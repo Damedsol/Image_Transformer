@@ -35,6 +35,27 @@ export class DropZone extends HTMLElement {
 
     // Evento de selección de archivos a través del input
     this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
+
+    // Manejar clic en toda la zona para abrir el selector de archivos
+    this.dropArea.addEventListener('click', this.handleAreaClick.bind(this));
+
+    // Prevenir que los clics en el contenido interno abran el selector múltiples veces
+    const dropzoneContent = this.querySelector('.dropzone-content');
+    if (dropzoneContent) {
+      dropzoneContent.addEventListener('click', (e) => {
+        // No detener la propagación para que el clic llegue al dropArea
+        // Solo evitamos que el evento se dispare múltiples veces
+      });
+    }
+
+    // Agregar enfoque al navegar con teclado
+    this.dropArea.addEventListener('keydown', (e) => {
+      // Activar el input file al presionar Enter o Space
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        this.fileInput.click();
+      }
+    });
   }
 
   /**
@@ -173,6 +194,16 @@ export class DropZone extends HTMLElement {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Maneja el clic en cualquier parte de la zona de drop
+   */
+  private handleAreaClick(event: MouseEvent) {
+    // Evitar activar el click si el target ya es el input
+    if (event.target !== this.fileInput) {
+      this.fileInput.click();
+    }
   }
 }
 
