@@ -324,40 +324,61 @@ body {
   background-color: rgba(67, 97, 238, 0.05);
   border: 1px solid rgba(67, 97, 238, 0.2);
   border-radius: var(--border-radius);
-  padding: 1rem;
-  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  margin-bottom: 0;
+  width: 100%;
+  max-width: 600px;
 }
 
 .downloads-container h3 {
   color: var(--primary-color);
   margin-bottom: 1rem;
+  font-size: 1.2rem;
+  text-align: center;
 }
 
 .downloads-list {
   list-style: none;
   padding: 0;
   margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .downloads-list li {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0;
+  background: white;
+  border-radius: var(--border-radius);
+  transition: var(--transition);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.downloads-list li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
 }
 
 .download-link {
-  display: inline-flex;
+  display: flex;
   align-items: center;
   color: var(--primary-color);
   text-decoration: none;
   transition: var(--transition);
+  padding: 0.75rem 1rem;
+  width: 100%;
 }
 
 .download-link:hover {
   color: var(--secondary-color);
-  text-decoration: underline;
+  background-color: rgba(67, 97, 238, 0.03);
 }
 
 .download-link svg {
-  margin-right: 0.5rem;
+  margin-right: 0.75rem;
+  min-width: 16px;
+  flex-shrink: 0;
 }
 
 /* Estilo para dimensiones de imágenes */
@@ -458,8 +479,21 @@ select:focus-visible {
 /* Contenedor de acciones */
 .action-container {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   margin-top: 1.5rem;
+  gap: 1.5rem;
+}
+
+/* Botón de convertir */
+.convert-btn {
+  min-width: 200px;
+  height: 48px;
+  font-size: 1.1rem;
+  padding: 0.75rem 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Estilo para la sección de previsualización */
@@ -483,4 +517,15 @@ select:focus-visible {
   outline: 2px solid var(--primary-color);
   outline-offset: 4px;
   border-color: var(--primary-color);
+}
+
+/* Responsive para dispositivos móviles */
+@media (max-width: 768px) {
+  .downloads-container {
+    max-width: 100%;
+  }
+
+  .convert-btn {
+    width: 100%;
+  }
 }

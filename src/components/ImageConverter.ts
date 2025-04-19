@@ -186,20 +186,25 @@ export class ImageConverter extends HTMLElement {
     const downloadsContainer = document.createElement('div');
     downloadsContainer.className = 'downloads-container';
     downloadsContainer.innerHTML = `
-      <h3>Descargas disponibles</h3>
-      <ul class="downloads-list">
-        ${urls
-          .map(
-            (url, index) => `
-          <li>
-            <a href="#" class="download-link" data-index="${index}">
-              ${this.images[index]?.name || `Imagen ${index + 1}`} (${this.options.format})
-            </a>
-          </li>
-        `,
-          )
-          .join('')}
-      </ul>
+        <h3>Descargas disponibles</h3>
+        <ul class="downloads-list">
+            ${urls
+              .map(
+                (url, index) => `
+                        <li>
+                            <a href="#" class="download-link" data-index="${index}">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                    <polyline points="7 10 12 15 17 10"></polyline>
+                                    <line x1="12" y1="15" x2="12" y2="3"></line>
+                                </svg>
+                                ${this.images[index]?.name || `Imagen ${index + 1}`} (${this.options.format})
+                            </a>
+                        </li>
+                    `,
+              )
+              .join('')}
+        </ul>
     `;
 
     // Agregamos event listeners para simular descargas
@@ -223,10 +228,10 @@ export class ImageConverter extends HTMLElement {
     if (existingContainer) {
       existingContainer.replaceWith(downloadsContainer);
     } else {
-      // Insertamos el contenedor antes del botón de conversión
-      const convertButton = this.querySelector('#convert-button');
-      if (convertButton && convertButton.parentNode) {
-        convertButton.parentNode.insertBefore(downloadsContainer, convertButton);
+      // Insertamos el contenedor en el content-actions
+      const actionsContainer = this.querySelector('.action-container');
+      if (actionsContainer) {
+        actionsContainer.insertBefore(downloadsContainer, actionsContainer.firstChild);
       }
     }
   }
@@ -352,7 +357,7 @@ export class ImageConverter extends HTMLElement {
           <div class="action-container">
             <button 
               id="convert-button" 
-              class="btn btn-primary" 
+              class="btn btn-primary convert-btn" 
               aria-label="Convertir imágenes seleccionadas"
             >
               Convertir imágenes
