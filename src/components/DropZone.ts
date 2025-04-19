@@ -4,8 +4,8 @@ import { isValidImage } from '../utils/fileUtils';
  * Componente DropZone para cargar imágenes mediante drag and drop o clic
  */
 export class DropZone extends HTMLElement {
-  private dropArea: HTMLElement;
-  private fileInput: HTMLInputElement;
+  private dropArea!: HTMLElement;
+  private fileInput!: HTMLInputElement;
   private onFilesSelected: (files: FileList) => void;
 
   constructor() {
@@ -42,7 +42,7 @@ export class DropZone extends HTMLElement {
     // Prevenir que los clics en el contenido interno abran el selector múltiples veces
     const dropzoneContent = this.querySelector('.dropzone-content');
     if (dropzoneContent) {
-      dropzoneContent.addEventListener('click', (e) => {
+      dropzoneContent.addEventListener('click', (_e) => {
         // No detener la propagación para que el clic llegue al dropArea
         // Solo evitamos que el evento se dispare múltiples veces
       });
