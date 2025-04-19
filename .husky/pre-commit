@@ -1,6 +1,0 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
-# Puedes añadir verificaciones de linting aquí si lo necesitas
-# Por ejemplo: npx lint-staged
-echo "✅ Preparando commit..." 

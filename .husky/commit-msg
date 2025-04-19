@@ -1,5 +1,2 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Validar el mensaje de commit usando commitlint
 npx --no -- commitlint --edit ${1} 
