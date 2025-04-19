@@ -171,43 +171,45 @@ export class ConversionOptions extends HTMLElement {
           <fieldset>
             <legend>Dimensiones (opcional)</legend>
             
-            <div class="dimensions-container">
-              <div class="form-group">
-                <label for="width" class="form-label">Ancho (px)</label>
-                <input 
-                  type="number" 
-                  id="width" 
-                  class="form-input" 
-                  placeholder="Auto" 
-                  min="1"
-                  aria-label="Ancho en píxeles" 
-                />
+            <div class="dimensions-wrapper">
+              <div class="dimensions-container">
+                <div class="form-group">
+                  <label for="width" class="form-label">Ancho (px)</label>
+                  <input 
+                    type="number" 
+                    id="width" 
+                    class="form-input" 
+                    placeholder="Auto" 
+                    min="1"
+                    aria-label="Ancho en píxeles" 
+                  />
+                </div>
+                
+                <div class="form-group">
+                  <label for="height" class="form-label">Alto (px)</label>
+                  <input 
+                    type="number" 
+                    id="height" 
+                    class="form-input" 
+                    placeholder="Auto" 
+                    min="1"
+                    aria-label="Alto en píxeles" 
+                  />
+                </div>
               </div>
               
-              <div class="form-group">
-                <label for="height" class="form-label">Alto (px)</label>
+              <div class="form-check">
                 <input 
-                  type="number" 
-                  id="height" 
-                  class="form-input" 
-                  placeholder="Auto" 
-                  min="1"
-                  aria-label="Alto en píxeles" 
+                  type="checkbox" 
+                  id="maintain-aspect-ratio" 
+                  class="form-check-input" 
+                  checked
+                  aria-label="Mantener proporción de aspecto" 
                 />
+                <label for="maintain-aspect-ratio" class="form-check-label">
+                  Mantener proporción de aspecto
+                </label>
               </div>
-            </div>
-            
-            <div class="form-check">
-              <input 
-                type="checkbox" 
-                id="maintain-aspect-ratio" 
-                class="form-check-input" 
-                checked
-                aria-label="Mantener proporción de aspecto" 
-              />
-              <label for="maintain-aspect-ratio" class="form-check-label">
-                Mantener proporción de aspecto
-              </label>
             </div>
           </fieldset>
         </div>
