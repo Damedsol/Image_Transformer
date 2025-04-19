@@ -1,4 +1,9 @@
 import { ImageInfo, ConversionOptions, ConversionStatus } from '../types/image';
+import {
+  DropZoneElement,
+  ImagePreviewElement,
+  ConversionOptionsElement,
+} from '../types/components';
 import { prepareImageFile, simulateFileUpload } from '../utils/fileUtils';
 
 /**
@@ -31,16 +36,14 @@ export class ImageConverter extends HTMLElement {
    */
   private setupComponents() {
     // Componente DropZone
-    const dropZone = this.querySelector('drop-zone');
+    const dropZone = this.querySelector('drop-zone') as DropZoneElement;
     if (dropZone) {
-      // @ts-expect-error - Propiedades personalizadas
       dropZone.setOnFilesSelectedCallback(this.handleFilesSelected.bind(this));
     }
 
     // Componente ConversionOptions
-    const conversionOptions = this.querySelector('conversion-options');
+    const conversionOptions = this.querySelector('conversion-options') as ConversionOptionsElement;
     if (conversionOptions) {
-      // @ts-expect-error - Propiedades personalizadas
       conversionOptions.setOnChangeCallback(this.handleOptionsChange.bind(this));
     }
 
@@ -250,10 +253,8 @@ export class ImageConverter extends HTMLElement {
 
     // Creamos las previsualizaciones para cada imagen
     this.images.forEach((imageInfo) => {
-      const preview = document.createElement('image-preview');
-      // @ts-expect-error - Propiedades personalizadas
+      const preview = document.createElement('image-preview') as ImagePreviewElement;
       preview.image = imageInfo;
-      // @ts-expect-error - Propiedades personalizadas
       preview.setOnRemoveCallback(this.handleRemoveImage.bind(this));
       previewArea.appendChild(preview);
     });
