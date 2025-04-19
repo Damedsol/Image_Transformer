@@ -1,0 +1,6 @@
+# Ejecutar lint-staged para verificar solo los archivos modificados
+echo "🔍 Ejecutando lint en archivos modificados..."
+pnpm lint-staged
+
+# Si el linter pasa, entonces permitir el commit
+echo "✅ Código listo para commit!" 
