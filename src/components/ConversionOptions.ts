@@ -23,6 +23,7 @@ export class ConversionOptions extends HTMLElement {
   connectedCallback() {
     this.render();
     this.setupEventListeners();
+    this.ensureAccessibility();
   }
 
   /**
@@ -163,7 +164,8 @@ export class ConversionOptions extends HTMLElement {
             max="100" 
             step="1" 
             value="90"
-            aria-labelledby="quality-label" 
+            aria-labelledby="quality-label"
+            aria-label="Calidad de la imagen, ajustable de 10 a 100 por ciento"
           />
         </div>
         
@@ -215,6 +217,33 @@ export class ConversionOptions extends HTMLElement {
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Verifica y corrige problemas de accesibilidad
+   */
+  private ensureAccessibility() {
+    // Asegurar que el label tiene el ID correcto para aria-labelledby
+    const qualityLabel = this.querySelector('label[for="quality"]');
+    if (qualityLabel && !qualityLabel.id) {
+      qualityLabel.id = 'quality-label';
+    }
+
+    // Asegurar que el input tenga referencias correctas
+    const qualityInput = this.querySelector('#quality') as HTMLInputElement;
+    if (qualityInput) {
+      if (qualityLabel && qualityLabel.id) {
+        qualityInput.setAttribute('aria-labelledby', qualityLabel.id);
+      }
+
+      // Añadir aria-label como respaldo
+      if (!qualityInput.hasAttribute('aria-label')) {
+        qualityInput.setAttribute(
+          'aria-label',
+          'Calidad de la imagen, ajustable de 10 a 100 por ciento'
+        );
+      }
+    }
   }
 }
 
