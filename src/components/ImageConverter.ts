@@ -66,7 +66,7 @@ export class ImageConverter extends HTMLElement {
    */
   private handleKeyboardNavigation() {
     // Permitir que el usuario pueda navegar entre previsualizaciones con el teclado
-    this.addEventListener('keydown', (e) => {
+    this.addEventListener('keydown', e => {
       if (e.key === 'Enter' || e.key === ' ') {
         const target = e.target as HTMLElement;
         if (target.classList.contains('preview-item')) {
@@ -102,7 +102,7 @@ export class ImageConverter extends HTMLElement {
       this.updateStatus('processing');
 
       // Preparamos cada archivo
-      const promises = Array.from(files).map(async (file) => {
+      const promises = Array.from(files).map(async file => {
         try {
           const imageInfo = await prepareImageFile(file);
           this.images.push(imageInfo);
@@ -124,7 +124,7 @@ export class ImageConverter extends HTMLElement {
       // Anunciar para lectores de pantalla
       if (validImages.length > 0) {
         this.announceStatus(
-          `${validImages.length} imagen${validImages.length > 1 ? 'es' : ''} cargada${validImages.length > 1 ? 's' : ''} correctamente. Ya puede convertirlas.`,
+          `${validImages.length} imagen${validImages.length > 1 ? 'es' : ''} cargada${validImages.length > 1 ? 's' : ''} correctamente. Ya puede convertirlas.`
         );
       }
 
@@ -132,7 +132,7 @@ export class ImageConverter extends HTMLElement {
       if (validImages.length > 0) {
         this.showMessage(
           `${validImages.length} imagen${validImages.length > 1 ? 'es' : ''} cargada${validImages.length > 1 ? 's' : ''} correctamente`,
-          'success',
+          'success'
         );
       }
 
@@ -153,7 +153,7 @@ export class ImageConverter extends HTMLElement {
     this.options = options;
 
     // Actualiza las opciones de conversión para todas las imágenes
-    this.images = this.images.map((img) => ({
+    this.images = this.images.map(img => ({
       ...img,
       conversionOptions: {
         ...img.conversionOptions,
@@ -163,7 +163,7 @@ export class ImageConverter extends HTMLElement {
 
     // Anunciar cambios para lectores de pantalla
     this.announceStatus(
-      `Opciones de conversión actualizadas: formato ${options.format}, calidad ${options.quality}%`,
+      `Opciones de conversión actualizadas: formato ${options.format}, calidad ${options.quality}%`
     );
   }
 
@@ -209,13 +209,13 @@ export class ImageConverter extends HTMLElement {
 
       // Anunciar para lectores de pantalla
       this.announceStatus(
-        `${this.images.length} imagen${this.images.length > 1 ? 'es' : ''} convertida${this.images.length > 1 ? 's' : ''} correctamente. El archivo ZIP está disponible para descarga.`,
+        `${this.images.length} imagen${this.images.length > 1 ? 'es' : ''} convertida${this.images.length > 1 ? 's' : ''} correctamente. El archivo ZIP está disponible para descarga.`
       );
 
       // Mostramos mensaje de éxito
       this.showMessage(
         `${this.images.length} imagen${this.images.length > 1 ? 'es' : ''} convertida${this.images.length > 1 ? 's' : ''} correctamente`,
-        'success',
+        'success'
       );
 
       // Mostrar enlace de descarga del ZIP
@@ -348,7 +348,7 @@ export class ImageConverter extends HTMLElement {
       // Agregar event listener para eliminar imagen
       const removeBtn = previewItem.querySelector('.remove-image-btn');
       if (removeBtn) {
-        removeBtn.addEventListener('click', (e) => {
+        removeBtn.addEventListener('click', e => {
           e.stopPropagation();
           this.handleRemoveImage(image.id);
         });
@@ -363,11 +363,11 @@ export class ImageConverter extends HTMLElement {
    */
   private handleRemoveImage(id: string) {
     // Buscar la imagen a eliminar
-    const imageToRemove = this.images.find((img) => img.id === id);
+    const imageToRemove = this.images.find(img => img.id === id);
     const imageName = imageToRemove?.name || 'Imagen';
 
     // Filtrar las imágenes para eliminar la seleccionada
-    this.images = this.images.filter((img) => img.id !== id);
+    this.images = this.images.filter(img => img.id !== id);
 
     // Actualizar previsualizaciones
     this.updatePreviews();
@@ -392,7 +392,7 @@ export class ImageConverter extends HTMLElement {
         'status-idle',
         'status-processing',
         'status-success',
-        'status-error',
+        'status-error'
       );
 
       // Agregar nueva clase de estado

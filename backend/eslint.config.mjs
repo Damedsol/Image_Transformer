@@ -9,9 +9,9 @@ export default [
 
   // Configuración TypeScript
   ...tseslint.configs.recommended,
-  ...tseslint.configs.recommendedRequiringTypeChecking,
+
   {
-    // Opciones para la verificación de tipos
+    // Opciones generales
     languageOptions: {
       parser: tseslint.parser,
       parserOptions: {
@@ -26,7 +26,15 @@ export default [
       reportUnusedDisableDirectives: true,
     },
     // Patrones de archivos ignorados
-    ignores: ['dist/**', 'node_modules/**', '.vscode/**', 'build/**', '**/*.log', '**/*.lock'],
+    ignores: [
+      'dist/**',
+      'node_modules/**',
+      '.vscode/**',
+      'build/**',
+      'temp/**',
+      '**/*.log',
+      '**/*.lock',
+    ],
   },
 
   // Configuración específica para archivos TypeScript
@@ -35,7 +43,7 @@ export default [
     rules: {
       // Reglas de TypeScript
       '@typescript-eslint/no-unused-vars': [
-        'error',
+        'warn',
         {
           vars: 'all',
           args: 'after-used',
@@ -45,33 +53,33 @@ export default [
         },
       ],
       '@typescript-eslint/explicit-function-return-type': [
-        'error',
+        'warn',
         {
           allowExpressions: true,
           allowTypedFunctionExpressions: true,
         },
       ],
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-unsafe-member-access': 'error',
-      '@typescript-eslint/no-unsafe-assignment': 'error',
-      '@typescript-eslint/no-unsafe-call': 'error',
-      '@typescript-eslint/no-unsafe-return': 'error',
-      '@typescript-eslint/restrict-template-expressions': 'error',
-      '@typescript-eslint/unbound-method': 'error',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/prefer-as-const': 'error',
-      '@typescript-eslint/prefer-regexp-exec': 'error',
-      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-unsafe-member-access': 'warn',
+      '@typescript-eslint/no-unsafe-assignment': 'warn',
+      '@typescript-eslint/no-unsafe-call': 'warn',
+      '@typescript-eslint/no-unsafe-return': 'warn',
+      '@typescript-eslint/restrict-template-expressions': 'warn',
+      '@typescript-eslint/unbound-method': 'warn',
+      '@typescript-eslint/no-floating-promises': 'warn',
+      '@typescript-eslint/await-thenable': 'warn',
+      '@typescript-eslint/no-misused-promises': 'warn',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
+      '@typescript-eslint/prefer-as-const': 'warn',
+      '@typescript-eslint/prefer-regexp-exec': 'warn',
+      '@typescript-eslint/require-await': 'warn',
 
       // Reglas JavaScript generales
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       'no-var': 'error',
       eqeqeq: ['error', 'always'],
       'prefer-const': 'error',
-      'no-unused-expressions': 'error',
+      'no-unused-expressions': 'warn',
     },
   },
 

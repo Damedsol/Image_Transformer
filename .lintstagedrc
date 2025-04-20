@@ -12,5 +12,9 @@
   ],
   "*.md": [
     "prettier --write"
+  ],
+  "backend/src/**/*.ts": [
+    "cd backend && prettier --write",
+    "cd backend && eslint --fix"
   ]
 }

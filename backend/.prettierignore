@@ -1,7 +1,7 @@
-node_modules
-dist
-build
-coverage
-.vscode
+dist/
+node_modules/
+.vscode/
+build/
+temp/
 *.log
 *.lock 

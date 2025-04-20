@@ -22,14 +22,14 @@ interface ConversionResponse {
  */
 export const convertImagesAPI = async (
   files: ImageInfo[],
-  options: ConversionOptions,
+  options: ConversionOptions
 ): Promise<string> => {
   try {
     // Crear un FormData para enviar los archivos
     const formData = new FormData();
 
     // Agregar cada imagen al FormData
-    files.forEach((image) => {
+    files.forEach(image => {
       formData.append('images', image.file);
     });
 

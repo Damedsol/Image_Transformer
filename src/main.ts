@@ -79,14 +79,14 @@ function setupScreenReaderAnnouncer() {
 
   if (statusAnnouncer) {
     // Verificar si hay errores en la carga inicial
-    window.addEventListener('error', (e) => {
+    window.addEventListener('error', e => {
       announceToScreenReader(`Error en la aplicación: ${e.message}`);
     });
 
     // Anunciar cuando la aplicación esté completamente cargada
     window.addEventListener('load', () => {
       announceToScreenReader(
-        'Aplicación de conversión de imágenes cargada correctamente. Puede empezar a usar el conversor.',
+        'Aplicación de conversión de imágenes cargada correctamente. Puede empezar a usar el conversor.'
       );
     });
   }
@@ -112,7 +112,7 @@ function setupAccessibilityDialog() {
 
   // Configurar botón de accesibilidad en el encabezado
   if (a11yButton) {
-    a11yButton.addEventListener('click', (e) => {
+    a11yButton.addEventListener('click', e => {
       e.preventDefault();
       openAccessibilityDialog();
     });
@@ -163,7 +163,7 @@ function setupAccessibilityDialog() {
 
   // Manejar cambios en opciones de tamaño de fuente
   const fontSizeOptions = dialog.querySelectorAll('input[name="font-size"]');
-  fontSizeOptions.forEach((option) => {
+  fontSizeOptions.forEach(option => {
     const radio = option as HTMLInputElement;
     radio.addEventListener('change', () => {
       if (radio.checked) {
@@ -193,7 +193,7 @@ function setupAccessibilityDialog() {
 
   // Manejar cambios en opciones de espaciado de texto
   const textSpacingOptions = dialog.querySelectorAll('input[name="text-spacing"]');
-  textSpacingOptions.forEach((option) => {
+  textSpacingOptions.forEach(option => {
     const radio = option as HTMLInputElement;
     radio.addEventListener('change', () => {
       if (radio.checked) {
@@ -248,7 +248,7 @@ function setupKeyboardShortcuts() {
   let dropZone;
   let convertButton;
 
-  document.addEventListener('keydown', (event) => {
+  document.addEventListener('keydown', event => {
     // Solo procesar si Ctrl+Alt está presionado (o Cmd+Alt en Mac)
     if ((event.ctrlKey || event.metaKey) && event.altKey) {
       switch (event.key.toLowerCase()) {
@@ -289,7 +289,7 @@ function setupKeyboardShortcuts() {
           // Iniciar conversión
           event.preventDefault();
           convertButton = document.querySelector(
-            'button[data-action="convert"]',
+            'button[data-action="convert"]'
           ) as HTMLButtonElement;
           if (convertButton) {
             convertButton.click();
@@ -312,7 +312,7 @@ function openAccessibilityDialog() {
 
     // Enfocar el primer elemento interactivo
     const firstFocusable = a11yDialog.querySelector(
-      'button, [href], input, select, textarea',
+      'button, [href], input, select, textarea'
     ) as HTMLElement;
     if (firstFocusable) {
       firstFocusable.focus();
@@ -438,7 +438,7 @@ function loadUserPreferences() {
     if (fontSize && fontSize !== 'normal') {
       document.body.classList.add(`font-size-${fontSize}`);
       const fontSizeRadio = document.querySelector(
-        `input[name="font-size"][value="${fontSize}"]`,
+        `input[name="font-size"][value="${fontSize}"]`
       ) as HTMLInputElement;
       if (fontSizeRadio) fontSizeRadio.checked = true;
     }
@@ -456,7 +456,7 @@ function loadUserPreferences() {
     if (textSpacing && textSpacing !== 'normal') {
       document.body.classList.add(`text-spacing-${textSpacing}`);
       const textSpacingRadio = document.querySelector(
-        `input[name="text-spacing"][value="${textSpacing}"]`,
+        `input[name="text-spacing"][value="${textSpacing}"]`
       ) as HTMLInputElement;
       if (textSpacingRadio) textSpacingRadio.checked = true;
     }
