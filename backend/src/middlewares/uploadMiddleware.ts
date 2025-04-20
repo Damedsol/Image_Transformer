@@ -2,6 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
+import sharp from 'sharp';
 // import { Request } from 'express';
 import { AppError } from '../utils/apiError';
 
@@ -52,6 +53,21 @@ const storage = multer.diskStorage({
   },
 });
 
+/**
+ * Valida el contenido de la imagen usando sharp
+ */
+const validateImage = async (file: Express.Multer.File): Promise<boolean> => {
+  try {
+    // Verificar firma real del archivo usando sharp
+    await sharp(file.path).metadata();
+    return true;
+  } catch (error) {
+    // Si sharp no puede procesar el archivo, no es una imagen válida
+    console.error(`Archivo inválido detectado: ${file.originalname}`);
+    return false;
+  }
+};
+
 // Validar tipos de archivos permitidos
 const validateFileType = (
   req: Express.Request,
@@ -69,6 +85,22 @@ const validateFileType = (
 
   // Verificar tanto el mimetype como la extensión
   if (allowedMimeTypes.includes(mimetype) && allowedExtensions.includes(extension)) {
+    // Realizar verificación adicional asíncrona para validar el contenido
+    file.stream.on('end', async () => {
+      try {
+        const isValid = await validateImage(file);
+        if (!isValid) {
+          // No podemos rechazar el archivo aquí porque ya se guardó,
+          // pero podemos eliminarlo si no es válido
+          safelyDeleteFile(file.path);
+          console.error(`Contenido de imagen inválido eliminado: ${file.originalname}`);
+        }
+      } catch (error) {
+        safelyDeleteFile(file.path);
+        console.error(`Error validando imagen: ${file.originalname}`, error);
+      }
+    });
+
     cb(null, true);
   } else {
     cb(new AppError(`Solo se permiten imágenes en formato JPEG, JPG, PNG y WEBP`, 400));
