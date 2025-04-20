@@ -5,27 +5,31 @@ import archiver from 'archiver';
 import { ConversionOptions, ImageFile, ConversionResult } from './types';
 import { AppError } from './apiError';
 import dotenv from 'dotenv';
+import { ImageFormat, ProcessedImage } from './types.js';
+import { ApiError } from './apiError.js';
 
 // Cargar variables de entorno
 dotenv.config();
 
 // Configurar límites de Sharp basados en variables de entorno
-const sharpMemoryLimit = parseInt(process.env.SHARP_MEMORY_LIMIT || '1024');
+const sharpConcurrency = parseInt(process.env.SHARP_CONCURRENCY || '1');
 // Configurar Sharp con límites de memoria
 sharp.cache(false); // Desactivar caché para evitar fugas de memoria
-sharp.concurrency(1); // Limitar procesamiento concurrente
-if (sharpMemoryLimit > 0) {
-  try {
-    sharp.simd(false); // Desactivar aceleración SIMD si hay restricciones de memoria
-    // Sharp limita píxeles a nivel de instancia, no a nivel global
-  } catch (err) {
-    console.warn('No se pudo establecer límites en Sharp:', err);
+sharp.concurrency(sharpConcurrency); // Limitar procesamiento concurrente
+sharp.simd(false); // Desactivar aceleración SIMD para reducir uso de memoria
+try {
+  // Verificamos si la propiedad pipeline existe antes de usarla
+  if (typeof sharp.pipeline?.cache === 'function') {
+    sharp.pipeline.cache(false); // Desactivar caché de pipeline si está disponible
   }
+} catch (err) {
+  // Error silenciado intencionalmente - la propiedad puede no estar disponible en todas las versiones
 }
 
 // Obtener límites máximos de dimensiones
 const MAX_WIDTH = parseInt(process.env.MAX_IMAGE_WIDTH || '4000');
 const MAX_HEIGHT = parseInt(process.env.MAX_IMAGE_HEIGHT || '4000');
+const MAX_DIMENSIONS = MAX_WIDTH * MAX_HEIGHT;
 const MAX_ZIP_SIZE = parseInt(process.env.MAX_ZIP_SIZE || '25000000');
 const IMAGE_PROCESSING_TIMEOUT = parseInt(process.env.IMAGE_PROCESSING_TIMEOUT || '30') * 1000;
 
@@ -37,6 +41,16 @@ if (!fs.existsSync(outputDir)) {
 }
 
 /**
+ * Verifica que una ruta esté dentro del directorio permitido
+ */
+const ensurePathIsWithinBoundary = (filePath: string, allowedDirectory: string): boolean => {
+  const normalizedPath = path.normalize(filePath);
+  const normalizedAllowedDir = path.normalize(allowedDirectory);
+
+  return normalizedPath.startsWith(normalizedAllowedDir);
+};
+
+/**
  * Procesa una imagen con Sharp según las opciones especificadas
  * con manejo de límites de recursos
  */
@@ -44,6 +58,11 @@ export const processImage = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  // Verificar que la ruta está dentro del directorio permitido
+  if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
+    throw new AppError('Ruta de archivo no permitida', 403);
+  }
+
   // Crear un temporizador para limitar el tiempo de procesamiento
   const timeoutPromise = new Promise<never>((_, reject) => {
     setTimeout(() => {
@@ -82,8 +101,16 @@ const processImageWithLimits = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  // Verificar que la ruta está dentro del directorio permitido
+  if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
+    throw new AppError('Ruta de archivo no permitida', 403);
+  }
+
   // Obtener información de la imagen original
-  const imageInfo = await sharp(imageFile.path).metadata();
+  const imageInfo = await sharp(imageFile.path, {
+    limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
+    sequentialRead: true, // Menor uso de memoria para imágenes grandes
+  }).metadata();
 
   // Verificar dimensiones máximas de la imagen original
   if (
@@ -137,10 +164,16 @@ const processImageWithLimits = async (
   const outputFileName = `${fileNameWithoutExt}_${width}x${height}.${options.format}`;
   const outputPath = path.join(outputDir, outputFileName);
 
+  // Verificar que la ruta de salida está dentro del directorio permitido
+  if (!ensurePathIsWithinBoundary(outputPath, tempDir)) {
+    throw new AppError('Ruta de salida no permitida', 403);
+  }
+
   // Procesar la imagen con Sharp
   const sharpInstance = sharp(imageFile.path, {
     failOnError: true,
-    limitInputPixels: MAX_WIDTH * MAX_HEIGHT, // Limitar tamaño en píxeles
+    limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
+    sequentialRead: true, // Menor uso de memoria para imágenes grandes
   });
 
   // Aplicar redimensionamiento si se especifican dimensiones
@@ -207,6 +240,12 @@ export const createZipFromImages = async (
   zipFileName: string
 ): Promise<string> => {
   const zipPath = path.join(outputDir, `${zipFileName}.zip`);
+
+  // Verificar que la ruta del ZIP esté dentro del directorio permitido
+  if (!ensurePathIsWithinBoundary(zipPath, tempDir)) {
+    throw new AppError('Ruta de archivo no permitida', 403);
+  }
+
   const output = fs.createWriteStream(zipPath);
   const archive = archiver('zip', {
     zlib: { level: 9 }, // Nivel de compresión máximo
@@ -224,6 +263,11 @@ export const createZipFromImages = async (
   // Verificar tamaño total de los archivos
   let totalSize = 0;
   for (const image of processedImages) {
+    // Verificar que la ruta está dentro del directorio permitido
+    if (!ensurePathIsWithinBoundary(image.path, tempDir)) {
+      throw new AppError('Ruta de archivo no permitida', 403);
+    }
+
     const stats = fs.statSync(image.path);
     totalSize += stats.size;
 
@@ -245,31 +289,17 @@ export const createZipFromImages = async (
 
   return new Promise((resolve, reject) => {
     output.on('close', () => {
-      const finalStats = fs.statSync(zipPath);
-      // console.log(`Archivo ZIP creado: ${zipPath}, tamaño: ${finalStats.size} bytes`);
-
-      // Verificar tamaño final del ZIP
-      if (finalStats.size > MAX_ZIP_SIZE) {
-        fs.unlinkSync(zipPath); // Eliminar el ZIP si excede el tamaño
-        reject(
-          new AppError(`El archivo ZIP resultante excede el tamaño máximo permitido`, 413, {
-            code: 'ZIP_SIZE_LIMIT_ERROR',
-          })
-        );
-      } else {
-        resolve(zipPath);
-      }
+      resolve(zipPath);
     });
 
-    archive.on('error', err => {
-      console.error('Error al crear el archivo ZIP:', err);
-      reject(new AppError('Error al crear el archivo ZIP', 500));
+    output.on('error', err => {
+      reject(err);
     });
   });
 };
 
 /**
- * Limpia los archivos temporales después de un tiempo determinado
+ * Limpia archivos temporales después de un tiempo determinado
  */
 export const cleanTempFiles = (
   filePaths: string[],
@@ -277,13 +307,24 @@ export const cleanTempFiles = (
 ) => {
   setTimeout(() => {
     filePaths.forEach(filePath => {
-      try {
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath);
-          // console.log(`Archivo temporal eliminado: ${filePath}`);
+      // Verificar que el archivo sigue dentro del directorio temporal
+      if (ensurePathIsWithinBoundary(filePath, tempDir)) {
+        try {
+          fs.access(filePath, fs.constants.F_OK, accessErr => {
+            if (!accessErr) {
+              // El archivo existe, intentar eliminarlo
+              fs.unlink(filePath, unlinkErr => {
+                if (unlinkErr) {
+                  // Error silenciado intencionalmente
+                }
+              });
+            }
+          });
+        } catch (error) {
+          // Error silenciado intencionalmente
         }
-      } catch (error) {
-        console.error(`Error al eliminar archivo temporal ${filePath}:`, error);
+      } else {
+        // Error silenciado intencionalmente
       }
     });
   }, delayMs);
