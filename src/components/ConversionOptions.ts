@@ -137,8 +137,8 @@ export class ConversionOptions extends HTMLElement {
    */
   private render() {
     this.innerHTML = `
-      <div class="options-container">
-        <h2>Opciones de conversión</h2>
+      <div class="options-container" role="region" aria-label="Opciones de conversión">
+        <h2 id="options-heading">Opciones de conversión</h2>
         
         <div class="form-group">
           <label for="format" class="form-label">Formato de salida</label>

@@ -7,6 +7,7 @@ export class DropZone extends HTMLElement {
   private dropArea!: HTMLElement;
   private fileInput!: HTMLInputElement;
   private onFilesSelected: (files: FileList) => void;
+  private statusElement!: HTMLElement;
 
   constructor() {
     super();
@@ -27,6 +28,7 @@ export class DropZone extends HTMLElement {
   private setupEventListeners() {
     this.dropArea = this.querySelector('.dropzone') as HTMLElement;
     this.fileInput = this.querySelector('.file-input') as HTMLInputElement;
+    this.statusElement = this.querySelector('.dropzone-status') as HTMLElement;
 
     // Eventos de drag and drop
     this.dropArea.addEventListener('dragover', this.handleDragOver.bind(this));
@@ -48,14 +50,34 @@ export class DropZone extends HTMLElement {
       });
     }
 
-    // Agregar enfoque al navegar con teclado
+    // Mejorar la accesibilidad del teclado
     this.dropArea.addEventListener('keydown', (e) => {
       // Activar el input file al presionar Enter o Space
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         this.fileInput.click();
+        // Anunciar para lectores de pantalla
+        this.updateStatus('Seleccionando archivos...');
       }
     });
+
+    // Añadir feedback de enfoque
+    this.dropArea.addEventListener('focus', () => {
+      this.dropArea.classList.add('focus-visible');
+    });
+
+    this.dropArea.addEventListener('blur', () => {
+      this.dropArea.classList.remove('focus-visible');
+    });
+  }
+
+  /**
+   * Actualiza el estado para los lectores de pantalla
+   */
+  private updateStatus(message: string) {
+    if (this.statusElement) {
+      this.statusElement.textContent = message;
+    }
   }
 
   /**
@@ -72,6 +94,7 @@ export class DropZone extends HTMLElement {
     event.preventDefault();
     event.stopPropagation();
     this.dropArea.classList.add('drag-active');
+    this.updateStatus('Soltar para cargar las imágenes');
 
     // Actualiza el cursor para indicar que se puede soltar
     if (event.dataTransfer) {
@@ -86,6 +109,7 @@ export class DropZone extends HTMLElement {
     event.preventDefault();
     event.stopPropagation();
     this.dropArea.classList.remove('drag-active');
+    this.updateStatus('');
   }
 
   /**
@@ -95,12 +119,15 @@ export class DropZone extends HTMLElement {
     event.preventDefault();
     event.stopPropagation();
     this.dropArea.classList.remove('drag-active');
+    this.updateStatus('Procesando archivos soltados...');
 
     if (event.dataTransfer && event.dataTransfer.files.length > 0) {
       const files = this.filterImageFiles(event.dataTransfer.files);
       if (files.length > 0) {
+        this.updateStatus(`${files.length} imágenes cargadas correctamente`);
         this.onFilesSelected(files);
       } else {
+        this.updateStatus('No se han cargado imágenes válidas');
         this.showError('Solo se permiten archivos de imagen');
       }
     }
@@ -111,13 +138,16 @@ export class DropZone extends HTMLElement {
    */
   private handleFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
+    this.updateStatus('Procesando archivos seleccionados...');
 
     if (input.files && input.files.length > 0) {
       const files = this.filterImageFiles(input.files);
 
       if (files.length > 0) {
+        this.updateStatus(`${files.length} imágenes cargadas correctamente`);
         this.onFilesSelected(files);
       } else {
+        this.updateStatus('No se han cargado imágenes válidas');
         this.showError('Solo se permiten archivos de imagen');
       }
     }
@@ -156,6 +186,8 @@ export class DropZone extends HTMLElement {
     if (!errorMessage) {
       errorMessage = document.createElement('div');
       errorMessage.className = 'message message-error';
+      errorMessage.setAttribute('role', 'alert');
+      errorMessage.setAttribute('aria-live', 'assertive');
       this.appendChild(errorMessage);
     }
 
@@ -174,7 +206,13 @@ export class DropZone extends HTMLElement {
    */
   private render() {
     this.innerHTML = `
-      <div class="dropzone" tabindex="0" role="button" aria-label="Zona para arrastrar y soltar imágenes">
+      <div 
+        class="dropzone" 
+        tabindex="0" 
+        role="button" 
+        aria-label="Zona para arrastrar y soltar imágenes" 
+        aria-describedby="dropzone-instructions"
+      >
         <input 
           type="file" 
           class="file-input" 
@@ -189,8 +227,9 @@ export class DropZone extends HTMLElement {
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
           <h2>Arrastra y suelta tus imágenes aquí</h2>
-          <p>o haz clic para seleccionar archivos</p>
+          <p id="dropzone-instructions">o haz clic para seleccionar archivos</p>
           <p class="dropzone-formats">Formatos soportados: PNG, JPEG, WEBP, GIF, BMP, TIFF, AVIF</p>
+          <div class="dropzone-status sr-only" aria-live="polite"></div>
         </div>
       </div>
     `;
@@ -203,6 +242,7 @@ export class DropZone extends HTMLElement {
     // Evitar activar el click si el target ya es el input
     if (event.target !== this.fileInput) {
       this.fileInput.click();
+      this.updateStatus('Seleccionando archivos...');
     }
   }
 }
