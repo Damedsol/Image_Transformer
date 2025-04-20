@@ -12,7 +12,14 @@
     "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"*.{js,ts}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss}\"",
     "format:check": "prettier --check \"src/**/*.{ts,tsx,css,scss}\"",
-    "lint-staged": "lint-staged"
+    "lint-staged": "lint-staged",
+    "docker:dev": "docker compose up -d",
+    "docker:dev:down": "docker compose down",
+    "docker:prod": "docker compose -f docker-compose.prod.yml up -d",
+    "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
+    "docker:logs": "docker compose logs -f",
+    "docker:prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
+    "docker:prune": "docker system prune -f"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",
