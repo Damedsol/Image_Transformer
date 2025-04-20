@@ -19,8 +19,12 @@ export const configureHelmet = () => {
         objectSrc: ["'none'"],
         mediaSrc: ["'self'"],
         frameSrc: ["'none'"],
+        workerSrc: ["'self'", 'blob:'],
       },
     },
+    crossOriginEmbedderPolicy: true,
+    crossOriginOpenerPolicy: true,
+    crossOriginResourcePolicy: { policy: 'same-site' },
     xssFilter: true,
     noSniff: true,
     referrerPolicy: { policy: 'no-referrer' },
@@ -40,6 +44,10 @@ export const apiRateLimiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_MAX || '100'), // 100 peticiones por ventana
   standardHeaders: true,
   legacyHeaders: false,
+  // Usar múltiples factores para identificar al cliente
+  keyGenerator: req => {
+    return `${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
+  },
   handler: (req: Request, res: Response, next: NextFunction) => {
     next(AppError.tooManyRequests());
   },
