@@ -43,7 +43,7 @@ export const createImagePreview = (file: File): Promise<string> => {
  * Obtiene las dimensiones de una imagen
  */
 export const getImageDimensions = (
-  imageUrl: string,
+  imageUrl: string
 ): Promise<{ width: number; height: number }> => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -130,14 +130,14 @@ export const prepareImageFile = async (file: File): Promise<ImageInfo> => {
  */
 export const simulateFileUpload = async (
   files: ImageInfo[],
-  options: ConversionOptions,
+  options: ConversionOptions
 ): Promise<string[]> => {
   // Esto simula una llamada a API
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     // Simulamos un retraso para imitar una petición real
     setTimeout(() => {
       // En un caso real, aquí se enviarían los archivos a un servidor
-      const downloadUrls = files.map((file) => `download-${file.id}.${options.format}`);
+      const downloadUrls = files.map(file => `download-${file.id}.${options.format}`);
       resolve(downloadUrls);
     }, 1500);
   });

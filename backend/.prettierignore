@@ -1,0 +1,7 @@
+dist/
+node_modules/
+.vscode/
+build/
+temp/
+*.log
+*.lock 

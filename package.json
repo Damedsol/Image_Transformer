@@ -8,9 +8,10 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "prepare": "husky",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint \"src/**/*.{ts,tsx}\" \"*.{js,ts}\"",
+    "lint:fix": "eslint \"src/**/*.{ts,tsx}\" \"*.{js,ts}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,scss}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css,scss}\"",
     "lint-staged": "lint-staged"
   },
   "devDependencies": {

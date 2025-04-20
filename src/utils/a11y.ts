@@ -50,7 +50,7 @@ export function makeElementFocusable(element: HTMLElement, label: string): void 
 export function setLoadingState(
   element: HTMLElement,
   isLoading: boolean,
-  loadingText = 'Cargando...',
+  loadingText = 'Cargando...'
 ): void {
   if (isLoading) {
     element.setAttribute('aria-busy', 'true');
@@ -90,7 +90,7 @@ export function setLoadingState(
 export function setupKeyboardNavigation(
   container: HTMLElement,
   selector: string,
-  onAction: (element: HTMLElement) => void,
+  onAction: (element: HTMLElement) => void
 ): void {
   container.addEventListener('keydown', (e: KeyboardEvent) => {
     const target = e.target as HTMLElement;
@@ -107,7 +107,7 @@ export function setupKeyboardNavigation(
 export function createAlert(
   message: string,
   type: 'success' | 'error' | 'info',
-  duration = 5000,
+  duration = 5000
 ): HTMLElement {
   const alert = document.createElement('div');
   alert.className = `message message-${type}`;
@@ -134,7 +134,7 @@ export function labelTreeStructure(
   container: HTMLElement,
   listSelector: string,
   itemSelector: string,
-  headingId: string,
+  headingId: string
 ): void {
   const list = container.querySelector(listSelector);
   if (!list) return;
@@ -157,7 +157,7 @@ export function labelTreeStructure(
 export function setupAccessibleDialog(
   dialogElement: HTMLElement,
   openButtonSelector: string,
-  closeButtonSelector: string,
+  closeButtonSelector: string
 ): {
   open: () => void;
   close: () => void;
@@ -179,7 +179,7 @@ export function setupAccessibleDialog(
 
     // Enfocar el primer elemento interactivo
     const firstFocusable = dialogElement.querySelector(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ) as HTMLElement;
     if (firstFocusable) {
       firstFocusable.focus();
@@ -216,17 +216,17 @@ export function setupAccessibleDialog(
   }
 
   // Configurar cierre con ESC
-  dialogElement.addEventListener('keydown', (e) => {
+  dialogElement.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       close();
     }
   });
 
   // Atrapar el foco dentro del diálogo
-  dialogElement.addEventListener('keydown', (e) => {
+  dialogElement.addEventListener('keydown', e => {
     if (e.key === 'Tab') {
       const focusables = dialogElement.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
       );
       const firstFocusable = focusables[0] as HTMLElement;
       const lastFocusable = focusables[focusables.length - 1] as HTMLElement;
