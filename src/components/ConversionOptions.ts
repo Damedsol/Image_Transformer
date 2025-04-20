@@ -154,7 +154,7 @@ export class ConversionOptions extends HTMLElement {
         </div>
         
         <div class="form-group">
-          <label for="quality" class="form-label">Calidad: <span id="quality-value">90</span>%</label>
+          <label for="quality" class="form-label" id="quality-label">Calidad: <span id="quality-value">90</span>%</label>
           <input 
             type="range" 
             id="quality" 

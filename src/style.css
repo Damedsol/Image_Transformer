@@ -47,12 +47,13 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --background-color: #121212;
-    --text-color: #e6e6e6;
+    --text-color: #ffffff; /* Mejorando contraste de texto */
     --card-bg: #1e1e1e;
-    --border-color: #444;
+    --border-color: #555; /* Mejorando contraste de bordes */
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     --focus-outline-color: #ffdd00;
     --primary-color-hover: #5470ff;
+    --primary-color: #5c7cff; /* Mejorando contraste del color primario */
   }
 }
 
@@ -96,7 +97,7 @@ body {
   position: absolute;
   top: -50px;
   left: 0;
-  background: #0078d7;
+  background: #0056b3; /* Color más oscuro para mejor contraste */
   color: white;
   padding: 10px 15px;
   z-index: 1000;
@@ -126,7 +127,8 @@ body {
 
 .header p {
   font-size: clamp(1rem, 3cqi, 1.1rem);
-  color: #666;
+  color: #4a4a4a; /* Color más oscuro para mejor contraste */
+  font-weight: 500; /* Un poco más de peso para mejorar la legibilidad */
 }
 
 .converter-container {
@@ -1499,7 +1501,8 @@ body.touch-device input[type='radio'] {
 .shortcut-note {
   font-size: 0.9rem;
   margin-top: 16px;
-  color: #666;
+  color: #4a4a4a; /* Mejorado para contraste */
+  font-weight: 500; /* Mejorado para legibilidad */
   font-style: italic;
   padding: 10px;
   background-color: rgba(255, 255, 255, 0.5);
@@ -1511,7 +1514,7 @@ body.touch-device input[type='radio'] {
 @media (prefers-color-scheme: dark) {
   .shortcut-note {
     background-color: rgba(0, 0, 0, 0.2);
-    color: #aaa;
+    color: #e0e0e0; /* Mejorado para contraste en modo oscuro */
     border-color: rgba(67, 97, 238, 0.3);
   }
 }
@@ -1560,11 +1563,11 @@ body.touch-device input[type='radio'] {
   }
 
   .option-description {
-    color: #aaa;
+    color: #e0e0e0; /* Mejorado para contraste */
   }
 
   .shortcut-note {
-    color: #aaa;
+    color: #e0e0e0; /* Mejorado para contraste en modo oscuro */
   }
 }
 
