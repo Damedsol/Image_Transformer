@@ -1,44 +1,111 @@
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
+// import { Request } from 'express';
+import { AppError } from '../utils/apiError';
 
-// Crear directorio temp si no existe
+// Crear directorios necesarios
 const tempDir = path.join(__dirname, '../../temp');
-if (!fs.existsSync(tempDir)) {
-  fs.mkdirSync(tempDir, { recursive: true });
-}
+const uploadsDir = path.join(tempDir, 'uploads');
+const outputDir = path.join(tempDir, 'output');
+
+// Crear directorios si no existen
+[tempDir, uploadsDir, outputDir].forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Función de sanitización del nombre de archivo
+const sanitizeFileName = (filename: string): string => {
+  // Eliminar caracteres especiales y espacios
+  let sanitized = filename.replace(/[^a-zA-Z0-9._-]/g, '_').replace(/\s+/g, '_');
+
+  // Truncar nombres muy largos
+  if (sanitized.length > 100) {
+    const ext = path.extname(sanitized);
+    const name = path.basename(sanitized, ext);
+    sanitized = name.substring(0, 90) + ext;
+  }
+
+  return sanitized;
+};
+
+// Generar nombre único para el archivo
+const generateUniqueFilename = (originalname: string): string => {
+  const timestamp = Date.now();
+  const randomString = crypto.randomBytes(8).toString('hex');
+  const ext = path.extname(originalname);
+  const sanitizedName = sanitizeFileName(path.basename(originalname, ext));
+
+  return `${sanitizedName}-${timestamp}-${randomString}${ext}`;
+};
 
 // Configurar el almacenamiento de multer
 const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, tempDir);
+  destination: function (req: Express.Request, file: Express.Multer.File, cb) {
+    cb(null, uploadsDir);
   },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix + path.extname(file.originalname));
+  filename: function (req: Express.Request, file: Express.Multer.File, cb) {
+    cb(null, generateUniqueFilename(file.originalname));
   },
 });
 
-// Filtro de archivos permitidos
-const fileFilter = (
+// Validar tipos de archivos permitidos
+const validateFileType = (
   req: Express.Request,
   file: Express.Multer.File,
-  cb: multer.FileFilterCallback,
+  cb: multer.FileFilterCallback
 ) => {
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+  // Lista de mimetypes permitidos
+  const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
-  if (allowedTypes.includes(file.mimetype)) {
+  // Lista de extensiones permitidas
+  const allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+
+  const mimetype = file.mimetype.toLowerCase();
+  const extension = path.extname(file.originalname).toLowerCase();
+
+  // Verificar tanto el mimetype como la extensión
+  if (allowedMimeTypes.includes(mimetype) && allowedExtensions.includes(extension)) {
     cb(null, true);
   } else {
-    cb(new Error('Solo se permiten imágenes en formato JPEG, JPG y PNG'));
+    cb(new AppError(`Solo se permiten imágenes en formato JPEG, JPG, PNG y WEBP`, 400));
   }
 };
 
 // Crear middleware de multer
 export const upload = multer({
   storage,
-  fileFilter,
+  fileFilter: validateFileType,
   limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB máximo
+    fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760'), // 10MB por defecto
+    files: 10, // Máximo 10 archivos simultáneos
   },
 });
+
+// Función para eliminar archivos de forma segura
+export const safelyDeleteFile = (filePath: string): boolean => {
+  try {
+    // Verificar que el archivo existe
+    if (fs.existsSync(filePath)) {
+      // Verificar que el archivo está dentro de los directorios permitidos
+      const normalizedPath = path.normalize(filePath);
+      const isInTempDir = normalizedPath.startsWith(path.normalize(tempDir));
+
+      if (!isInTempDir) {
+        console.error(`Intento de eliminar archivo fuera del directorio temporal: ${filePath}`);
+        return false;
+      }
+
+      // Eliminar el archivo
+      fs.unlinkSync(filePath);
+      return true;
+    }
+    return false;
+  } catch (error) {
+    console.error(`Error al eliminar archivo ${filePath}:`, error);
+    return false;
+  }
+};
