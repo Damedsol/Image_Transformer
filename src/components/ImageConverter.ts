@@ -1,6 +1,7 @@
 import { ImageInfo, ConversionOptions, ConversionStatus } from '../types/image';
 import { DropZoneElement, ConversionOptionsElement } from '../types/components';
-import { prepareImageFile, simulateFileUpload } from '../utils/fileUtils';
+import { prepareImageFile } from '../utils/fileUtils';
+import { convertImagesAPI } from '../utils/api';
 
 /**
  * Componente principal para el conversor de imágenes
@@ -187,7 +188,7 @@ export class ImageConverter extends HTMLElement {
       // Cambiamos el estado a procesando
       this.updateStatus('processing');
 
-      // Simulamos la carga de archivos (en una app real, esto enviaría los archivos al servidor)
+      // Actualizar la UI para mostrar que estamos procesando
       const convertButton = this.querySelector('#convert-button') as HTMLButtonElement;
       if (convertButton) {
         convertButton.disabled = true;
@@ -200,15 +201,15 @@ export class ImageConverter extends HTMLElement {
         `;
       }
 
-      // Simulamos la conversión en el servidor
-      const downloadUrls = await simulateFileUpload(this.images, this.options);
+      // Llamar a la API para convertir las imágenes
+      const zipUrl = await convertImagesAPI(this.images, this.options);
 
       // Actualizamos el estado
       this.updateStatus('success');
 
       // Anunciar para lectores de pantalla
       this.announceStatus(
-        `${this.images.length} imagen${this.images.length > 1 ? 'es' : ''} convertida${this.images.length > 1 ? 's' : ''} correctamente. Las descargas están disponibles.`,
+        `${this.images.length} imagen${this.images.length > 1 ? 'es' : ''} convertida${this.images.length > 1 ? 's' : ''} correctamente. El archivo ZIP está disponible para descarga.`,
       );
 
       // Mostramos mensaje de éxito
@@ -217,8 +218,8 @@ export class ImageConverter extends HTMLElement {
         'success',
       );
 
-      // En una app real, aquí se redireccionaría a los URLs de descarga
-      this.simulateDownloads(downloadUrls);
+      // Mostrar enlace de descarga del ZIP
+      this.createDownloadLink(zipUrl);
 
       // Restauramos el botón
       if (convertButton) {
@@ -243,10 +244,10 @@ export class ImageConverter extends HTMLElement {
   }
 
   /**
-   * Simula la descarga de archivos (solo para desarrollo frontend)
+   * Crea un enlace para descargar el archivo ZIP
    */
-  private simulateDownloads(urls: string[]) {
-    // Creamos un contenedor para los enlaces de descarga
+  private createDownloadLink(zipUrl: string) {
+    // Creamos un contenedor para el enlace de descarga
     const downloadsContainer = document.createElement('div');
     downloadsContainer.className = 'downloads-container';
     downloadsContainer.setAttribute('role', 'region');
@@ -255,47 +256,18 @@ export class ImageConverter extends HTMLElement {
     downloadsContainer.innerHTML = `
         <h3 id="download-heading">Descargas disponibles</h3>
         <ul class="downloads-list" aria-labelledby="download-heading">
-            ${urls
-              .map(
-                (url, index) => `
-                        <li>
-                            <a href="#" class="download-link" data-index="${index}" aria-label="Descargar ${this.images[index]?.name || `Imagen ${index + 1}`} en formato ${this.options.format}">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                                    <polyline points="7 10 12 15 17 10"></polyline>
-                                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                                </svg>
-                                ${this.images[index]?.name || `Imagen ${index + 1}`} (${this.options.format})
-                            </a>
-                        </li>
-                    `,
-              )
-              .join('')}
+            <li>
+                <a href="${zipUrl}" class="download-link" target="_blank" aria-label="Descargar todas las imágenes convertidas en formato ZIP">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    Descargar todas las imágenes (ZIP)
+                </a>
+            </li>
         </ul>
     `;
-
-    // Agregamos event listeners para simular descargas
-    const downloadLinks = downloadsContainer.querySelectorAll('.download-link');
-    downloadLinks.forEach((link) => {
-      link.addEventListener('click', (e) => {
-        e.preventDefault();
-        const index = parseInt(
-          (e.currentTarget as HTMLElement).getAttribute('data-index') || '0',
-          10,
-        );
-        const fileName = this.images[index]?.name || `Imagen ${index + 1}`;
-        this.showMessage(`Descarga iniciada: ${fileName}`, 'success');
-        this.announceStatus(`Descargando ${fileName} en formato ${this.options.format}`);
-      });
-
-      // Mejora de accesibilidad para navegación por teclado
-      link.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          (e.currentTarget as HTMLElement).click();
-        }
-      });
-    });
 
     // Buscamos si ya existe un contenedor de descargas
     const existingContainer = this.querySelector('.downloads-container');
@@ -308,6 +280,15 @@ export class ImageConverter extends HTMLElement {
         actionsContainer.insertBefore(downloadsContainer, actionsContainer.firstChild);
       }
     }
+  }
+
+  /**
+   * Simula la descarga de archivos (solo para desarrollo frontend)
+   */
+  private simulateDownloads(urls: string[]) {
+    // Este método se mantiene por compatibilidad, pero ahora
+    // utilizamos createDownloadLink para manejar la descarga del ZIP
+    console.log('Método legacy: simulateDownloads', urls);
   }
 
   /**

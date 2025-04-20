@@ -3,6 +3,7 @@ import './components/DropZone';
 import './components/ImagePreview';
 import './components/ConversionOptions';
 import './components/ImageConverter';
+import './utils/api';
 import { setupOfflineDetection } from './utils/serviceWorkerRegistration';
 import {
   prefersDarkMode,
