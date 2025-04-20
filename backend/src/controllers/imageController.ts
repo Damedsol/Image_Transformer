@@ -3,9 +3,10 @@ import path from 'path';
 import fs from 'fs';
 import { z } from 'zod';
 import { processImage, createZipFromImages, cleanTempFiles } from '../utils/imageProcessor';
-import { ConversionOptions, JwtPayload } from '../utils/types';
+import { ConversionOptions } from '../utils/types';
 import { AppError } from '../utils/apiError';
 import { safelyDeleteFile } from '../middlewares/uploadMiddleware';
+import { auditLogger } from '../utils/auditLogger';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -13,14 +14,14 @@ dotenv.config();
 
 // Configuración de límites
 const MAX_FILES_PER_REQUEST = parseInt(process.env.MAX_FILES_PER_REQUEST || '5');
-const DAILY_QUOTA_PER_USER = parseInt(process.env.DAILY_QUOTA_PER_USER || '100');
+const DAILY_QUOTA_PER_IP = parseInt(process.env.DAILY_QUOTA_PER_IP || '100');
 
 // Almacenamiento en memoria para cuotas (en producción usar Redis o base de datos)
-interface UserQuota {
+interface IPQuota {
   count: number;
   resetAt: Date;
 }
-const userQuotas = new Map<string, UserQuota>();
+const ipQuotas = new Map<string, IPQuota>();
 
 // Esquema de validación para opciones de conversión
 const formatSchema = z.enum(['jpeg', 'png', 'webp', 'avif', 'gif']);
@@ -32,38 +33,33 @@ const conversionOptionsSchema = z.object({
   maintainAspectRatio: z.coerce.boolean().optional().default(true),
 });
 
-// Interfaz para extender Request con la propiedad user
-interface RequestWithUser extends Request {
-  user?: JwtPayload;
-}
-
 /**
- * Verificar y actualizar la cuota de un usuario
- * @returns true si el usuario tiene cuota disponible, false si ha excedido su cuota
+ * Verificar y actualizar la cuota de un IP
+ * @returns true si el IP tiene cuota disponible, false si ha excedido su cuota
  */
-const checkUserQuota = (userId: string): boolean => {
+const checkIPQuota = (ip: string): boolean => {
   // En un entorno de producción, esto debería persistirse en base de datos
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  let userQuota = userQuotas.get(userId);
+  let ipQuota = ipQuotas.get(ip);
 
   // Si no existe la cuota o es de un día anterior, resetear
-  if (!userQuota || userQuota.resetAt < today) {
-    userQuota = {
+  if (!ipQuota || ipQuota.resetAt < today) {
+    ipQuota = {
       count: 0,
       resetAt: today,
     };
   }
 
   // Verificar si ha excedido la cuota
-  if (userQuota.count >= DAILY_QUOTA_PER_USER) {
+  if (ipQuota.count >= DAILY_QUOTA_PER_IP) {
     return false;
   }
 
   // Actualizar contador
-  userQuota.count += 1;
-  userQuotas.set(userId, userQuota);
+  ipQuota.count += 1;
+  ipQuotas.set(ip, ipQuota);
 
   return true;
 };
@@ -88,11 +84,22 @@ export const convertImages = async (req: Request, res: Response) => {
       );
     }
 
-    // Verificar cuota de usuario si está autenticado
-    const userId = (req as RequestWithUser).user?.userId || req.ip || 'anonymous';
-    if (!checkUserQuota(userId)) {
+    // Obtener IP del cliente
+    const clientIP = req.ip || 'unknown';
+
+    // Verificar cuota de IP
+    if (!checkIPQuota(clientIP)) {
+      auditLogger.log({
+        ip: clientIP,
+        action: 'QUOTA_EXCEEDED',
+        details: {
+          limit: DAILY_QUOTA_PER_IP,
+          userAgent: req.headers['user-agent'] || 'unknown',
+        },
+      });
+
       throw new AppError(
-        `Ha excedido su cuota diaria de procesamiento (${DAILY_QUOTA_PER_USER} imágenes)`,
+        `Ha excedido su cuota diaria de procesamiento (${DAILY_QUOTA_PER_IP} imágenes)`,
         429,
         { code: 'QUOTA_EXCEEDED' }
       );
@@ -145,10 +152,16 @@ export const convertImages = async (req: Request, res: Response) => {
     // Devolver la URL para descargar el ZIP
     const zipUrl = `/temp/output/${path.basename(zipPath)}`;
 
-    // Registrar uso para auditoría si está habilitado
-    if (process.env.ENABLE_AUDIT_LOG === 'true') {
-      // console.log(`[AUDIT] Usuario ${userId} procesó ${req.files.length} imágenes a formato ${options.format}`);
-    }
+    // Registrar uso para auditoría
+    auditLogger.log({
+      ip: clientIP,
+      action: 'IMAGE_CONVERSION_SUCCESS',
+      details: {
+        numImages: req.files.length,
+        format: options.format,
+        userAgent: req.headers['user-agent'] || 'unknown',
+      },
+    });
 
     // Preparar respuesta
     const responseData = {
@@ -171,6 +184,18 @@ export const convertImages = async (req: Request, res: Response) => {
   } catch (error) {
     console.error('Error al convertir imágenes:', error);
 
+    // Registrar error en audit log
+    if (req && req.ip) {
+      auditLogger.log({
+        ip: req.ip || 'unknown',
+        action: 'IMAGE_CONVERSION_ERROR',
+        details: {
+          errorMessage: error instanceof Error ? error.message : 'Error desconocido',
+          userAgent: req.headers ? req.headers['user-agent'] || 'unknown' : 'unknown',
+        },
+      });
+    }
+
     // Si es un AppError, usamos su estructura
     if (error instanceof AppError) {
       res.status(error.statusCode).json({
@@ -187,7 +212,7 @@ export const convertImages = async (req: Request, res: Response) => {
         success: false,
         error: {
           message: 'Error al procesar las imágenes',
-          details: (error as Error).message,
+          details: error instanceof Error ? error.message : 'Error desconocido',
         },
       });
     }
@@ -210,7 +235,7 @@ export const getFormats = (_req: Request, res: Response) => {
       limits: {
         maxFilesPerRequest: MAX_FILES_PER_REQUEST,
         maxFileSize: parseInt(process.env.MAX_FILE_SIZE || '5242880'),
-        dailyQuota: DAILY_QUOTA_PER_USER,
+        dailyQuota: DAILY_QUOTA_PER_IP,
         maxDimensions: {
           width: parseInt(process.env.MAX_IMAGE_WIDTH || '4000'),
           height: parseInt(process.env.MAX_IMAGE_HEIGHT || '4000'),
