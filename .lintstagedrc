@@ -14,7 +14,7 @@
     "prettier --write"
   ],
   "backend/src/**/*.ts": [
-    "cd backend && prettier --write",
-    "cd backend && eslint --fix"
+    "prettier --write",
+    "eslint --fix"
   ]
 }
