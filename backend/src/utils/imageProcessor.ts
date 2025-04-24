@@ -5,8 +5,12 @@ import archiver from 'archiver';
 import { ConversionOptions, ImageFile, ConversionResult } from './types';
 import { AppError } from './apiError';
 import dotenv from 'dotenv';
-import { ImageFormat, ProcessedImage } from './types.js';
-import { ApiError } from './apiError.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+
+// Crear equivalentes a __dirname y __filename para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Cargar variables de entorno
 dotenv.config();
@@ -22,7 +26,7 @@ try {
   if (typeof sharp.pipeline?.cache === 'function') {
     sharp.pipeline.cache(false); // Desactivar caché de pipeline si está disponible
   }
-} catch (err) {
+} catch {
   // Error silenciado intencionalmente - la propiedad puede no estar disponible en todas las versiones
 }
 
@@ -320,7 +324,7 @@ export const cleanTempFiles = (
               });
             }
           });
-        } catch (error) {
+        } catch {
           // Error silenciado intencionalmente
         }
       } else {

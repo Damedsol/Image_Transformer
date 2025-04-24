@@ -1,5 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Configuración para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export interface AuditLogEntry {
   timestamp: string;
@@ -32,7 +37,7 @@ export class AuditLogger {
     if (!fs.existsSync(logDir)) {
       try {
         fs.mkdirSync(logDir, { recursive: true });
-      } catch (error) {
+      } catch {
         this.enabled = false;
         this.logPath = '';
         return;
@@ -59,7 +64,7 @@ export class AuditLogger {
 
     try {
       fs.appendFileSync(this.logPath, JSON.stringify(logEntry) + '\n', { encoding: 'utf8' });
-    } catch (error) {
+    } catch {
       // Error silenciado intencionalmente
     }
   }

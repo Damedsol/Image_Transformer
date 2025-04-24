@@ -3,8 +3,13 @@ import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
 import sharp from 'sharp';
+import { fileURLToPath } from 'url';
 // import { Request } from 'express';
-import { AppError } from '../utils/apiError';
+import { AppError } from '../utils/apiError.js';
+
+// Configuración para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Crear directorios necesarios
 const tempDir = path.join(__dirname, '../../temp');
@@ -61,7 +66,7 @@ const validateImage = async (file: Express.Multer.File): Promise<boolean> => {
     // Verificar firma real del archivo usando sharp
     await sharp(file.path).metadata();
     return true;
-  } catch (error) {
+  } catch {
     // Si sharp no puede procesar el archivo, no es una imagen válida
     console.error(`Archivo inválido detectado: ${file.originalname}`);
     return false;
@@ -95,9 +100,9 @@ const validateFileType = (
           safelyDeleteFile(file.path);
           console.error(`Contenido de imagen inválido eliminado: ${file.originalname}`);
         }
-      } catch (error) {
+      } catch {
         safelyDeleteFile(file.path);
-        console.error(`Error validando imagen: ${file.originalname}`, error);
+        console.error(`Error validando imagen: ${file.originalname}`);
       }
     });
 
