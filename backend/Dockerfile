@@ -11,10 +11,18 @@ RUN npm install -g pnpm
 # Etapa de desarrollo
 FROM base AS development
 ENV NODE_ENV=development
+# Instalar tsx globalmente para hot-reloading
+RUN npm install -g tsx
 RUN pnpm install
-COPY . .
+# No copiar los archivos al inicio, los montaremos como volumen
 EXPOSE 3001
-CMD ["sh", "-c", "pnpm run dev"]
+# Configurar tsx para mejor hot-reloading
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+ENV TSX_DISABLE_CACHE=false
+ENV DEBUG=tsx:*
+# Usar tsx para ejecutar la aplicación
+CMD ["tsx", "watch", "--clear-screen=false", "src/index.ts"]
 
 # Etapa de compilación para producción
 FROM base AS builder

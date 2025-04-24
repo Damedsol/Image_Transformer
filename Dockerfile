@@ -12,10 +12,14 @@ RUN npm install -g pnpm
 FROM base AS development
 ENV NODE_ENV=development
 RUN pnpm install
-COPY . .
+# No copiar los archivos al inicio, los montaremos como volumen
 EXPOSE 5173
-# Usar sh para mejor compatibilidad entre sistemas
-CMD ["sh", "-c", "pnpm run dev -- --host 0.0.0.0"]
+# Configurar Vite para observar cambios y habilitar HMR
+ENV CHOKIDAR_USEPOLLING=true
+ENV WATCHPACK_POLLING=true
+ENV FAST_REFRESH=true
+ENV VITE_HMR=true
+CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0", "--watch"]
 
 # Etapa de compilación para producción
 FROM base AS builder
