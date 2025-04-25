@@ -5,7 +5,7 @@ import { processImage, createZipFromImages, cleanTempFiles } from '../utils/imag
 import { ConversionOptions, ConversionResult } from '../utils/types.js';
 import { AppError } from '../utils/apiError.js';
 import { safelyDeleteFile } from '../middlewares/uploadMiddleware.js';
-import { auditLogger } from '../utils/auditLogger.js';
+import logger from '../utils/logger.js';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -90,14 +90,15 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
 
     // Verificar cuota de IP
     if (!checkIPQuota(clientIP)) {
-      auditLogger.log({
-        ip: clientIP,
-        action: 'QUOTA_EXCEEDED',
-        details: {
+      logger.warn(
+        {
+          ip: clientIP,
+          action: 'QUOTA_EXCEEDED',
           limit: DAILY_QUOTA_PER_IP,
           userAgent: req.headers['user-agent'] || 'unknown',
         },
-      });
+        'Intento de exceder cuota diaria'
+      );
 
       throw new AppError(
         `Ha excedido su cuota diaria de procesamiento (${DAILY_QUOTA_PER_IP} imágenes)`,
@@ -151,7 +152,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     allTempFiles.push(zipPath);
 
     // --- Limpieza Inmediata de Originales y Procesados ---
-    console.log('Limpiando archivos originales y procesados...');
+    logger.debug('Limpiando archivos originales y procesados...');
     // Eliminar archivos originales
     req.files.forEach(file => {
       safelyDeleteFile(file.path);
@@ -160,22 +161,24 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     processedImages.forEach(img => {
       safelyDeleteFile(img.path);
     });
-    console.log('Limpieza inmediata completada.');
+    logger.debug('Limpieza inmediata completada.');
     // ------------------------------------------------------
 
     // Devolver la URL para descargar el ZIP
     const zipUrl = `/temp/output/${path.basename(zipPath)}`;
 
-    // Registrar uso para auditoría
-    auditLogger.log({
-      ip: clientIP,
-      action: 'IMAGE_CONVERSION_SUCCESS',
-      details: {
+    // Registrar uso para auditoría con logger.info
+    logger.info(
+      {
+        ip: clientIP,
+        action: 'IMAGE_CONVERSION_SUCCESS',
         numImages: req.files.length,
         format: options.format,
         userAgent: req.headers['user-agent'] || 'unknown',
+        zipFile: path.basename(zipPath),
       },
-    });
+      'Conversión de imágenes completada exitosamente'
+    );
 
     // Preparar respuesta
     const responseData = {
@@ -194,31 +197,27 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     res.json(responseData);
 
     // Configurar eliminación RETRASADA SOLO para el archivo ZIP
-    console.log(`Programando limpieza retrasada para: ${zipPath}`);
+    logger.debug({ zipFile: zipPath }, `Programando limpieza retrasada para: ${zipPath}`);
     cleanTempFiles([zipPath]); // Solo el ZIP
   } catch (error: unknown) {
-    console.error('Error al convertir imágenes:', error);
-
-    // Registrar error en audit log
-    if (req && req.ip) {
-      auditLogger.log({
-        ip: req.ip || 'unknown',
-        action: 'IMAGE_CONVERSION_ERROR',
-        details: {
-          errorMessage: error instanceof Error ? error.message : 'Error desconocido',
-          userAgent: req.headers ? req.headers['user-agent'] || 'unknown' : 'unknown',
-        },
-      });
-    }
+    logger.error(
+      {
+        err: error,
+        ip: req?.ip,
+        userAgent: req?.headers ? req.headers['user-agent'] : undefined,
+      },
+      'Error durante la conversión de imágenes'
+    );
 
     // Limpieza INMEDIATA de TODOS los archivos temporales en caso de error
-    console.warn(
+    logger.warn(
+      { numFiles: allTempFiles.length },
       'Error detectado. Iniciando limpieza inmediata de todos los archivos temporales...'
     );
     allTempFiles.forEach(filePath => {
       safelyDeleteFile(filePath);
     });
-    console.warn('Limpieza por error completada.');
+    logger.warn('Limpieza por error completada.');
 
     // Enviar respuesta de error
     if (error instanceof AppError) {

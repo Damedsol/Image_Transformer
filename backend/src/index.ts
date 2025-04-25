@@ -12,6 +12,7 @@ import {
   preventClickjacking,
   validateContentType,
 } from './middlewares/securityMiddleware.js';
+import logger from './utils/logger.js';
 
 // Calcular __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -74,17 +75,15 @@ app.use(errorHandler);
 
 // Iniciar el servidor
 app.listen(PORT, () => {
-  // console.log(`🔒 Servidor seguro corriendo en puerto ${PORT}`);
-  // console.log(`🌍 Entorno: ${process.env.NODE_ENV}`);
+  logger.info({ port: PORT, env: process.env.NODE_ENV }, `Servidor iniciado en puerto ${PORT}`);
 });
 
 // Manejar errores no capturados
 process.on('uncaughtException', error => {
-  console.error('Error no capturado:', error);
-  // En producción, aquí podríamos notificar a un servicio de monitoreo
+  logger.fatal({ err: error }, 'Error no capturado (uncaughtException). Saliendo...');
+  process.exit(1);
 });
 
-process.on('unhandledRejection', reason => {
-  console.error('Promesa rechazada no manejada:', reason);
-  // En producción, aquí podríamos notificar a un servicio de monitoreo
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error({ reason, promise }, 'Promesa rechazada no manejada (unhandledRejection)');
 });
