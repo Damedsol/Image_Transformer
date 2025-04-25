@@ -2,8 +2,8 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import archiver from 'archiver';
-import { ConversionOptions, ImageFile, ConversionResult } from './types';
-import { AppError } from './apiError';
+import { ConversionOptions, ImageFile, ConversionResult } from './types.js';
+import { AppError } from './apiError.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -21,14 +21,6 @@ const sharpConcurrency = parseInt(process.env.SHARP_CONCURRENCY || '1');
 sharp.cache(false); // Desactivar caché para evitar fugas de memoria
 sharp.concurrency(sharpConcurrency); // Limitar procesamiento concurrente
 sharp.simd(false); // Desactivar aceleración SIMD para reducir uso de memoria
-try {
-  // Verificamos si la propiedad pipeline existe antes de usarla
-  if (typeof sharp.pipeline?.cache === 'function') {
-    sharp.pipeline.cache(false); // Desactivar caché de pipeline si está disponible
-  }
-} catch {
-  // Error silenciado intencionalmente - la propiedad puede no estar disponible en todas las versiones
-}
 
 // Obtener límites máximos de dimensiones
 const MAX_WIDTH = parseInt(process.env.MAX_IMAGE_WIDTH || '4000');
@@ -116,10 +108,11 @@ const processImageWithLimits = async (
     sequentialRead: true, // Menor uso de memoria para imágenes grandes
   }).metadata();
 
-  // Verificar dimensiones máximas de la imagen original
+  // Verificar dimensiones máximas de la imagen original (usar ?. y ??)
   if (
-    (imageInfo.width && imageInfo.width > MAX_WIDTH) ||
-    (imageInfo.height && imageInfo.height > MAX_HEIGHT)
+    (imageInfo.width ?? 0) > MAX_WIDTH ||
+    (imageInfo.height ?? 0) > MAX_HEIGHT ||
+    (imageInfo.width ?? 0) * (imageInfo.height ?? 0) > MAX_DIMENSIONS
   ) {
     throw new AppError(
       `Dimensiones de imagen exceden el límite permitido (${MAX_WIDTH}x${MAX_HEIGHT})`,
@@ -133,25 +126,32 @@ const processImageWithLimits = async (
   let height = options.height;
 
   // Validar dimensiones solicitadas
-  if (width && width > MAX_WIDTH) {
+  if (width !== undefined && width > MAX_WIDTH) {
     width = MAX_WIDTH;
   }
 
-  if (height && height > MAX_HEIGHT) {
+  if (height !== undefined && height > MAX_HEIGHT) {
     height = MAX_HEIGHT;
   }
 
-  // Si no se especifica width o height, usar las dimensiones originales
-  if (!width && imageInfo.width) {
-    width = Math.min(imageInfo.width, MAX_WIDTH);
+  // Si no se especifica width o height, usar las dimensiones originales (usar ?. y ??)
+  if (width === undefined) {
+    width = Math.min(imageInfo.width ?? MAX_WIDTH, MAX_WIDTH);
   }
 
-  if (!height && imageInfo.height) {
-    height = Math.min(imageInfo.height, MAX_HEIGHT);
+  if (height === undefined) {
+    height = Math.min(imageInfo.height ?? MAX_HEIGHT, MAX_HEIGHT);
   }
 
-  // Mantener relación de aspecto si se especifica
-  if (options.maintainAspectRatio && width && height && imageInfo.width && imageInfo.height) {
+  // Mantener relación de aspecto si se especifica (usar ?. y verificaciones)
+  if (
+    options.maintainAspectRatio &&
+    width !== undefined &&
+    height !== undefined &&
+    imageInfo.width !== undefined &&
+    imageInfo.height !== undefined &&
+    imageInfo.height > 0
+  ) {
     const aspectRatio = imageInfo.width / imageInfo.height;
     if (width / height > aspectRatio) {
       width = Math.round(height * aspectRatio);
@@ -162,10 +162,10 @@ const processImageWithLimits = async (
 
   // Crear nombre para archivo procesado
   const fileNameWithoutExt = path.basename(
-    imageFile.originalname,
+    imageFile.originalname, // originalname debería estar presente
     path.extname(imageFile.originalname)
   );
-  const outputFileName = `${fileNameWithoutExt}_${width}x${height}.${options.format}`;
+  const outputFileName = `${fileNameWithoutExt}_${width ?? 'auto'}x${height ?? 'auto'}.${options.format}`;
   const outputPath = path.join(outputDir, outputFileName);
 
   // Verificar que la ruta de salida está dentro del directorio permitido
@@ -181,7 +181,7 @@ const processImageWithLimits = async (
   });
 
   // Aplicar redimensionamiento si se especifican dimensiones
-  if (width || height) {
+  if (width !== undefined || height !== undefined) {
     sharpInstance.resize({
       width,
       height,
@@ -191,16 +191,22 @@ const processImageWithLimits = async (
   }
 
   // Determinar calidad basada en el tamaño del archivo original para optimización
-  let quality = options.quality || 80;
-  const stats = fs.statSync(imageFile.path);
-  const fileSizeMB = stats.size / (1024 * 1024);
+  let quality = options.quality ?? 80; // Usar ??
+  let fileSizeMB = 0;
+  try {
+    const stats = fs.statSync(imageFile.path);
+    fileSizeMB = stats.size / (1024 * 1024);
+  } catch (statError) {
+    console.warn(`No se pudo obtener el tamaño del archivo ${imageFile.path}:`, statError);
+    // Continuar con la calidad por defecto si no se puede obtener el tamaño
+  }
 
   // Ajuste dinámico de calidad basado en tamaño
   if (fileSizeMB > 4) {
     quality = Math.min(quality, 70); // Reducir calidad para archivos grandes
   }
 
-  // Aplicar opciones de formato y calidad
+  // Aplicar opciones de formato y calidad (options.format debería estar presente)
   switch (options.format) {
     case 'jpeg':
       sharpInstance.jpeg({ quality });
@@ -230,9 +236,9 @@ const processImageWithLimits = async (
 
   return {
     path: outputPath,
-    format: options.format,
-    width: processedInfo.width || width || 0,
-    height: processedInfo.height || height || 0,
+    format: options.format, // options.format debería estar presente
+    width: processedInfo.width ?? width ?? 0, // Usar ??
+    height: processedInfo.height ?? height ?? 0, // Usar ??
   };
 };
 
@@ -308,7 +314,7 @@ export const createZipFromImages = async (
 export const cleanTempFiles = (
   filePaths: string[],
   delayMs = parseInt(process.env.TEMP_FILES_CLEANUP_MS || '300000')
-) => {
+): void => {
   setTimeout(() => {
     filePaths.forEach(filePath => {
       // Verificar que el archivo sigue dentro del directorio temporal

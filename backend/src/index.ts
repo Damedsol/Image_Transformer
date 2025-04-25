@@ -2,15 +2,15 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import dotenv from 'dotenv';
-import { imageRoutes } from './routes/imageRoutes';
-import { errorHandler } from './middlewares/errorMiddleware';
+import { imageRoutes } from './routes/imageRoutes.js';
+import { errorHandler } from './middlewares/errorMiddleware.js';
 import {
   configureHelmet,
   apiRateLimiter,
   protectFromPrototypePollution,
   preventClickjacking,
   validateContentType,
-} from './middlewares/securityMiddleware';
+} from './middlewares/securityMiddleware.js';
 
 // Cargar variables de entorno
 dotenv.config();
@@ -45,10 +45,13 @@ app.use(express.json({ limit: '1mb' }));
 app.use(validateContentType(['application/json', 'multipart/form-data']));
 
 // Ruta para servir archivos temporales (solo archivos permitidos)
-app.use('/temp', (req, res, next) => {
+app.use('/temp', (req, res, next): void => {
   // Solo permitir archivos con extensiones seguras
-  if (req.path.match(/\.(zip|jpe?g|png|webp|avif|gif)$/i)) {
-    return express.static(path.join(__dirname, '../temp'))(req, res, next);
+  if (/\.(zip|jpe?g|png|webp|avif|gif)$/i.exec(req.path)) {
+    // Usar express.static directamente aquí podría causar problemas si no se llama a next
+    // Es mejor dejar que el siguiente middleware (si existe) lo maneje o enviar la respuesta directamente
+    express.static(path.join(__dirname, '../temp'))(req, res, next);
+    return; // Asegurarse de que no se ejecute el res.status(403) después
   }
   res.status(403).send('Acceso denegado');
 });
@@ -57,7 +60,7 @@ app.use('/temp', (req, res, next) => {
 app.use('/api', imageRoutes);
 
 // Ruta por defecto
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({ message: 'Image Transformer API' });
 });
 

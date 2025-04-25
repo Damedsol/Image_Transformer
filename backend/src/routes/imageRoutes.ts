@@ -1,10 +1,10 @@
 import express from 'express';
-import { convertImages, getFormats } from '../controllers/imageController';
-import { upload } from '../middlewares/uploadMiddleware';
-import { errorHandler } from '../middlewares/errorMiddleware';
-import { apiRateLimiter } from '../middlewares/securityMiddleware';
+import { convertImages, getFormats } from '../controllers/imageController.js';
+import { upload } from '../middlewares/uploadMiddleware.js';
+import { errorHandler } from '../middlewares/errorMiddleware.js';
+import { apiRateLimiter } from '../middlewares/securityMiddleware.js';
 import rateLimit from 'express-rate-limit';
-import { AppError } from '../utils/apiError';
+import { AppError } from '../utils/apiError.js';
 
 const router = express.Router();
 
@@ -18,7 +18,7 @@ const convertRateLimiter = rateLimit({
   keyGenerator: req => {
     return `${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
   },
-  handler: (req, res, next) => {
+  handler: (_req, _res, next) => {
     next(
       new AppError('Demasiadas solicitudes de conversión. Por favor, intente más tarde.', 429, {
         code: 'RATE_LIMIT_EXCEEDED',

@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { ParsedQs } from 'qs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import { AppError } from '../utils/apiError';
+import { AppError } from '../utils/apiError.js';
 
 /**
  * Configuración de Helmet con opciones de seguridad
  */
-export const configureHelmet = () => {
+export const configureHelmet = (): RequestHandler => {
   return helmet({
     contentSecurityPolicy: {
       directives: {
@@ -48,7 +49,7 @@ export const apiRateLimiter = rateLimit({
   keyGenerator: req => {
     return `${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
   },
-  handler: (req: Request, res: Response, next: NextFunction) => {
+  handler: (_req: Request, _res: Response, next: NextFunction) => {
     next(AppError.tooManyRequests());
   },
 });
@@ -56,7 +57,11 @@ export const apiRateLimiter = rateLimit({
 /**
  * Middleware para prevenir vulnerabilidades de Prototype Pollution
  */
-export const protectFromPrototypePollution = (req: Request, res: Response, next: NextFunction) => {
+export const protectFromPrototypePollution = (
+  req: Request,
+  _res: Response,
+  next: NextFunction
+): void => {
   const purifyObject = (obj: Record<string, unknown>): Record<string, unknown> => {
     if (!obj || typeof obj !== 'object') return obj;
 
@@ -88,7 +93,7 @@ export const protectFromPrototypePollution = (req: Request, res: Response, next:
 
   // Purificar query params
   if (req.query && typeof req.query === 'object') {
-    req.query = purifyObject(req.query);
+    req.query = purifyObject(req.query as Record<string, unknown>) as ParsedQs;
   }
 
   next();
@@ -97,8 +102,8 @@ export const protectFromPrototypePollution = (req: Request, res: Response, next:
 /**
  * Middleware para validar tipos MIME
  */
-export const validateContentType = (allowedTypes: string[]) => {
-  return (req: Request, res: Response, next: NextFunction) => {
+export const validateContentType = (allowedTypes: string[]): RequestHandler => {
+  return (req: Request, _res: Response, next: NextFunction): void => {
     const contentType = req.headers['content-type'];
 
     if (
@@ -121,7 +126,7 @@ export const validateContentType = (allowedTypes: string[]) => {
 /**
  * Middleware para prevenir ataques de clickjacking
  */
-export const preventClickjacking = (req: Request, res: Response, next: NextFunction) => {
+export const preventClickjacking = (_req: Request, res: Response, next: NextFunction): void => {
   res.setHeader('X-Frame-Options', 'DENY');
   next();
 };

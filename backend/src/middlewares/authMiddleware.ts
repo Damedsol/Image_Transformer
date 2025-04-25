@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AppError } from '../utils/apiError';
-import { JwtPayload, UserRole } from '../utils/types';
+import { AppError } from '../utils/apiError.js';
+import { JwtPayload, UserRole } from '../utils/types.js';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -24,7 +24,7 @@ type EnhancedRequest = Request & {
 /**
  * Middleware para verificar token JWT
  */
-export const authenticateJwt = (req: EnhancedRequest, res: Response, next: NextFunction) => {
+export const authenticateJwt = (req: EnhancedRequest, _res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -55,7 +55,11 @@ export const authenticateJwt = (req: EnhancedRequest, res: Response, next: NextF
 /**
  * Middleware para verificar API Key
  */
-export const authenticateApiKey = (req: EnhancedRequest, res: Response, next: NextFunction) => {
+export const authenticateApiKey = (
+  req: EnhancedRequest,
+  _res: Response,
+  next: NextFunction
+): void => {
   const apiKey = req.headers['x-api-key'] as string;
 
   if (!apiKey) {
@@ -78,7 +82,7 @@ export const authenticateApiKey = (req: EnhancedRequest, res: Response, next: Ne
  * Middleware para verificar roles de usuario
  */
 export const requireRole = (allowedRoles: UserRole[]) => {
-  return (req: EnhancedRequest, res: Response, next: NextFunction) => {
+  return (req: EnhancedRequest, _res: Response, next: NextFunction): void => {
     // Verificar que el usuario esté autenticado
     if (!req.user) {
       return next(AppError.unauthorized());
@@ -96,7 +100,7 @@ export const requireRole = (allowedRoles: UserRole[]) => {
 /**
  * Middleware para limitar la tasa de solicitudes por IP
  */
-export const ipRateLimiter = (_req: Request, _res: Response, next: NextFunction) => {
+export const ipRateLimiter = (_req: Request, _res: Response, next: NextFunction): void => {
   // Aquí iría la lógica de limitación de tasa
   // Por simplicidad, este es un ejemplo básico
   // const ip = req.ip;

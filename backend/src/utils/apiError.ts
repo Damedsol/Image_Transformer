@@ -1,9 +1,9 @@
-import { ApiError } from './types';
+import { ApiError } from './types.js';
 
 /**
  * Clase para crear errores tipados y consistentes en la API
  */
-export class AppError implements ApiError {
+export class AppError extends Error implements ApiError {
   public readonly message: string;
   public readonly statusCode: number;
   public readonly code?: string;
@@ -12,6 +12,7 @@ export class AppError implements ApiError {
   public readonly name: string = 'AppError';
 
   constructor(message: string, statusCode: number, options?: { code?: string; details?: unknown }) {
+    super(message);
     this.message = message;
     this.statusCode = statusCode;
     this.code = options?.code;

@@ -1,12 +1,13 @@
-import { Request, Response, NextFunction } from 'express';
-import { ApiError } from '../utils/types';
+import { Request, Response, NextFunction, ErrorRequestHandler } from 'express';
+import { ApiError } from '../utils/types.js';
+import { AppError } from '../utils/apiError.js';
 
 /**
  * Middleware para manejar errores de forma centralizada
  */
-export const errorHandler = (
-  err: Error | ApiError,
-  req: Request,
+export const errorHandler: ErrorRequestHandler = (
+  err: Error | ApiError | AppError,
+  _req: Request,
   res: Response,
   _next: NextFunction
 ) => {
@@ -14,16 +15,14 @@ export const errorHandler = (
   console.error('Error:', err.message);
   console.error('Stack:', err.stack);
 
-  // Si es un ApiError personalizado, usar su código de estado y detalles
-  if ('statusCode' in err) {
-    const apiError = err as ApiError;
-    return res.status(apiError.statusCode).json({
+  // Si es un AppError personalizado, usar su código de estado y detalles
+  if (err instanceof AppError) {
+    return res.status(err.statusCode).json({
       success: false,
       error: {
-        message: apiError.message,
-        code: apiError.code,
-        details:
-          apiError.details && process.env.NODE_ENV === 'development' ? apiError.details : undefined,
+        message: err.message,
+        code: err.code,
+        details: err.details && process.env.NODE_ENV === 'development' ? err.details : undefined,
       },
     });
   }

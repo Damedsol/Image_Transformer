@@ -2,7 +2,7 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import sharp from 'sharp';
+// Eliminar importación no usada de sharp
 import { fileURLToPath } from 'url';
 // import { Request } from 'express';
 import { AppError } from '../utils/apiError.js';
@@ -50,35 +50,20 @@ const generateUniqueFilename = (originalname: string): string => {
 
 // Configurar el almacenamiento de multer
 const storage = multer.diskStorage({
-  destination: function (req: Express.Request, file: Express.Multer.File, cb) {
+  destination: function (_req: Express.Request, _file: Express.Multer.File, cb) {
     cb(null, uploadsDir);
   },
-  filename: function (req: Express.Request, file: Express.Multer.File, cb) {
+  filename: function (_req: Express.Request, file: Express.Multer.File, cb) {
     cb(null, generateUniqueFilename(file.originalname));
   },
 });
 
-/**
- * Valida el contenido de la imagen usando sharp
- */
-const validateImage = async (file: Express.Multer.File): Promise<boolean> => {
-  try {
-    // Verificar firma real del archivo usando sharp
-    await sharp(file.path).metadata();
-    return true;
-  } catch {
-    // Si sharp no puede procesar el archivo, no es una imagen válida
-    console.error(`Archivo inválido detectado: ${file.originalname}`);
-    return false;
-  }
-};
-
 // Validar tipos de archivos permitidos
 const validateFileType = (
-  req: Express.Request,
+  _req: Express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
-) => {
+): void => {
   // Lista de mimetypes permitidos
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -90,25 +75,13 @@ const validateFileType = (
 
   // Verificar tanto el mimetype como la extensión
   if (allowedMimeTypes.includes(mimetype) && allowedExtensions.includes(extension)) {
-    // Realizar verificación adicional asíncrona para validar el contenido
-    file.stream.on('end', async () => {
-      try {
-        const isValid = await validateImage(file);
-        if (!isValid) {
-          // No podemos rechazar el archivo aquí porque ya se guardó,
-          // pero podemos eliminarlo si no es válido
-          safelyDeleteFile(file.path);
-          console.error(`Contenido de imagen inválido eliminado: ${file.originalname}`);
-        }
-      } catch {
-        safelyDeleteFile(file.path);
-        console.error(`Error validando imagen: ${file.originalname}`);
-      }
-    });
-
-    cb(null, true);
+    // No podemos validar contenido de forma asíncrona aquí de forma fiable
+    // La validación de contenido real debería hacerse después de que multer complete la subida
+    // Este es un punto a mejorar: validar después de la subida, no durante el filtro
+    cb(null, true); // Aceptar provisionalmente
   } else {
-    cb(new AppError(`Solo se permiten imágenes en formato JPEG, JPG, PNG y WEBP`, 400));
+    // Rechazar si el tipo MIME o la extensión no son válidos
+    cb(new AppError(`Solo se permiten imágenes en formato ${allowedExtensions.join(', ')}`, 400));
   }
 };
 

@@ -1,12 +1,11 @@
-import { Request, Response, NextFunction } from 'express';
+import { Request, Response } from 'express';
 import path from 'path';
-import fs from 'fs';
 import { z } from 'zod';
-import { processImage, createZipFromImages, cleanTempFiles } from '../utils/imageProcessor';
-import { ConversionOptions } from '../utils/types';
-import { AppError } from '../utils/apiError';
-import { safelyDeleteFile } from '../middlewares/uploadMiddleware';
-import { auditLogger } from '../utils/auditLogger';
+import { processImage, createZipFromImages, cleanTempFiles } from '../utils/imageProcessor.js';
+import { ConversionOptions } from '../utils/types.js';
+import { AppError } from '../utils/apiError.js';
+import { safelyDeleteFile } from '../middlewares/uploadMiddleware.js';
+import { auditLogger } from '../utils/auditLogger.js';
 import dotenv from 'dotenv';
 
 // Cargar variables de entorno
@@ -67,7 +66,7 @@ const checkIPQuota = (ip: string): boolean => {
 /**
  * Convierte las imágenes según las opciones especificadas y devuelve un ZIP
  */
-export const convertImages = async (req: Request, res: Response) => {
+export const convertImages = async (req: Request, res: Response): Promise<void> => {
   // Lista de archivos temporales para limpiar
   const tempFilesToClean: string[] = [];
 
@@ -118,13 +117,13 @@ export const convertImages = async (req: Request, res: Response) => {
     const options: ConversionOptions = validationResult.data;
 
     // Añadir archivos originales a la lista de limpieza
-    (req.files as Express.Multer.File[]).forEach(file => {
+    req.files.forEach((file: Express.Multer.File) => {
       tempFilesToClean.push(file.path);
     });
 
     // Procesar cada imagen subida
     const processedImages = await Promise.all(
-      (req.files as Express.Multer.File[]).map(file =>
+      req.files.map((file: Express.Multer.File) =>
         processImage(
           {
             path: file.path,
@@ -181,7 +180,7 @@ export const convertImages = async (req: Request, res: Response) => {
 
     // Configurar eliminación de archivos temporales después de un tiempo prudencial
     cleanTempFiles(tempFilesToClean);
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Error al convertir imágenes:', error);
 
     // Registrar error en audit log
@@ -212,7 +211,7 @@ export const convertImages = async (req: Request, res: Response) => {
         success: false,
         error: {
           message: 'Error al procesar las imágenes',
-          details: error instanceof Error ? error.message : 'Error desconocido',
+          details: error instanceof Error ? error.message : 'Error desconocido genérico',
         },
       });
     }
@@ -227,7 +226,7 @@ export const convertImages = async (req: Request, res: Response) => {
 /**
  * Devuelve los formatos de imagen disponibles
  */
-export const getFormats = (_req: Request, res: Response) => {
+export const getFormats = (_req: Request, res: Response): void => {
   res.json({
     success: true,
     data: {
