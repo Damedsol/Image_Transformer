@@ -1,4 +1,4 @@
-import pino from 'pino';
+import pino from 'pino'; // Volver a importación ESM estándar
 import fs from 'fs'; // Importar fs
 import path from 'path'; // Importar path
 import { fileURLToPath } from 'url';
@@ -53,9 +53,9 @@ try {
   process.exit(1);
 }
 
-// Intentar inicializar pino.
-// Corrección: Usar pino.default ya que la importación directa no es reconocida como callable.
-const logger = (pino as any).default(pinoOptions, logDestination);
+// Usar pino directamente
+// @ts-expect-error: TS/Linter incorrectamente marca esto como no invocable con NodeNext
+const logger = pino(pinoOptions, logDestination);
 
 // Loggear información inicial
 logger.info('============================================');
