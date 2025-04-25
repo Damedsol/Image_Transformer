@@ -1,5 +1,4 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
-import { ParsedQs } from 'qs';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import { AppError } from '../utils/apiError.js';
@@ -56,44 +55,32 @@ export const apiRateLimiter = rateLimit({
 
 /**
  * Middleware para prevenir vulnerabilidades de Prototype Pollution
+ * Simplificado para evitar reasignar req.query y req.body
  */
 export const protectFromPrototypePollution = (
   req: Request,
   _res: Response,
   next: NextFunction
 ): void => {
-  const purifyObject = (obj: Record<string, unknown>): Record<string, unknown> => {
-    if (!obj || typeof obj !== 'object') return obj;
+  const dangerousProps = ['__proto__', 'constructor', 'prototype'];
 
-    // Eliminar propiedades peligrosas
-    const dangerousProps = ['__proto__', 'constructor', 'prototype'];
-    dangerousProps.forEach(prop => {
-      if (Object.prototype.hasOwnProperty.call(obj, prop)) {
-        delete obj[prop];
-      }
-    });
-
-    // Recursivamente purificar objeto
-    for (const key in obj) {
-      if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        const value = obj[key];
-        if (value && typeof value === 'object') {
-          obj[key] = purifyObject(value as Record<string, unknown>);
-        }
+  // Verificar y limpiar req.body (si existe y es objeto)
+  if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) {
+    for (const prop of dangerousProps) {
+      if (Object.prototype.hasOwnProperty.call(req.body, prop)) {
+        delete req.body[prop];
       }
     }
-
-    return obj;
-  };
-
-  // Purificar body si es un objeto
-  if (req.body && typeof req.body === 'object') {
-    req.body = purifyObject(req.body);
   }
 
-  // Purificar query params
+  // Verificar y limpiar req.query (si existe y es objeto)
   if (req.query && typeof req.query === 'object') {
-    req.query = purifyObject(req.query as Record<string, unknown>) as ParsedQs;
+    for (const prop of dangerousProps) {
+      // Necesitamos verificar el objeto req.query directamente
+      if (Object.prototype.hasOwnProperty.call(req.query, prop)) {
+        delete (req.query as any)[prop]; // Usar 'as any' temporalmente para permitir delete
+      }
+    }
   }
 
   next();
