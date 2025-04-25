@@ -285,10 +285,10 @@ export class ImageConverter extends HTMLElement {
   /**
    * Simula la descarga de archivos (solo para desarrollo frontend)
    */
-  private simulateDownloads(urls: string[]) {
+  private simulateDownloads(_urls: string[]) {
     // Este método se mantiene por compatibilidad, pero ahora
     // utilizamos createDownloadLink para manejar la descarga del ZIP
-    console.log('Método legacy: simulateDownloads', urls);
+    // console.log('Método legacy: simulateDownloads', urls);
   }
 
   /**

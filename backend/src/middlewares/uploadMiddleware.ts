@@ -2,9 +2,15 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import crypto from 'crypto';
-import sharp from 'sharp';
+// Eliminar importación no usada de sharp
+import { fileURLToPath } from 'url';
 // import { Request } from 'express';
-import { AppError } from '../utils/apiError';
+import { AppError } from '../utils/apiError.js';
+import logger from '../utils/logger.js'; // Importar logger
+
+// Configuración para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Crear directorios necesarios
 const tempDir = path.join(__dirname, '../../temp');
@@ -45,35 +51,30 @@ const generateUniqueFilename = (originalname: string): string => {
 
 // Configurar el almacenamiento de multer
 const storage = multer.diskStorage({
-  destination: function (req: Express.Request, file: Express.Multer.File, cb) {
+  destination: function (_req: Express.Request, _file: Express.Multer.File, cb) {
+    logger.debug({ destinationDir: uploadsDir }, 'Determinando destino de subida');
     cb(null, uploadsDir);
   },
-  filename: function (req: Express.Request, file: Express.Multer.File, cb) {
-    cb(null, generateUniqueFilename(file.originalname));
+  filename: function (_req: Express.Request, file: Express.Multer.File, cb) {
+    const uniqueFilename = generateUniqueFilename(file.originalname);
+    logger.debug(
+      { originalname: file.originalname, uniqueFilename },
+      'Generando nombre de archivo único'
+    );
+    cb(null, uniqueFilename);
   },
 });
 
-/**
- * Valida el contenido de la imagen usando sharp
- */
-const validateImage = async (file: Express.Multer.File): Promise<boolean> => {
-  try {
-    // Verificar firma real del archivo usando sharp
-    await sharp(file.path).metadata();
-    return true;
-  } catch (error) {
-    // Si sharp no puede procesar el archivo, no es una imagen válida
-    console.error(`Archivo inválido detectado: ${file.originalname}`);
-    return false;
-  }
-};
-
 // Validar tipos de archivos permitidos
 const validateFileType = (
-  req: Express.Request,
+  _req: Express.Request,
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
-) => {
+): void => {
+  logger.debug(
+    { filename: file.originalname, mimetype: file.mimetype },
+    'Validando tipo de archivo'
+  );
   // Lista de mimetypes permitidos
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -85,25 +86,14 @@ const validateFileType = (
 
   // Verificar tanto el mimetype como la extensión
   if (allowedMimeTypes.includes(mimetype) && allowedExtensions.includes(extension)) {
-    // Realizar verificación adicional asíncrona para validar el contenido
-    file.stream.on('end', async () => {
-      try {
-        const isValid = await validateImage(file);
-        if (!isValid) {
-          // No podemos rechazar el archivo aquí porque ya se guardó,
-          // pero podemos eliminarlo si no es válido
-          safelyDeleteFile(file.path);
-          console.error(`Contenido de imagen inválido eliminado: ${file.originalname}`);
-        }
-      } catch (error) {
-        safelyDeleteFile(file.path);
-        console.error(`Error validando imagen: ${file.originalname}`, error);
-      }
-    });
-
-    cb(null, true);
+    logger.debug(
+      { filename: file.originalname },
+      'Tipo de archivo válido, aceptando provisionalmente'
+    );
+    cb(null, true); // Aceptar provisionalmente
   } else {
-    cb(new AppError(`Solo se permiten imágenes en formato JPEG, JPG, PNG y WEBP`, 400));
+    logger.warn({ filename: file.originalname, mimetype, extension }, 'Tipo de archivo rechazado');
+    cb(new AppError(`Solo se permiten imágenes en formato ${allowedExtensions.join(', ')}`, 400));
   }
 };
 
@@ -119,6 +109,7 @@ export const upload = multer({
 
 // Función para eliminar archivos de forma segura
 export const safelyDeleteFile = (filePath: string): boolean => {
+  logger.debug({ file: filePath }, 'Intentando eliminar archivo de forma segura');
   try {
     // Verificar que el archivo existe
     if (fs.existsSync(filePath)) {
@@ -127,17 +118,22 @@ export const safelyDeleteFile = (filePath: string): boolean => {
       const isInTempDir = normalizedPath.startsWith(path.normalize(tempDir));
 
       if (!isInTempDir) {
-        console.error(`Intento de eliminar archivo fuera del directorio temporal: ${filePath}`);
+        logger.error(
+          { file: filePath },
+          'Intento de eliminar archivo fuera del directorio temporal'
+        );
         return false;
       }
 
       // Eliminar el archivo
       fs.unlinkSync(filePath);
+      logger.info({ file: filePath }, 'Archivo eliminado exitosamente (safelyDeleteFile)');
       return true;
     }
+    logger.warn({ file: filePath }, 'Archivo no encontrado para eliminar (safelyDeleteFile)');
     return false;
   } catch (error) {
-    console.error(`Error al eliminar archivo ${filePath}:`, error);
+    logger.error({ err: error, file: filePath }, 'Error en safelyDeleteFile');
     return false;
   }
 };

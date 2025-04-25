@@ -19,7 +19,11 @@
     "docker:prod:down": "docker compose -f docker-compose.prod.yml down",
     "docker:logs": "docker compose logs -f",
     "docker:prod:logs": "docker compose -f docker-compose.prod.yml logs -f",
-    "docker:prune": "docker system prune -f"
+    "docker:prune": "docker system prune -f",
+    "docker:status": "docker compose ps",
+    "docker:restart": "docker compose restart",
+    "docker:frontend:logs": "docker compose logs -f frontend",
+    "docker:backend:logs": "docker compose logs -f backend"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.8.0",

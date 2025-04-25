@@ -2,11 +2,16 @@ import sharp from 'sharp';
 import path from 'path';
 import fs from 'fs';
 import archiver from 'archiver';
-import { ConversionOptions, ImageFile, ConversionResult } from './types';
-import { AppError } from './apiError';
+import { ConversionOptions, ImageFile, ConversionResult } from './types.js';
+import { AppError } from './apiError.js';
 import dotenv from 'dotenv';
-import { ImageFormat, ProcessedImage } from './types.js';
-import { ApiError } from './apiError.js';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+import logger from './logger.js';
+
+// Crear equivalentes a __dirname y __filename para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Cargar variables de entorno
 dotenv.config();
@@ -17,14 +22,6 @@ const sharpConcurrency = parseInt(process.env.SHARP_CONCURRENCY || '1');
 sharp.cache(false); // Desactivar caché para evitar fugas de memoria
 sharp.concurrency(sharpConcurrency); // Limitar procesamiento concurrente
 sharp.simd(false); // Desactivar aceleración SIMD para reducir uso de memoria
-try {
-  // Verificamos si la propiedad pipeline existe antes de usarla
-  if (typeof sharp.pipeline?.cache === 'function') {
-    sharp.pipeline.cache(false); // Desactivar caché de pipeline si está disponible
-  }
-} catch (err) {
-  // Error silenciado intencionalmente - la propiedad puede no estar disponible en todas las versiones
-}
 
 // Obtener límites máximos de dimensiones
 const MAX_WIDTH = parseInt(process.env.MAX_IMAGE_WIDTH || '4000');
@@ -58,6 +55,7 @@ export const processImage = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  logger.debug({ imageFile, options }, 'Iniciando processImage');
   // Verificar que la ruta está dentro del directorio permitido
   if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
     throw new AppError('Ruta de archivo no permitida', 403);
@@ -71,9 +69,13 @@ export const processImage = async (
   });
 
   try {
+    logger.debug({ imagePath: imageFile.path }, 'Ejecutando processImageWithLimits con timeout');
     // Carrera entre el procesamiento y el timeout
-    return await Promise.race([processImageWithLimits(imageFile, options), timeoutPromise]);
+    const result = await Promise.race([processImageWithLimits(imageFile, options), timeoutPromise]);
+    logger.debug({ result }, 'processImage completado exitosamente');
+    return result;
   } catch (error) {
+    logger.error({ err: error, imageFile }, 'Error en processImage');
     console.error('Error al procesar la imagen:', error);
 
     // Verificar si es un error de memoria o recursos
@@ -101,21 +103,25 @@ const processImageWithLimits = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  logger.debug({ imageFile, options }, 'Iniciando processImageWithLimits');
   // Verificar que la ruta está dentro del directorio permitido
   if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
     throw new AppError('Ruta de archivo no permitida', 403);
   }
 
   // Obtener información de la imagen original
+  logger.debug({ imagePath: imageFile.path }, 'Obteniendo metadatos de la imagen original');
   const imageInfo = await sharp(imageFile.path, {
     limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
     sequentialRead: true, // Menor uso de memoria para imágenes grandes
   }).metadata();
+  logger.debug({ imageInfo }, 'Metadatos obtenidos');
 
-  // Verificar dimensiones máximas de la imagen original
+  // Verificar dimensiones máximas de la imagen original (usar ?. y ??)
   if (
-    (imageInfo.width && imageInfo.width > MAX_WIDTH) ||
-    (imageInfo.height && imageInfo.height > MAX_HEIGHT)
+    (imageInfo.width ?? 0) > MAX_WIDTH ||
+    (imageInfo.height ?? 0) > MAX_HEIGHT ||
+    (imageInfo.width ?? 0) * (imageInfo.height ?? 0) > MAX_DIMENSIONS
   ) {
     throw new AppError(
       `Dimensiones de imagen exceden el límite permitido (${MAX_WIDTH}x${MAX_HEIGHT})`,
@@ -129,25 +135,32 @@ const processImageWithLimits = async (
   let height = options.height;
 
   // Validar dimensiones solicitadas
-  if (width && width > MAX_WIDTH) {
+  if (width !== undefined && width > MAX_WIDTH) {
     width = MAX_WIDTH;
   }
 
-  if (height && height > MAX_HEIGHT) {
+  if (height !== undefined && height > MAX_HEIGHT) {
     height = MAX_HEIGHT;
   }
 
-  // Si no se especifica width o height, usar las dimensiones originales
-  if (!width && imageInfo.width) {
-    width = Math.min(imageInfo.width, MAX_WIDTH);
+  // Si no se especifica width o height, usar las dimensiones originales (usar ?. y ??)
+  if (width === undefined) {
+    width = Math.min(imageInfo.width ?? MAX_WIDTH, MAX_WIDTH);
   }
 
-  if (!height && imageInfo.height) {
-    height = Math.min(imageInfo.height, MAX_HEIGHT);
+  if (height === undefined) {
+    height = Math.min(imageInfo.height ?? MAX_HEIGHT, MAX_HEIGHT);
   }
 
-  // Mantener relación de aspecto si se especifica
-  if (options.maintainAspectRatio && width && height && imageInfo.width && imageInfo.height) {
+  // Mantener relación de aspecto si se especifica (usar ?. y verificaciones)
+  if (
+    options.maintainAspectRatio &&
+    width !== undefined &&
+    height !== undefined &&
+    imageInfo.width !== undefined &&
+    imageInfo.height !== undefined &&
+    imageInfo.height > 0
+  ) {
     const aspectRatio = imageInfo.width / imageInfo.height;
     if (width / height > aspectRatio) {
       width = Math.round(height * aspectRatio);
@@ -158,10 +171,10 @@ const processImageWithLimits = async (
 
   // Crear nombre para archivo procesado
   const fileNameWithoutExt = path.basename(
-    imageFile.originalname,
+    imageFile.originalname, // originalname debería estar presente
     path.extname(imageFile.originalname)
   );
-  const outputFileName = `${fileNameWithoutExt}_${width}x${height}.${options.format}`;
+  const outputFileName = `${fileNameWithoutExt}_${width ?? 'auto'}x${height ?? 'auto'}.${options.format}`;
   const outputPath = path.join(outputDir, outputFileName);
 
   // Verificar que la ruta de salida está dentro del directorio permitido
@@ -170,6 +183,7 @@ const processImageWithLimits = async (
   }
 
   // Procesar la imagen con Sharp
+  logger.debug({ imagePath: imageFile.path }, 'Creando instancia de Sharp');
   const sharpInstance = sharp(imageFile.path, {
     failOnError: true,
     limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
@@ -177,7 +191,8 @@ const processImageWithLimits = async (
   });
 
   // Aplicar redimensionamiento si se especifican dimensiones
-  if (width || height) {
+  if (width !== undefined || height !== undefined) {
+    logger.debug({ resizeDims: { width, height } }, 'Aplicando redimensionamiento');
     sharpInstance.resize({
       width,
       height,
@@ -187,16 +202,23 @@ const processImageWithLimits = async (
   }
 
   // Determinar calidad basada en el tamaño del archivo original para optimización
-  let quality = options.quality || 80;
-  const stats = fs.statSync(imageFile.path);
-  const fileSizeMB = stats.size / (1024 * 1024);
+  let quality = options.quality ?? 80; // Usar ??
+  let fileSizeMB = 0;
+  try {
+    const stats = fs.statSync(imageFile.path);
+    fileSizeMB = stats.size / (1024 * 1024);
+  } catch (statError) {
+    console.warn(`No se pudo obtener el tamaño del archivo ${imageFile.path}:`, statError);
+    // Continuar con la calidad por defecto si no se puede obtener el tamaño
+  }
 
   // Ajuste dinámico de calidad basado en tamaño
   if (fileSizeMB > 4) {
     quality = Math.min(quality, 70); // Reducir calidad para archivos grandes
   }
 
-  // Aplicar opciones de formato y calidad
+  // Aplicar opciones de formato y calidad (options.format debería estar presente)
+  logger.debug({ quality, format: options.format }, 'Aplicando formato y calidad');
   switch (options.format) {
     case 'jpeg':
       sharpInstance.jpeg({ quality });
@@ -219,17 +241,22 @@ const processImageWithLimits = async (
   }
 
   // Guardar la imagen procesada
+  logger.debug({ outputPath }, 'Guardando imagen procesada en archivo');
   await sharpInstance.toFile(outputPath);
+  logger.info({ outputPath }, 'Imagen procesada guardada exitosamente');
 
   // Obtener información de la imagen procesada
+  logger.debug({ outputPath }, 'Obteniendo metadatos de imagen procesada');
   const processedInfo = await sharp(outputPath).metadata();
 
-  return {
+  const result: ConversionResult = {
     path: outputPath,
     format: options.format,
-    width: processedInfo.width || width || 0,
-    height: processedInfo.height || height || 0,
+    width: processedInfo.width ?? width ?? 0,
+    height: processedInfo.height ?? height ?? 0,
   };
+  logger.debug({ result }, 'processImageWithLimits completado exitosamente');
+  return result;
 };
 
 /**
@@ -239,6 +266,7 @@ export const createZipFromImages = async (
   processedImages: ConversionResult[],
   zipFileName: string
 ): Promise<string> => {
+  logger.info({ numFiles: processedImages.length, zipFileName }, 'Iniciando createZipFromImages');
   const zipPath = path.join(outputDir, `${zipFileName}.zip`);
 
   // Verificar que la ruta del ZIP esté dentro del directorio permitido
@@ -253,8 +281,9 @@ export const createZipFromImages = async (
 
   // Manejar errores del stream de salida
   output.on('error', err => {
-    console.error('Error en el stream de salida:', err);
-    throw new AppError('Error al crear el archivo ZIP', 500);
+    logger.error({ err, zipPath }, 'Error en writeStream al crear ZIP');
+    // Considerar si lanzar AppError aquí es lo mejor o si ya se manejó
+    // throw new AppError('Error al crear el archivo ZIP', 500);
   });
 
   // Pipe el archivo de salida al archivo
@@ -262,6 +291,7 @@ export const createZipFromImages = async (
 
   // Verificar tamaño total de los archivos
   let totalSize = 0;
+  logger.debug('Añadiendo archivos al ZIP...');
   for (const image of processedImages) {
     // Verificar que la ruta está dentro del directorio permitido
     if (!ensurePathIsWithinBoundary(image.path, tempDir)) {
@@ -270,6 +300,7 @@ export const createZipFromImages = async (
 
     const stats = fs.statSync(image.path);
     totalSize += stats.size;
+    logger.debug({ file: image.path, size: stats.size }, 'Añadiendo archivo al ZIP');
 
     // Comprobar si el tamaño ya excede el límite configurado
     if (totalSize > MAX_ZIP_SIZE) {
@@ -283,17 +314,24 @@ export const createZipFromImages = async (
     const fileName = path.basename(image.path);
     archive.file(image.path, { name: fileName });
   }
+  logger.debug({ totalSize }, 'Todos los archivos añadidos al descriptor del ZIP');
 
   // Finalizar el archivo
+  logger.debug('Finalizando el archivo ZIP (escribiendo en disco)...');
   await archive.finalize();
+  logger.info({ zipPath, totalSize }, 'Archivo ZIP finalizado y escrito');
 
+  // La promesa se resuelve/rechaza basada en los eventos del stream de salida
   return new Promise((resolve, reject) => {
     output.on('close', () => {
+      logger.info({ zipPath }, 'Stream del ZIP cerrado, creación completada.');
       resolve(zipPath);
     });
 
-    output.on('error', err => {
-      reject(err);
+    // El error ya se maneja con output.on('error', ...), pero añadimos reject por si acaso
+    archive.on('error', err => {
+      logger.error({ err, zipPath }, 'Error en el archiver durante la creación del ZIP');
+      reject(new AppError(`Error al crear el archivo ZIP: ${err.message}`, 500));
     });
   });
 };
@@ -304,27 +342,46 @@ export const createZipFromImages = async (
 export const cleanTempFiles = (
   filePaths: string[],
   delayMs = parseInt(process.env.TEMP_FILES_CLEANUP_MS || '300000')
-) => {
+): void => {
+  logger.debug({ files: filePaths, delayMs }, 'Programando limpieza de archivos temporales');
   setTimeout(() => {
     filePaths.forEach(filePath => {
+      logger.debug({ file: filePath }, 'Intentando limpieza programada de archivo');
       // Verificar que el archivo sigue dentro del directorio temporal
       if (ensurePathIsWithinBoundary(filePath, tempDir)) {
         try {
-          fs.access(filePath, fs.constants.F_OK, accessErr => {
-            if (!accessErr) {
-              // El archivo existe, intentar eliminarlo
-              fs.unlink(filePath, unlinkErr => {
-                if (unlinkErr) {
-                  // Error silenciado intencionalmente
-                }
-              });
-            }
-          });
-        } catch (error) {
-          // Error silenciado intencionalmente
+          // Usamos existsSync para simplificar, ya que es una operación de limpieza
+          if (fs.existsSync(filePath)) {
+            fs.unlink(filePath, unlinkErr => {
+              if (unlinkErr) {
+                logger.warn(
+                  { err: unlinkErr, file: filePath },
+                  'Error al eliminar archivo temporal programado'
+                );
+              } else {
+                logger.info(
+                  { file: filePath },
+                  'Archivo temporal programado eliminado exitosamente'
+                );
+              }
+            });
+          } else {
+            logger.debug(
+              { file: filePath },
+              'Archivo temporal programado ya no existe, omitiendo eliminación'
+            );
+          }
+        } catch (err) {
+          logger.error(
+            { err, file: filePath },
+            'Error inesperado durante la limpieza programada de archivo'
+          );
         }
       } else {
-        // Error silenciado intencionalmente
+        logger.warn(
+          { file: filePath },
+          'Intento de eliminar archivo fuera del directorio temporal durante limpieza programada'
+        );
       }
     });
   }, delayMs);

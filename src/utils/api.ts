@@ -52,7 +52,7 @@ export const convertImagesAPI = async (
       formData.append('maintainAspectRatio', options.maintainAspectRatio.toString());
     }
 
-    console.log('Enviando solicitud al servidor:', {
+    console.warn('Enviando solicitud al servidor:', {
       formato: options.format,
       calidad: options.quality,
       ancho: options.width,
@@ -70,15 +70,16 @@ export const convertImagesAPI = async (
     if (!response.ok) {
       let errorMessage = 'Error al convertir las imágenes';
       try {
-        const errorData = await response.json();
+        const errorData = (await response.json()) as { error?: string; message?: string };
         errorMessage = errorData.error || errorData.message || errorMessage;
       } catch (parseError) {
-        console.error('Error al procesar la respuesta de error:', parseError);
+        const error = parseError instanceof Error ? parseError : new Error(String(parseError));
+        console.error('Error al procesar la respuesta de error:', error);
       }
       throw new Error(errorMessage);
     }
 
-    const data: ConversionResponse = await response.json();
+    const data = (await response.json()) as ConversionResponse;
 
     if (!data.success) {
       throw new Error(data.message || 'Error en la conversión de imágenes');
@@ -86,11 +87,12 @@ export const convertImagesAPI = async (
 
     // Construir la URL completa para descargar el ZIP
     const zipDownloadUrl = `http://localhost:3001${data.zipUrl}`;
-    console.log('URL de descarga generada:', zipDownloadUrl);
+    console.warn('URL de descarga generada:', zipDownloadUrl);
     return zipDownloadUrl;
   } catch (error) {
-    console.error('Error al convertir imágenes:', error);
-    throw error;
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('Error al convertir imágenes:', err);
+    throw err;
   }
 };
 
@@ -105,10 +107,11 @@ export const getAvailableFormats = async (): Promise<string[]> => {
       throw new Error('Error al obtener los formatos disponibles');
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as { formats?: string[] };
     return data.formats || [];
   } catch (error) {
-    console.error('Error al obtener formatos:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    console.error('Error al obtener formatos:', err);
     return ['jpeg', 'png', 'webp', 'avif', 'gif']; // Formatos por defecto
   }
 };
