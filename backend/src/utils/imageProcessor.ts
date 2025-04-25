@@ -7,6 +7,7 @@ import { AppError } from './apiError.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import logger from './logger.js';
 
 // Crear equivalentes a __dirname y __filename para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -315,26 +316,45 @@ export const cleanTempFiles = (
   filePaths: string[],
   delayMs = parseInt(process.env.TEMP_FILES_CLEANUP_MS || '300000')
 ): void => {
+  logger.debug({ files: filePaths, delayMs }, 'Programando limpieza de archivos temporales');
   setTimeout(() => {
     filePaths.forEach(filePath => {
+      logger.debug({ file: filePath }, 'Intentando limpieza programada de archivo');
       // Verificar que el archivo sigue dentro del directorio temporal
       if (ensurePathIsWithinBoundary(filePath, tempDir)) {
         try {
-          fs.access(filePath, fs.constants.F_OK, accessErr => {
-            if (!accessErr) {
-              // El archivo existe, intentar eliminarlo
-              fs.unlink(filePath, unlinkErr => {
-                if (unlinkErr) {
-                  // Error silenciado intencionalmente
-                }
-              });
-            }
-          });
-        } catch {
-          // Error silenciado intencionalmente
+          // Usamos existsSync para simplificar, ya que es una operación de limpieza
+          if (fs.existsSync(filePath)) {
+            fs.unlink(filePath, unlinkErr => {
+              if (unlinkErr) {
+                logger.warn(
+                  { err: unlinkErr, file: filePath },
+                  'Error al eliminar archivo temporal programado'
+                );
+              } else {
+                logger.info(
+                  { file: filePath },
+                  'Archivo temporal programado eliminado exitosamente'
+                );
+              }
+            });
+          } else {
+            logger.debug(
+              { file: filePath },
+              'Archivo temporal programado ya no existe, omitiendo eliminación'
+            );
+          }
+        } catch (err) {
+          logger.error(
+            { err, file: filePath },
+            'Error inesperado durante la limpieza programada de archivo'
+          );
         }
       } else {
-        // Error silenciado intencionalmente
+        logger.warn(
+          { file: filePath },
+          'Intento de eliminar archivo fuera del directorio temporal durante limpieza programada'
+        );
       }
     });
   }, delayMs);
