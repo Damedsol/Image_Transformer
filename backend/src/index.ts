@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
-import path from 'path';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import { imageRoutes } from './routes/imageRoutes.js';
 import { errorHandler } from './middlewares/errorMiddleware.js';
@@ -11,6 +12,10 @@ import {
   preventClickjacking,
   validateContentType,
 } from './middlewares/securityMiddleware.js';
+
+// Calcular __dirname para ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 // Cargar variables de entorno
 dotenv.config();
@@ -29,7 +34,7 @@ app.use(
     origin:
       process.env.NODE_ENV === 'production'
         ? ['https://yourdomain.com'] // Dominio en producción
-        : ['http://localhost:3000'], // Dominio local de desarrollo
+        : ['http://localhost:3000', 'http://localhost:5173'], // Permitir frontend dev
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     credentials: true,
