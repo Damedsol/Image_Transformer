@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 import path from 'path';
 import { z } from 'zod';
 import { processImage, createZipFromImages, cleanTempFiles } from '../utils/imageProcessor.js';
-import { ConversionOptions } from '../utils/types.js';
+import { ConversionOptions, ConversionResult } from '../utils/types.js';
 import { AppError } from '../utils/apiError.js';
 import { safelyDeleteFile } from '../middlewares/uploadMiddleware.js';
 import { auditLogger } from '../utils/auditLogger.js';
@@ -67,8 +67,10 @@ const checkIPQuota = (ip: string): boolean => {
  * Convierte las imágenes según las opciones especificadas y devuelve un ZIP
  */
 export const convertImages = async (req: Request, res: Response): Promise<void> => {
-  // Lista de archivos temporales para limpiar
-  const tempFilesToClean: string[] = [];
+  // Lista DE TODOS los archivos temporales generados en esta petición
+  const allTempFiles: string[] = [];
+  let zipPath: string | undefined;
+  let processedImages: ConversionResult[] = [];
 
   try {
     if (!req.files || !Array.isArray(req.files)) {
@@ -116,13 +118,13 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     // Opciones de conversión validadas
     const options: ConversionOptions = validationResult.data;
 
-    // Añadir archivos originales a la lista de limpieza
-    req.files.forEach((file: Express.Multer.File) => {
-      tempFilesToClean.push(file.path);
+    // Añadir archivos originales a la lista global de limpieza
+    req.files.forEach(file => {
+      allTempFiles.push(file.path);
     });
 
     // Procesar cada imagen subida
-    const processedImages = await Promise.all(
+    processedImages = await Promise.all(
       req.files.map((file: Express.Multer.File) =>
         processImage(
           {
@@ -134,19 +136,32 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
       )
     );
 
-    // Añadir imágenes procesadas a la lista de limpieza
+    // Añadir imágenes procesadas a la lista global de limpieza
     processedImages.forEach(img => {
-      tempFilesToClean.push(img.path);
+      allTempFiles.push(img.path);
     });
 
     // Crear nombre para el ZIP basado en la marca de tiempo y un identificador aleatorio
     const zipFileName = `converted_images_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
     // Crear ZIP con las imágenes procesadas
-    const zipPath = await createZipFromImages(processedImages, zipFileName);
+    zipPath = await createZipFromImages(processedImages, zipFileName);
 
-    // Añadir el ZIP a la lista de limpieza
-    tempFilesToClean.push(zipPath);
+    // Añadir el ZIP a la lista global de limpieza
+    allTempFiles.push(zipPath);
+
+    // --- Limpieza Inmediata de Originales y Procesados ---
+    console.log('Limpiando archivos originales y procesados...');
+    // Eliminar archivos originales
+    req.files.forEach(file => {
+      safelyDeleteFile(file.path);
+    });
+    // Eliminar imágenes procesadas individuales
+    processedImages.forEach(img => {
+      safelyDeleteFile(img.path);
+    });
+    console.log('Limpieza inmediata completada.');
+    // ------------------------------------------------------
 
     // Devolver la URL para descargar el ZIP
     const zipUrl = `/temp/output/${path.basename(zipPath)}`;
@@ -178,8 +193,9 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     // Enviar respuesta
     res.json(responseData);
 
-    // Configurar eliminación de archivos temporales después de un tiempo prudencial
-    cleanTempFiles(tempFilesToClean);
+    // Configurar eliminación RETRASADA SOLO para el archivo ZIP
+    console.log(`Programando limpieza retrasada para: ${zipPath}`);
+    cleanTempFiles([zipPath]); // Solo el ZIP
   } catch (error: unknown) {
     console.error('Error al convertir imágenes:', error);
 
@@ -195,7 +211,16 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
       });
     }
 
-    // Si es un AppError, usamos su estructura
+    // Limpieza INMEDIATA de TODOS los archivos temporales en caso de error
+    console.warn(
+      'Error detectado. Iniciando limpieza inmediata de todos los archivos temporales...'
+    );
+    allTempFiles.forEach(filePath => {
+      safelyDeleteFile(filePath);
+    });
+    console.warn('Limpieza por error completada.');
+
+    // Enviar respuesta de error
     if (error instanceof AppError) {
       res.status(error.statusCode).json({
         success: false,
@@ -215,11 +240,6 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
         },
       });
     }
-
-    // Limpiar archivos temporales en caso de error
-    tempFilesToClean.forEach(filePath => {
-      safelyDeleteFile(filePath);
-    });
   }
 };
 
