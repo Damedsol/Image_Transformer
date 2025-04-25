@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 // import { Request } from 'express';
 import { AppError } from '../utils/apiError.js';
+import logger from '../utils/logger.js'; // Importar logger
 
 // Configuración para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -51,10 +52,16 @@ const generateUniqueFilename = (originalname: string): string => {
 // Configurar el almacenamiento de multer
 const storage = multer.diskStorage({
   destination: function (_req: Express.Request, _file: Express.Multer.File, cb) {
+    logger.debug({ destinationDir: uploadsDir }, 'Determinando destino de subida');
     cb(null, uploadsDir);
   },
   filename: function (_req: Express.Request, file: Express.Multer.File, cb) {
-    cb(null, generateUniqueFilename(file.originalname));
+    const uniqueFilename = generateUniqueFilename(file.originalname);
+    logger.debug(
+      { originalname: file.originalname, uniqueFilename },
+      'Generando nombre de archivo único'
+    );
+    cb(null, uniqueFilename);
   },
 });
 
@@ -64,6 +71,10 @@ const validateFileType = (
   file: Express.Multer.File,
   cb: multer.FileFilterCallback
 ): void => {
+  logger.debug(
+    { filename: file.originalname, mimetype: file.mimetype },
+    'Validando tipo de archivo'
+  );
   // Lista de mimetypes permitidos
   const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -75,12 +86,13 @@ const validateFileType = (
 
   // Verificar tanto el mimetype como la extensión
   if (allowedMimeTypes.includes(mimetype) && allowedExtensions.includes(extension)) {
-    // No podemos validar contenido de forma asíncrona aquí de forma fiable
-    // La validación de contenido real debería hacerse después de que multer complete la subida
-    // Este es un punto a mejorar: validar después de la subida, no durante el filtro
+    logger.debug(
+      { filename: file.originalname },
+      'Tipo de archivo válido, aceptando provisionalmente'
+    );
     cb(null, true); // Aceptar provisionalmente
   } else {
-    // Rechazar si el tipo MIME o la extensión no son válidos
+    logger.warn({ filename: file.originalname, mimetype, extension }, 'Tipo de archivo rechazado');
     cb(new AppError(`Solo se permiten imágenes en formato ${allowedExtensions.join(', ')}`, 400));
   }
 };
@@ -97,6 +109,7 @@ export const upload = multer({
 
 // Función para eliminar archivos de forma segura
 export const safelyDeleteFile = (filePath: string): boolean => {
+  logger.debug({ file: filePath }, 'Intentando eliminar archivo de forma segura');
   try {
     // Verificar que el archivo existe
     if (fs.existsSync(filePath)) {
@@ -105,17 +118,22 @@ export const safelyDeleteFile = (filePath: string): boolean => {
       const isInTempDir = normalizedPath.startsWith(path.normalize(tempDir));
 
       if (!isInTempDir) {
-        console.error(`Intento de eliminar archivo fuera del directorio temporal: ${filePath}`);
+        logger.error(
+          { file: filePath },
+          'Intento de eliminar archivo fuera del directorio temporal'
+        );
         return false;
       }
 
       // Eliminar el archivo
       fs.unlinkSync(filePath);
+      logger.info({ file: filePath }, 'Archivo eliminado exitosamente (safelyDeleteFile)');
       return true;
     }
+    logger.warn({ file: filePath }, 'Archivo no encontrado para eliminar (safelyDeleteFile)');
     return false;
   } catch (error) {
-    console.error(`Error al eliminar archivo ${filePath}:`, error);
+    logger.error({ err: error, file: filePath }, 'Error en safelyDeleteFile');
     return false;
   }
 };

@@ -5,6 +5,8 @@ import { errorHandler } from '../middlewares/errorMiddleware.js';
 import { apiRateLimiter } from '../middlewares/securityMiddleware.js';
 import rateLimit from 'express-rate-limit';
 import { AppError } from '../utils/apiError.js';
+import logger from '../utils/logger.js';
+import { Request, Response, NextFunction } from 'express';
 
 const router = express.Router();
 
@@ -27,13 +29,23 @@ const convertRateLimiter = rateLimit({
   },
 });
 
+// Middleware simple para loguear inicio de petición /convert
+const logConvertRequestStart = (req: Request, _res: Response, next: NextFunction): void => {
+  logger.info(
+    { ip: req.ip, userAgent: req.headers['user-agent'], body: req.body },
+    'Recibida solicitud POST /api/convert'
+  );
+  next();
+};
+
 // Rutas
 router.get('/formats', apiRateLimiter, getFormats);
 
 // Ruta de conversión con rate limiting específico
 router.post(
   '/convert',
-  convertRateLimiter, // Primero verificamos límite de tasa
+  logConvertRequestStart,
+  convertRateLimiter,
   upload.array('images', parseInt(process.env.MAX_FILES_PER_REQUEST || '5')),
   convertImages
 );

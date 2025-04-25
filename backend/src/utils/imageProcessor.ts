@@ -55,6 +55,7 @@ export const processImage = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  logger.debug({ imageFile, options }, 'Iniciando processImage');
   // Verificar que la ruta está dentro del directorio permitido
   if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
     throw new AppError('Ruta de archivo no permitida', 403);
@@ -68,9 +69,13 @@ export const processImage = async (
   });
 
   try {
+    logger.debug({ imagePath: imageFile.path }, 'Ejecutando processImageWithLimits con timeout');
     // Carrera entre el procesamiento y el timeout
-    return await Promise.race([processImageWithLimits(imageFile, options), timeoutPromise]);
+    const result = await Promise.race([processImageWithLimits(imageFile, options), timeoutPromise]);
+    logger.debug({ result }, 'processImage completado exitosamente');
+    return result;
   } catch (error) {
+    logger.error({ err: error, imageFile }, 'Error en processImage');
     console.error('Error al procesar la imagen:', error);
 
     // Verificar si es un error de memoria o recursos
@@ -98,16 +103,19 @@ const processImageWithLimits = async (
   imageFile: ImageFile,
   options: ConversionOptions
 ): Promise<ConversionResult> => {
+  logger.debug({ imageFile, options }, 'Iniciando processImageWithLimits');
   // Verificar que la ruta está dentro del directorio permitido
   if (!ensurePathIsWithinBoundary(imageFile.path, tempDir)) {
     throw new AppError('Ruta de archivo no permitida', 403);
   }
 
   // Obtener información de la imagen original
+  logger.debug({ imagePath: imageFile.path }, 'Obteniendo metadatos de la imagen original');
   const imageInfo = await sharp(imageFile.path, {
     limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
     sequentialRead: true, // Menor uso de memoria para imágenes grandes
   }).metadata();
+  logger.debug({ imageInfo }, 'Metadatos obtenidos');
 
   // Verificar dimensiones máximas de la imagen original (usar ?. y ??)
   if (
@@ -175,6 +183,7 @@ const processImageWithLimits = async (
   }
 
   // Procesar la imagen con Sharp
+  logger.debug({ imagePath: imageFile.path }, 'Creando instancia de Sharp');
   const sharpInstance = sharp(imageFile.path, {
     failOnError: true,
     limitInputPixels: MAX_DIMENSIONS, // Limitar tamaño en píxeles
@@ -183,6 +192,7 @@ const processImageWithLimits = async (
 
   // Aplicar redimensionamiento si se especifican dimensiones
   if (width !== undefined || height !== undefined) {
+    logger.debug({ resizeDims: { width, height } }, 'Aplicando redimensionamiento');
     sharpInstance.resize({
       width,
       height,
@@ -208,6 +218,7 @@ const processImageWithLimits = async (
   }
 
   // Aplicar opciones de formato y calidad (options.format debería estar presente)
+  logger.debug({ quality, format: options.format }, 'Aplicando formato y calidad');
   switch (options.format) {
     case 'jpeg':
       sharpInstance.jpeg({ quality });
@@ -230,17 +241,22 @@ const processImageWithLimits = async (
   }
 
   // Guardar la imagen procesada
+  logger.debug({ outputPath }, 'Guardando imagen procesada en archivo');
   await sharpInstance.toFile(outputPath);
+  logger.info({ outputPath }, 'Imagen procesada guardada exitosamente');
 
   // Obtener información de la imagen procesada
+  logger.debug({ outputPath }, 'Obteniendo metadatos de imagen procesada');
   const processedInfo = await sharp(outputPath).metadata();
 
-  return {
+  const result: ConversionResult = {
     path: outputPath,
-    format: options.format, // options.format debería estar presente
-    width: processedInfo.width ?? width ?? 0, // Usar ??
-    height: processedInfo.height ?? height ?? 0, // Usar ??
+    format: options.format,
+    width: processedInfo.width ?? width ?? 0,
+    height: processedInfo.height ?? height ?? 0,
   };
+  logger.debug({ result }, 'processImageWithLimits completado exitosamente');
+  return result;
 };
 
 /**
@@ -250,6 +266,7 @@ export const createZipFromImages = async (
   processedImages: ConversionResult[],
   zipFileName: string
 ): Promise<string> => {
+  logger.info({ numFiles: processedImages.length, zipFileName }, 'Iniciando createZipFromImages');
   const zipPath = path.join(outputDir, `${zipFileName}.zip`);
 
   // Verificar que la ruta del ZIP esté dentro del directorio permitido
@@ -264,8 +281,9 @@ export const createZipFromImages = async (
 
   // Manejar errores del stream de salida
   output.on('error', err => {
-    console.error('Error en el stream de salida:', err);
-    throw new AppError('Error al crear el archivo ZIP', 500);
+    logger.error({ err, zipPath }, 'Error en writeStream al crear ZIP');
+    // Considerar si lanzar AppError aquí es lo mejor o si ya se manejó
+    // throw new AppError('Error al crear el archivo ZIP', 500);
   });
 
   // Pipe el archivo de salida al archivo
@@ -273,6 +291,7 @@ export const createZipFromImages = async (
 
   // Verificar tamaño total de los archivos
   let totalSize = 0;
+  logger.debug('Añadiendo archivos al ZIP...');
   for (const image of processedImages) {
     // Verificar que la ruta está dentro del directorio permitido
     if (!ensurePathIsWithinBoundary(image.path, tempDir)) {
@@ -281,6 +300,7 @@ export const createZipFromImages = async (
 
     const stats = fs.statSync(image.path);
     totalSize += stats.size;
+    logger.debug({ file: image.path, size: stats.size }, 'Añadiendo archivo al ZIP');
 
     // Comprobar si el tamaño ya excede el límite configurado
     if (totalSize > MAX_ZIP_SIZE) {
@@ -294,17 +314,24 @@ export const createZipFromImages = async (
     const fileName = path.basename(image.path);
     archive.file(image.path, { name: fileName });
   }
+  logger.debug({ totalSize }, 'Todos los archivos añadidos al descriptor del ZIP');
 
   // Finalizar el archivo
+  logger.debug('Finalizando el archivo ZIP (escribiendo en disco)...');
   await archive.finalize();
+  logger.info({ zipPath, totalSize }, 'Archivo ZIP finalizado y escrito');
 
+  // La promesa se resuelve/rechaza basada en los eventos del stream de salida
   return new Promise((resolve, reject) => {
     output.on('close', () => {
+      logger.info({ zipPath }, 'Stream del ZIP cerrado, creación completada.');
       resolve(zipPath);
     });
 
-    output.on('error', err => {
-      reject(err);
+    // El error ya se maneja con output.on('error', ...), pero añadimos reject por si acaso
+    archive.on('error', err => {
+      logger.error({ err, zipPath }, 'Error en el archiver durante la creación del ZIP');
+      reject(new AppError(`Error al crear el archivo ZIP: ${err.message}`, 500));
     });
   });
 };

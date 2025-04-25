@@ -15,11 +15,8 @@ const logsDir = path.join(__dirname, '../../logs');
 try {
   if (!fs.existsSync(logsDir)) {
     fs.mkdirSync(logsDir, { recursive: true });
-    console.log(`Directorio de logs creado en: ${logsDir}`);
   }
 } catch (error) {
-  console.error('Error al crear el directorio de logs:', error);
-  // Salir si no se pueden escribir logs, ya que es el único destino
   process.exit(1);
 }
 
@@ -44,9 +41,21 @@ const pinoOptions = {
   },
 };
 
-// Crear e exportar la instancia del logger, siempre escribiendo al archivo
-console.log(`Redirigiendo todos los logs a: ${logFilePath}`);
-const logger = pino(pinoOptions, pino.destination(logFilePath));
+// Crear e exportar la instancia del logger
+let logDestination;
+try {
+  logDestination = pino.destination(logFilePath);
+} catch (destError) {
+  console.error(
+    `Error crítico: No se pudo crear el destino del log en ${logFilePath}. Saliendo...`,
+    destError
+  );
+  process.exit(1);
+}
+
+// Intentar inicializar pino.
+// Corrección: Usar pino.default ya que la importación directa no es reconocida como callable.
+const logger = (pino as any).default(pinoOptions, logDestination);
 
 // Loggear información inicial
 logger.info('============================================');

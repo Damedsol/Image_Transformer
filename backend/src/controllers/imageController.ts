@@ -118,6 +118,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
 
     // Opciones de conversión validadas
     const options: ConversionOptions = validationResult.data;
+    logger.info({ options }, 'Opciones de conversión validadas');
 
     // Añadir archivos originales a la lista global de limpieza
     req.files.forEach(file => {
@@ -125,6 +126,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     });
 
     // Procesar cada imagen subida
+    logger.info({ numFiles: req.files.length }, 'Iniciando procesamiento de imágenes');
     processedImages = await Promise.all(
       req.files.map((file: Express.Multer.File) =>
         processImage(
@@ -142,11 +144,15 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
       allTempFiles.push(img.path);
     });
 
+    logger.info({ numProcessed: processedImages.length }, 'Procesamiento de imágenes completado');
+
     // Crear nombre para el ZIP basado en la marca de tiempo y un identificador aleatorio
     const zipFileName = `converted_images_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
     // Crear ZIP con las imágenes procesadas
+    logger.info({ zipFileName }, 'Iniciando creación de archivo ZIP');
     zipPath = await createZipFromImages(processedImages, zipFileName);
+    logger.info({ zipPath }, 'Archivo ZIP creado exitosamente');
 
     // Añadir el ZIP a la lista global de limpieza
     allTempFiles.push(zipPath);
@@ -166,6 +172,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
 
     // Devolver la URL para descargar el ZIP
     const zipUrl = `/temp/output/${path.basename(zipPath)}`;
+    logger.info({ zipUrl }, 'URL del ZIP generada para la respuesta');
 
     // Registrar uso para auditoría con logger.info
     logger.info(
@@ -194,6 +201,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     };
 
     // Enviar respuesta
+    logger.info({ responseData }, 'Enviando respuesta exitosa al cliente');
     res.json(responseData);
 
     // Configurar eliminación RETRASADA SOLO para el archivo ZIP
