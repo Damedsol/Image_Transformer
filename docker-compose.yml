@@ -1,0 +1,58 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      target: development
+    container_name: image-transformer-backend-dev
+    volumes:
+      - ./backend:/app:delegated
+      - /app/node_modules
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - TSX_DISABLE_CACHE=false
+      - DEBUG=tsx:*
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - image-transformer-network
+    healthcheck:
+      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: .
+      target: development
+    container_name: image-transformer-frontend-dev
+    volumes:
+      - ./:/app:delegated
+      - /app/node_modules
+      - ./node_modules/.vite:/app/node_modules/.vite
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001/api
+      - CHOKIDAR_USEPOLLING=true
+      - WATCHPACK_POLLING=true
+      - FAST_REFRESH=true
+      - VITE_HMR=true
+    depends_on:
+      - backend
+    restart: unless-stopped
+    networks:
+      - image-transformer-network
+    command: pnpm run dev -- --host 0.0.0.0
+
+networks:
+  image-transformer-network:
+    driver: bridge

@@ -1,0 +1,46 @@
+# Dependencias
+node_modules
+.pnpm-store/
+
+# Archivos de compilación
+dist/
+build/
+*.tsbuildinfo
+
+# Variables de entorno (excepto el ejemplo)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+!.env.example
+
+# Archivos temporales
+temp/
+*.log
+logs/
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+.directory
+
+# Archivos de IDE/editores
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Archivos específicos de pruebas
+coverage/
+
+# Archivos de monitoreo
+audit-logs/
+
+# Archivos de Sharp (caché)
+.cache/ 
