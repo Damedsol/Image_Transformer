@@ -9,98 +9,98 @@ importers:
   .:
     dependencies:
       archiver:
-        specifier: ^7.0.1
+        specifier: 7.0.1
         version: 7.0.1
       cors:
-        specifier: ^2.8.5
+        specifier: 2.8.5
         version: 2.8.5
       dotenv:
-        specifier: ^16.5.0
+        specifier: 16.5.0
         version: 16.5.0
       express:
-        specifier: ^5.1.0
+        specifier: 5.1.0
         version: 5.1.0
       express-rate-limit:
-        specifier: ^7.5.0
+        specifier: 7.5.0
         version: 7.5.0(express@5.1.0)
       helmet:
-        specifier: ^8.1.0
+        specifier: 8.1.0
         version: 8.1.0
       jsonwebtoken:
-        specifier: ^9.0.2
+        specifier: 9.0.2
         version: 9.0.2
       multer:
-        specifier: ^1.4.5-lts.2
-        version: 1.4.5-lts.2
+        specifier: 2.0.2
+        version: 2.0.2
       pino:
-        specifier: ^9.6.0
+        specifier: 9.6.0
         version: 9.6.0
       sharp:
-        specifier: ^0.34.1
+        specifier: 0.34.1
         version: 0.34.1
       zod:
-        specifier: ^3.24.3
+        specifier: 3.24.3
         version: 3.24.3
     devDependencies:
       '@eslint/js':
-        specifier: ^9.25.1
+        specifier: 9.25.1
         version: 9.25.1
       '@types/archiver':
-        specifier: ^6.0.3
+        specifier: 6.0.3
         version: 6.0.3
       '@types/cors':
-        specifier: ^2.8.17
+        specifier: 2.8.17
         version: 2.8.17
       '@types/express':
-        specifier: ^5.0.1
+        specifier: 5.0.1
         version: 5.0.1
       '@types/jsonwebtoken':
-        specifier: ^9.0.9
+        specifier: 9.0.9
         version: 9.0.9
       '@types/multer':
-        specifier: ^1.4.12
+        specifier: 1.4.12
         version: 1.4.12
       '@types/node':
-        specifier: ^22.15.2
+        specifier: 22.15.2
         version: 22.15.2
       '@typescript-eslint/eslint-plugin':
-        specifier: ^8.31.0
+        specifier: 8.31.0
         version: 8.31.0(@typescript-eslint/parser@8.31.0(eslint@9.25.1)(typescript@5.8.3))(eslint@9.25.1)(typescript@5.8.3)
       '@typescript-eslint/parser':
-        specifier: ^8.31.0
+        specifier: 8.31.0
         version: 8.31.0(eslint@9.25.1)(typescript@5.8.3)
       eslint:
-        specifier: ^9.25.1
+        specifier: 9.25.1
         version: 9.25.1
       eslint-config-prettier:
-        specifier: ^10.1.2
+        specifier: 10.1.2
         version: 10.1.2(eslint@9.25.1)
       eslint-plugin-prettier:
-        specifier: ^5.2.6
+        specifier: 5.2.6
         version: 5.2.6(eslint-config-prettier@10.1.2(eslint@9.25.1))(eslint@9.25.1)(prettier@3.5.3)
       nodemon:
-        specifier: ^3.1.10
+        specifier: 3.1.10
         version: 3.1.10
       pino-pretty:
-        specifier: ^13.0.0
+        specifier: 13.0.0
         version: 13.0.0
       prettier:
-        specifier: ^3.5.3
+        specifier: 3.5.3
         version: 3.5.3
       ts-node:
-        specifier: ^10.9.2
+        specifier: 10.9.2
         version: 10.9.2(@types/node@22.15.2)(typescript@5.8.3)
       ts-node-dev:
-        specifier: ^2.0.0
+        specifier: 2.0.0
         version: 2.0.0(@types/node@22.15.2)(typescript@5.8.3)
       tsx:
-        specifier: ^4.19.3
+        specifier: 4.19.3
         version: 4.19.3
       typescript:
-        specifier: ^5.8.3
+        specifier: 5.8.3
         version: 5.8.3
       typescript-eslint:
-        specifier: ^8.31.0
+        specifier: 8.31.0
         version: 8.31.0(eslint@9.25.1)(typescript@5.8.3)
 
 packages:
@@ -750,9 +750,9 @@ packages:
   concat-map@0.0.1:
     resolution: {integrity: sha512-/Srv4dswyQNBfohGpz9o6Yb3Gz3SrUDqBH5rTuhGR7ahtlbYKnVxw2bCFMRljaA7EXHaXZ8wsHdodFvbkhKmqg==}
 
-  concat-stream@1.6.2:
-    resolution: {integrity: sha512-27HBghJxjiZtIk3Ycvn/4kbJk/1uZuJFfuPEns6LaEvpvG1f0hTea8lilrouyo9mVc2GWdcEZ8OLoGmSADlrCw==}
-    engines: {'0': node >= 0.8}
+  concat-stream@2.0.0:
+    resolution: {integrity: sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==}
+    engines: {'0': node >= 6.0}
 
   content-disposition@1.0.0:
     resolution: {integrity: sha512-Au9nRL8VNUut/XSzbQA38+M78dzP4D+eqg3gfJHMIHHYa3bg067xj1KxMUWj+VULbiZMowKngFFbKczUrNJ1mg==}
@@ -1328,9 +1328,9 @@ packages:
   ms@2.1.3:
     resolution: {integrity: sha512-6FlzubTLZG3J2a/NVCAleEhjzq5oxgHyaCU9yYXvcLsvoVaHJq/s5xXI6/XXP6tz7R9xAOtHnSO/tXtF3WRTlA==}
 
-  multer@1.4.5-lts.2:
-    resolution: {integrity: sha512-VzGiVigcG9zUAoCNU+xShztrlr1auZOlurXynNvO9GiWD1/mTBbUljOKY+qMeazBqXgRnjzeEgJI/wyjJUHg9A==}
-    engines: {node: '>= 6.0.0'}
+  multer@2.0.2:
+    resolution: {integrity: sha512-u7f2xaZ/UG8oLXHvtF/oWTRvT44p9ecwBBqTwgJVq0+4BW1g8OW01TyMEGWBHbyMOYVHXslaut7qEQ1meATXgw==}
+    engines: {node: '>= 10.16.0'}
 
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
@@ -1488,6 +1488,10 @@ packages:
 
   readable-stream@2.3.8:
     resolution: {integrity: sha512-8p0AUk4XODgIewSi0l8Epjs+EVnWiK7NoDIEGU0HhE7+ZyY8D1IMY7odu5lRrFXGg71L15KG8QrPmum45RTtdA==}
+
+  readable-stream@3.6.2:
+    resolution: {integrity: sha512-9u/sniCrY3D5WdsERHzHE4G2YCXqoG5FTHUiCC4SIbr6XcLZBY05ya9EKjYek9O5xOAwjGq+1JdGBAS7Q9ScoA==}
+    engines: {node: '>= 6'}
 
   readable-stream@4.7.0:
     resolution: {integrity: sha512-oIGGmcpTLwPga8Bn6/Z75SVaH1z5dUut2ibSyAMVhmUggWpmDn2dapB0n7f8nwaSiRtepAsfJyfXIO5DCVAODg==}
@@ -2434,11 +2438,11 @@ snapshots:
 
   concat-map@0.0.1: {}
 
-  concat-stream@1.6.2:
+  concat-stream@2.0.0:
     dependencies:
       buffer-from: 1.1.2
       inherits: 2.0.4
-      readable-stream: 2.3.8
+      readable-stream: 3.6.2
       typedarray: 0.0.6
 
   content-disposition@1.0.0:
@@ -3020,11 +3024,11 @@ snapshots:
 
   ms@2.1.3: {}
 
-  multer@1.4.5-lts.2:
+  multer@2.0.2:
     dependencies:
       append-field: 1.0.0
       busboy: 1.6.0
-      concat-stream: 1.6.2
+      concat-stream: 2.0.0
       mkdirp: 0.5.6
       object-assign: 4.1.1
       type-is: 1.6.18
@@ -3194,6 +3198,12 @@ snapshots:
       process-nextick-args: 2.0.1
       safe-buffer: 5.1.2
       string_decoder: 1.1.1
+      util-deprecate: 1.0.2
+
+  readable-stream@3.6.2:
+    dependencies:
+      inherits: 2.0.4
+      string_decoder: 1.3.0
       util-deprecate: 1.0.2
 
   readable-stream@4.7.0:
