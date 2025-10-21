@@ -1,7 +1,7 @@
 import { ConversionOptions as Options, ImageFormat } from '../types/image';
 
 /**
- * Componente para las opciones de conversión de imágenes
+ * Component for image conversion options
  */
 export class ConversionOptions extends HTMLElement {
   private options: Options;
@@ -18,7 +18,7 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Callback que se ejecuta cuando el componente se conecta al DOM
+   * Callback that executes when the component connects to the DOM
    */
   connectedCallback() {
     this.render();
@@ -27,7 +27,7 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Setter para las opciones de conversión
+   * Setter for conversion options
    */
   set conversionOptions(options: Options) {
     this.options = { ...this.options, ...options };
@@ -35,21 +35,21 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Getter para las opciones de conversión
+   * Getter for conversion options
    */
   get conversionOptions(): Options {
     return this.options;
   }
 
   /**
-   * Registra el callback para cuando cambian las opciones
+   * Registers the callback for when options change
    */
   public setOnChangeCallback(callback: (options: Options) => void) {
     this.onChange = callback;
   }
 
   /**
-   * Actualiza los valores del formulario según las opciones actuales
+   * Updates form values according to current options
    */
   private updateFormValues() {
     const formatSelect = this.querySelector('#format') as HTMLSelectElement;
@@ -82,7 +82,7 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Configura los event listeners para los cambios en las opciones
+   * Sets up event listeners for option changes
    */
   private setupEventListeners() {
     // Format select
@@ -134,16 +134,16 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Renderiza el componente
+   * Renders the component
    */
   private render() {
     this.innerHTML = `
-      <div class="options-container" role="region" aria-label="Opciones de conversión">
-        <h2 id="options-heading">Opciones de conversión</h2>
+      <div class="options-container" role="region" aria-label="Conversion options">
+        <h2 id="options-heading">Conversion options</h2>
         
         <div class="form-group">
-          <label for="format" class="form-label">Formato de salida</label>
-          <select id="format" class="form-select" aria-label="Seleccionar formato de salida">
+          <label for="format" class="form-label">Output format</label>
+          <select id="format" class="form-select" aria-label="Select output format">
             <option value="png">PNG</option>
             <option value="jpeg">JPEG</option>
             <option value="webp">WEBP</option>
@@ -155,7 +155,7 @@ export class ConversionOptions extends HTMLElement {
         </div>
         
         <div class="form-group">
-          <label for="quality" class="form-label" id="quality-label">Calidad: <span id="quality-value">90</span>%</label>
+          <label for="quality" class="form-label" id="quality-label">Quality: <span id="quality-value">90</span>%</label>
           <input 
             type="range" 
             id="quality" 
@@ -165,37 +165,37 @@ export class ConversionOptions extends HTMLElement {
             step="1" 
             value="90"
             aria-labelledby="quality-label"
-            aria-label="Calidad de la imagen, ajustable de 10 a 100 por ciento"
+            aria-label="Image quality, adjustable from 10 to 100 percent"
           />
         </div>
         
         <div class="form-group">
           <fieldset>
-            <legend>Dimensiones (opcional)</legend>
+            <legend>Dimensions (optional)</legend>
             
             <div class="dimensions-wrapper">
               <div class="dimensions-container">
                 <div class="form-group">
-                  <label for="width" class="form-label">Ancho (px)</label>
+                  <label for="width" class="form-label">Width (px)</label>
                   <input 
                     type="number" 
                     id="width" 
                     class="form-input" 
                     placeholder="Auto" 
                     min="1"
-                    aria-label="Ancho en píxeles" 
+                    aria-label="Width in pixels" 
                   />
                 </div>
                 
                 <div class="form-group">
-                  <label for="height" class="form-label">Alto (px)</label>
+                  <label for="height" class="form-label">Height (px)</label>
                   <input 
                     type="number" 
                     id="height" 
                     class="form-input" 
                     placeholder="Auto" 
                     min="1"
-                    aria-label="Alto en píxeles" 
+                    aria-label="Height in pixels" 
                   />
                 </div>
               </div>
@@ -206,10 +206,10 @@ export class ConversionOptions extends HTMLElement {
                   id="maintain-aspect-ratio" 
                   class="form-check-input" 
                   checked
-                  aria-label="Mantener proporción de aspecto" 
+                  aria-label="Maintain aspect ratio" 
                 />
                 <label for="maintain-aspect-ratio" class="form-check-label">
-                  Mantener proporción de aspecto
+                  Maintain aspect ratio
                 </label>
               </div>
             </div>
@@ -220,32 +220,29 @@ export class ConversionOptions extends HTMLElement {
   }
 
   /**
-   * Verifica y corrige problemas de accesibilidad
+   * Verifies and corrects accessibility issues
    */
   private ensureAccessibility() {
-    // Asegurar que el label tiene el ID correcto para aria-labelledby
+    // Ensure the label has the correct ID for aria-labelledby
     const qualityLabel = this.querySelector('label[for="quality"]');
     if (qualityLabel && !qualityLabel.id) {
       qualityLabel.id = 'quality-label';
     }
 
-    // Asegurar que el input tenga referencias correctas
+    // Ensure the input has correct references
     const qualityInput = this.querySelector('#quality') as HTMLInputElement;
     if (qualityInput) {
       if (qualityLabel && qualityLabel.id) {
         qualityInput.setAttribute('aria-labelledby', qualityLabel.id);
       }
 
-      // Añadir aria-label como respaldo
+      // Add aria-label as backup
       if (!qualityInput.hasAttribute('aria-label')) {
-        qualityInput.setAttribute(
-          'aria-label',
-          'Calidad de la imagen, ajustable de 10 a 100 por ciento'
-        );
+        qualityInput.setAttribute('aria-label', 'Image quality, adjustable from 10 to 100 percent');
       }
     }
   }
 }
 
-// Registrar el componente
+// Register the component
 customElements.define('conversion-options', ConversionOptions);

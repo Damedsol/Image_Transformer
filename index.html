@@ -1,27 +1,27 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="Conversor de imágenes online - Convierte formatos de imagen de manera sencilla y rápida"
+      content="Online image converter - Convert image formats easily and quickly"
     />
     <meta name="format-detection" content="telephone=no" />
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preload" href="/src/style.css" as="style" />
     <link rel="preload" href="/src/main.ts" as="script" />
-    <title>Conversor de Imágenes</title>
+    <title>Image Converter</title>
   </head>
 
   <body>
-    <a href="#main-content" class="skip-link">Saltar al contenido principal</a>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
     <header class="app-header">
       <button
         id="open-a11y-dialog"
         class="a11y-button"
-        aria-label="Abrir opciones de accesibilidad"
+        aria-label="Open accessibility options"
         aria-haspopup="dialog"
       >
         <svg
@@ -57,7 +57,7 @@
         aria-live="assertive"
         role="status"
       >
-        Sin conexión - Algunas funciones podrían no estar disponibles
+        No connection - Some features may not be available
       </div>
     </footer>
 
@@ -73,8 +73,8 @@
       aria-modal="true"
     >
       <div class="a11y-dialog-content">
-        <h2 id="a11y-dialog-title">Opciones de accesibilidad</h2>
-        <button id="close-a11y-dialog" aria-label="Cerrar diálogo de accesibilidad">
+        <h2 id="a11y-dialog-title">Accessibility options</h2>
+        <button id="close-a11y-dialog" aria-label="Close accessibility dialog">
           <svg
             aria-hidden="true"
             focusable="false"
@@ -95,70 +95,64 @@
           <div class="a11y-option">
             <label for="high-contrast">
               <input type="checkbox" id="high-contrast" aria-describedby="high-contrast-desc" />
-              <span>Alto contraste</span>
+              <span>High contrast</span>
             </label>
             <span id="high-contrast-desc" class="option-description"
-              >Aumenta el contraste de colores para mejor legibilidad</span
+              >Increases color contrast for better readability</span
             >
           </div>
           <div class="a11y-option">
-            <label for="font-size">Tamaño de texto</label>
+            <label for="font-size">Text size</label>
             <select id="font-size" aria-describedby="font-size-desc">
-              <option value="default">Predeterminado</option>
-              <option value="large">Grande</option>
-              <option value="larger">Muy grande</option>
+              <option value="default">Default</option>
+              <option value="large">Large</option>
+              <option value="larger">Extra large</option>
             </select>
             <span id="font-size-desc" class="option-description"
-              >Cambia el tamaño del texto en toda la aplicación</span
+              >Changes text size throughout the application</span
             >
           </div>
           <div class="a11y-option">
             <label for="dyslexic-font">
               <input type="checkbox" id="dyslexic-font" aria-describedby="dyslexic-font-desc" />
-              <span>Fuente para dislexia</span>
+              <span>Dyslexic font</span>
             </label>
             <span id="dyslexic-font-desc" class="option-description"
-              >Utiliza una fuente diseñada para facilitar la lectura a personas con dislexia</span
+              >Uses a font designed to facilitate reading for people with dyslexia</span
             >
           </div>
           <div class="a11y-option">
             <label for="reduce-motion">
               <input type="checkbox" id="reduce-motion" aria-describedby="reduce-motion-desc" />
-              <span>Reducir animaciones</span>
+              <span>Reduce animations</span>
             </label>
             <span id="reduce-motion-desc" class="option-description"
-              >Minimiza o elimina las animaciones y efectos de movimiento</span
+              >Minimizes or eliminates animations and motion effects</span
             >
           </div>
           <div class="a11y-option">
-            <label for="text-spacing">Espaciado de texto</label>
+            <label for="text-spacing">Text spacing</label>
             <select id="text-spacing" aria-describedby="text-spacing-desc">
-              <option value="default">Predeterminado</option>
-              <option value="medium">Medio</option>
-              <option value="large">Amplio</option>
+              <option value="default">Default</option>
+              <option value="medium">Medium</option>
+              <option value="large">Wide</option>
             </select>
             <span id="text-spacing-desc" class="option-description"
-              >Ajusta el espaciado entre letras, palabras y líneas de texto</span
+              >Adjusts spacing between letters, words and text lines</span
             >
           </div>
         </div>
         <div class="keyboard-shortcuts">
-          <h3 id="keyboard-shortcuts-title">Atajos de teclado</h3>
+          <h3 id="keyboard-shortcuts-title">Keyboard shortcuts</h3>
           <ul aria-labelledby="keyboard-shortcuts-title">
             <li>
-              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd>: Abrir/cerrar opciones de
-              accesibilidad
+              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd>: Open/close accessibility options
             </li>
-            <li>
-              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>: Alternar modo de alto contraste
-            </li>
-            <li>
-              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>: Cargar una imagen desde el
-              dispositivo
-            </li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd>: Iniciar conversión de imagen</li>
+            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>: Toggle high contrast mode</li>
+            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>: Load an image from the device</li>
+            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd>: Start image conversion</li>
           </ul>
-          <p class="shortcut-note">Nota: En Mac, usa <kbd>Cmd</kbd> en lugar de <kbd>Ctrl</kbd></p>
+          <p class="shortcut-note">Note: On Mac, use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd></p>
         </div>
       </div>
     </div>

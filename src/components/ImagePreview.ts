@@ -2,7 +2,7 @@ import { ImageInfo } from '../types/image';
 import { formatFileSize } from '../utils/fileUtils';
 
 /**
- * Componente para mostrar la vista previa de las imágenes seleccionadas
+ * Component to show preview of selected images
  */
 export class ImagePreview extends HTMLElement {
   private imageInfo!: ImageInfo;
@@ -14,7 +14,7 @@ export class ImagePreview extends HTMLElement {
   }
 
   /**
-   * Setter para la información de la imagen
+   * Setter for image information
    */
   set image(imageInfo: ImageInfo) {
     this.imageInfo = imageInfo;
@@ -23,21 +23,21 @@ export class ImagePreview extends HTMLElement {
   }
 
   /**
-   * Getter para la información de la imagen
+   * Getter for image information
    */
   get image(): ImageInfo {
     return this.imageInfo;
   }
 
   /**
-   * Registra el callback para cuando se elimina una imagen
+   * Registers the callback for when an image is removed
    */
   public setOnRemoveCallback(callback: (id: string) => void) {
     this.onRemove = callback;
   }
 
   /**
-   * Configura los event listeners para el botón de eliminar
+   * Sets up event listeners for the remove button
    */
   private setupEventListeners() {
     const removeButton = this.querySelector('.preview-remove');
@@ -49,16 +49,14 @@ export class ImagePreview extends HTMLElement {
   }
 
   /**
-   * Renderiza el componente
+   * Renders the component
    */
   private render() {
     if (!this.imageInfo) return;
 
     const { preview, name, size, dimensions } = this.imageInfo;
     const formattedSize = formatFileSize(size);
-    const dimensionsText = dimensions
-      ? `${dimensions.width} × ${dimensions.height}`
-      : 'Desconocido';
+    const dimensionsText = dimensions ? `${dimensions.width} × ${dimensions.height}` : 'Unknown';
 
     this.innerHTML = `
       <div class="preview-item" id="preview-${this.imageInfo.id}">
@@ -77,13 +75,13 @@ export class ImagePreview extends HTMLElement {
           <button 
             type="button" 
             class="preview-remove btn btn-outline" 
-            aria-label="Eliminar imagen ${name}"
+            aria-label="Remove image ${name}"
           >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <polyline points="3 6 5 6 21 6"></polyline>
               <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
             </svg>
-            Eliminar
+            Remove
           </button>
         </div>
       </div>
@@ -91,5 +89,5 @@ export class ImagePreview extends HTMLElement {
   }
 }
 
-// Registrar el componente
+// Register the component
 customElements.define('image-preview', ImagePreview);

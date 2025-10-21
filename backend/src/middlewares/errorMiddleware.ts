@@ -4,7 +4,7 @@ import { AppError } from '../utils/apiError.js';
 import logger from '../utils/logger.js';
 
 /**
- * Middleware para manejar errores de forma centralizada
+ * Middleware to handle errors centrally
  */
 export const errorHandler: ErrorRequestHandler = (
   err: Error | ApiError | AppError,
@@ -12,11 +12,11 @@ export const errorHandler: ErrorRequestHandler = (
   res: Response,
   _next: NextFunction
 ): void => {
-  // Loguear el error usando el logger centralizado
-  // Incluir el objeto de error completo para tener stack trace y detalles
-  logger.error({ err }, 'Error no manejado interceptado por errorHandler');
+  // Log the error using the centralized logger
+  // Include the complete error object to have stack trace and details
+  logger.error({ err }, 'Unhandled error intercepted by errorHandler');
 
-  // Si es un AppError personalizado, usar su código de estado y detalles
+  // If it's a custom AppError, use its status code and details
   if (err instanceof AppError) {
     res.status(err.statusCode).json({
       success: false,
@@ -29,20 +29,20 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  // Categorizar errores comunes
-  // Errores de validación
+  // Categorize common errors
+  // Validation errors
   if (err.message.includes('Validation error') || err.message.includes('validation failed')) {
     res.status(400).json({
       success: false,
       error: {
-        message: 'Datos de entrada inválidos',
+        message: 'Invalid input data',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
     return;
   }
 
-  // Errores de autenticación
+  // Authentication errors
   if (
     err.message.includes('jwt') ||
     err.message.includes('token') ||
@@ -51,42 +51,42 @@ export const errorHandler: ErrorRequestHandler = (
     res.status(401).json({
       success: false,
       error: {
-        message: 'Error de autenticación',
+        message: 'Authentication error',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
     return;
   }
 
-  // Errores de autorización
+  // Authorization errors
   if (err.message.includes('permission') || err.message.includes('forbidden')) {
     res.status(403).json({
       success: false,
       error: {
-        message: 'No tiene permisos para realizar esta acción',
+        message: 'You do not have permission to perform this action',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
     return;
   }
 
-  // Errores de Multer (subida de archivos)
-  if (err.message.includes('Solo se permiten imágenes') || err.name === 'MulterError') {
+  // Multer errors (file upload)
+  if (err.message.includes('Only images are allowed') || err.name === 'MulterError') {
     res.status(400).json({
       success: false,
       error: {
-        message: err.message || 'Error en la subida de archivos',
+        message: err.message || 'File upload error',
         details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
       },
     });
     return;
   }
 
-  // Error genérico (500 - Internal Server Error)
+  // Generic error (500 - Internal Server Error)
   res.status(500).json({
     success: false,
     error: {
-      message: 'Error interno del servidor',
+      message: 'Internal server error',
       details: process.env.NODE_ENV === 'development' ? err.message : undefined,
     },
   });
