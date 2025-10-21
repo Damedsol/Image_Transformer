@@ -49,5 +49,15 @@
     "tsx": "4.20.6",
     "typescript": "5.9.3",
     "typescript-eslint": "8.46.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "brace-expansion@^1.0.0": "1.1.12",
+      "brace-expansion@^2.0.0": "2.0.2"
+    },
+    "onlyBuiltDependencies": [
+      "esbuild",
+      "sharp"
+    ]
   }
 }
