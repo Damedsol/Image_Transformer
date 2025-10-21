@@ -11,6 +11,15 @@
 
 A powerful web application for transforming and converting images between different formats. Built with TypeScript, Vite for the frontend, and Express with Sharp for the backend processing. This application offers a modern interface for efficient image manipulation.
 
+## 📚 Documentation
+
+For detailed documentation, see the [docs/](docs/) folder:
+
+- **[📖 General Documentation](docs/README.md)** - Project overview and architecture
+- **[🐳 Docker Setup](docs/DOCKER.md)** - Container configuration and deployment
+- **[📝 Logging System](docs/LOGGING.md)** - Conditional logging for development/production
+- **[📋 Documentation Index](docs/INDEX.md)** - Complete documentation guide
+
 ## Main Features
 
 - ✅ Convert images between multiple formats (JPG, PNG, WebP, AVIF, GIF)
