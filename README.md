@@ -1,15 +1,24 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](https://github.com/your-username/imageTransformer)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.7.2-blue?logo=typescript)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-6.3.1-646CFF?logo=vite)](https://vitejs.dev/)
-[![Sharp](https://img.shields.io/badge/Sharp-0.33.2-green?logo=sharp)](https://sharp.pixelplumbing.com/)
-[![Express](https://img.shields.io/badge/Express-4.18.2-black?logo=express)](https://expressjs.com/)
+[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/your-username/imageTransformer)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.1.11-646CFF?logo=vite)](https://vitejs.dev/)
+[![Sharp](https://img.shields.io/badge/Sharp-0.34.4-green?logo=sharp)](https://sharp.pixelplumbing.com/)
+[![Express](https://img.shields.io/badge/Express-5.1.0-black?logo=express)](https://expressjs.com/)
 
 ## Description
 
 A powerful web application for transforming and converting images between different formats. Built with TypeScript, Vite for the frontend, and Express with Sharp for the backend processing. This application offers a modern interface for efficient image manipulation.
+
+## 📚 Documentation
+
+For detailed documentation, see the [docs/](docs/) folder:
+
+- **[📖 General Documentation](docs/README.md)** - Project overview and architecture
+- **[🐳 Docker Setup](docs/DOCKER.md)** - Container configuration and deployment
+- **[📝 Logging System](docs/LOGGING.md)** - Conditional logging for development/production
+- **[📋 Documentation Index](docs/INDEX.md)** - Complete documentation guide
 
 ## Main Features
 
@@ -20,37 +29,46 @@ A powerful web application for transforming and converting images between differ
 - 📦 Download results as individual files or ZIP archives
 - 📱 Responsive design with accessibility features
 - 🌓 Light and dark theme support
+- 🔒 Security middleware with Helmet and rate limiting
+- 📝 Comprehensive logging system with Pino
+- 🐳 Docker containerization with development and production profiles
+- ⚡ Hot-reload development environment
 
 ## Technologies Used
 
 ### Frontend
 
-- TypeScript
-- Vite
+- TypeScript 5.9.3
+- Vite 7.1.11
 - Web Components (vanilla)
 - CSS Custom Properties
 
 ### Backend
 
-- Node.js
-- Express
-- Sharp (image processing)
-- Multer (file uploads)
-- Archiver (ZIP creation)
-- Zod (validation)
+- Node.js (ES2022)
+- Express 5.1.0
+- Sharp 0.34.4 (image processing)
+- Multer 2.0.2 (file uploads)
+- Archiver 7.0.1 (ZIP creation)
+- Zod 4.1.12 (validation)
+- Pino 10.1.0 (logging)
+- Helmet 8.1.0 (security)
+- CORS 2.8.5 (cross-origin)
 
 ### DevOps & Tools
 
 - Docker & Docker Compose
-- ESLint + Prettier
-- Husky (Git hooks)
-- Commitlint
+- ESLint 9.38.0 + Prettier 3.6.2
+- Husky 9.1.7 (Git hooks)
+- Commitlint 20.1.0
+- PNPM 10.18.3 (package manager)
 
 ## Requirements
 
-- Node.js (version 16 or higher)
-- PNPM
+- Node.js (version 18 or higher, ES2022 support)
+- PNPM 10.18.3+
 - Docker & Docker Compose (optional, for containerized deployment)
+- TypeScript 5.9.3+
 
 ## Installation
 
@@ -80,14 +98,19 @@ A powerful web application for transforming and converting images between differ
 4. Start the development services:
 
    ```bash
-   # Using Docker
-   pnpm docker:dev
+   # Using Docker (Development)
+   docker compose --profile development up --build
+
+   # Using Docker (Production)
+   docker compose --profile production up --build -d
 
    # Without Docker
    pnpm dev
    ```
 
-5. Open your browser at [http://localhost:5173](http://localhost:5173)
+5. Open your browser at:
+   - **Development**: [http://localhost:5173](http://localhost:5173)
+   - **Production**: [http://localhost:80](http://localhost:80)
 
 ## How to Use the Application
 
@@ -116,16 +139,96 @@ A powerful web application for transforming and converting images between differ
 
 ## Available Scripts
 
-- `pnpm dev`: Start the frontend development server
-- `pnpm build`: Build the frontend for production
+### Frontend Scripts
+
+- `pnpm dev`: Start the frontend development server with Vite
+- `pnpm build`: Build the frontend for production with TypeScript compilation
 - `pnpm preview`: Preview the built frontend version
 - `pnpm lint`: Run ESLint to check the code
-- `pnpm format`: Format the code with Prettier
 - `pnpm lint:fix`: Run lint with automatic fixing
-- `pnpm docker:dev`: Start development environment in Docker
-- `pnpm docker:prod`: Start production environment in Docker
-- `pnpm docker:logs`: View Docker logs
-- `pnpm docker:prune`: Clean up Docker resources
+- `pnpm format`: Format the code with Prettier
+- `pnpm format:check`: Check code formatting with Prettier
+- `pnpm type-check`: Run TypeScript type checking
+
+### Backend Scripts
+
+- `pnpm dev`: Start the backend development server with hot-reload (tsx)
+- `pnpm build`: Compile TypeScript to JavaScript
+- `pnpm start`: Start the production backend server
+- `pnpm lint`: Run ESLint for backend code
+- `pnpm lint:fix`: Run lint with automatic fixing for backend
+- `pnpm format`: Format backend code with Prettier
+- `pnpm format:check`: Check backend code formatting
+- `pnpm type-check`: Run TypeScript type checking for backend
+
+## Docker Commands
+
+### Development
+
+```bash
+# Start development environment
+docker compose --profile development up --build
+
+# Stop development environment
+docker compose --profile development down
+
+# View development logs
+docker compose --profile development logs -f
+```
+
+### Production
+
+```bash
+# Start production environment
+docker compose --profile production up --build -d
+
+# Stop production environment
+docker compose --profile production down
+
+# View production logs
+docker compose --profile production logs -f
+```
+
+### General Docker Commands
+
+```bash
+# View all containers
+docker compose ps
+
+# View logs for specific services
+docker compose logs -f backend-dev backend-prod
+docker compose logs -f frontend-dev frontend-prod
+
+# Clean up Docker resources
+docker system prune -f
+```
+
+## Docker Configuration
+
+This project uses Docker Compose with profiles to manage both development and production environments:
+
+### Profiles Available
+
+- **`development`**: Hot-reload enabled, volumes mounted, ports 5173/3001
+- **`production`**: Optimized build, Nginx frontend, ports 80/3001
+
+### Services
+
+- **Backend**: Node.js with Express 5.1.0 and Sharp 0.34.4 for image processing
+- **Frontend**: Vite 7.1.11 dev server (dev) or Nginx (prod)
+
+### Volumes
+
+- `backend-temp`: Persistent storage for processed files
+- `backend-logs`: Persistent storage for application logs
+- Development volumes: Mounted for hot-reload with optimized polling
+
+### Environment Variables
+
+- **Development**: `NODE_ENV=development`, `LOG_LEVEL=debug`, hot-reload enabled
+- **Production**: `NODE_ENV=production`, `LOG_LEVEL=silent`, optimized for performance
+
+For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
 
 ## Development Workflow
 

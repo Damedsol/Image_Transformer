@@ -34,8 +34,8 @@ app.use(
   cors({
     origin:
       process.env.NODE_ENV === 'production'
-        ? ['https://yourdomain.com'] // Dominio en producción
-        : ['http://localhost:3000', 'http://localhost:5173'], // Permitir frontend dev
+        ? ['http://localhost', 'https://yourdomain.com'] // Dominio en producción + localhost
+        : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost'], // Permitir frontend dev y prod
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     credentials: true,

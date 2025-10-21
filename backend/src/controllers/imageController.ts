@@ -8,21 +8,21 @@ import { safelyDeleteFile } from '../middlewares/uploadMiddleware.js';
 import logger from '../utils/logger.js';
 import dotenv from 'dotenv';
 
-// Cargar variables de entorno
+// Load environment variables
 dotenv.config();
 
-// Configuración de límites
+// Configuration limits
 const MAX_FILES_PER_REQUEST = parseInt(process.env.MAX_FILES_PER_REQUEST || '5');
 const DAILY_QUOTA_PER_IP = parseInt(process.env.DAILY_QUOTA_PER_IP || '100');
 
-// Almacenamiento en memoria para cuotas (en producción usar Redis o base de datos)
+// In-memory storage for quotas (in production use Redis or database)
 interface IPQuota {
   count: number;
   resetAt: Date;
 }
 const ipQuotas = new Map<string, IPQuota>();
 
-// Esquema de validación para opciones de conversión
+// Validation schema for conversion options
 const formatSchema = z.enum(['jpeg', 'png', 'webp', 'avif', 'gif']);
 const conversionOptionsSchema = z.object({
   format: formatSchema,
@@ -33,17 +33,17 @@ const conversionOptionsSchema = z.object({
 });
 
 /**
- * Verificar y actualizar la cuota de un IP
- * @returns true si el IP tiene cuota disponible, false si ha excedido su cuota
+ * Check and update IP quota
+ * @returns true if IP has available quota, false if quota exceeded
  */
 const checkIPQuota = (ip: string): boolean => {
-  // En un entorno de producción, esto debería persistirse en base de datos
+  // In a production environment, this should be persisted in a database
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   let ipQuota = ipQuotas.get(ip);
 
-  // Si no existe la cuota o es de un día anterior, resetear
+  // If quota doesn't exist or is from a previous day, reset
   if (!ipQuota || ipQuota.resetAt < today) {
     ipQuota = {
       count: 0,
@@ -51,12 +51,12 @@ const checkIPQuota = (ip: string): boolean => {
     };
   }
 
-  // Verificar si ha excedido la cuota
+  // Check if quota has been exceeded
   if (ipQuota.count >= DAILY_QUOTA_PER_IP) {
     return false;
   }
 
-  // Actualizar contador
+  // Update counter
   ipQuota.count += 1;
   ipQuotas.set(ip, ipQuota);
 
@@ -64,31 +64,31 @@ const checkIPQuota = (ip: string): boolean => {
 };
 
 /**
- * Convierte las imágenes según las opciones especificadas y devuelve un ZIP
+ * Converts images according to specified options and returns a ZIP
  */
 export const convertImages = async (req: Request, res: Response): Promise<void> => {
-  // Lista DE TODOS los archivos temporales generados en esta petición
+  // List of ALL temporary files generated in this request
   const allTempFiles: string[] = [];
   let zipPath: string | undefined;
   let processedImages: ConversionResult[] = [];
 
   try {
     if (!req.files || !Array.isArray(req.files)) {
-      throw new AppError('No se han subido imágenes', 400);
+      throw new AppError('No images uploaded', 400);
     }
 
-    // Verificar cantidad máxima de archivos
+    // Check maximum number of files
     if (req.files.length > MAX_FILES_PER_REQUEST) {
       throw new AppError(
-        `Número máximo de archivos excedido. Máximo permitido: ${MAX_FILES_PER_REQUEST}`,
+        `Maximum number of files exceeded. Maximum allowed: ${MAX_FILES_PER_REQUEST}`,
         400
       );
     }
 
-    // Obtener IP del cliente
+    // Get client IP
     const clientIP = req.ip || 'unknown';
 
-    // Verificar cuota de IP
+    // Check IP quota
     if (!checkIPQuota(clientIP)) {
       logger.warn(
         {
@@ -97,36 +97,42 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
           limit: DAILY_QUOTA_PER_IP,
           userAgent: req.headers['user-agent'] || 'unknown',
         },
-        'Intento de exceder cuota diaria'
+        'Attempt to exceed daily quota'
       );
 
       throw new AppError(
-        `Ha excedido su cuota diaria de procesamiento (${DAILY_QUOTA_PER_IP} imágenes)`,
+        `You have exceeded your daily processing quota (${DAILY_QUOTA_PER_IP} images)`,
         429,
         { code: 'QUOTA_EXCEEDED' }
       );
     }
 
-    // Validar opciones de conversión
+    // Validate conversion options
     const validationResult = conversionOptionsSchema.safeParse(req.body);
     if (!validationResult.success) {
-      throw new AppError('Opciones de conversión inválidas', 400, {
+      throw new AppError('Invalid conversion options', 400, {
         code: 'VALIDATION_ERROR',
         details: validationResult.error.format(),
       });
     }
 
-    // Opciones de conversión validadas
-    const options: ConversionOptions = validationResult.data;
-    logger.info({ options }, 'Opciones de conversión validadas');
+    // Validated conversion options
+    const options: ConversionOptions = {
+      format: validationResult.data.format,
+      width: validationResult.data.width,
+      height: validationResult.data.height,
+      quality: validationResult.data.quality,
+      maintainAspectRatio: validationResult.data.maintainAspectRatio,
+    };
+    logger.info({ options }, 'Conversion options validated');
 
-    // Añadir archivos originales a la lista global de limpieza
+    // Add original files to global cleanup list
     req.files.forEach(file => {
       allTempFiles.push(file.path);
     });
 
-    // Procesar cada imagen subida
-    logger.info({ numFiles: req.files.length }, 'Iniciando procesamiento de imágenes');
+    // Process each uploaded image
+    logger.info({ numFiles: req.files.length }, 'Starting image processing');
     processedImages = await Promise.all(
       req.files.map((file: Express.Multer.File) =>
         processImage(
@@ -139,42 +145,42 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
       )
     );
 
-    // Añadir imágenes procesadas a la lista global de limpieza
+    // Add processed images to global cleanup list
     processedImages.forEach(img => {
       allTempFiles.push(img.path);
     });
 
-    logger.info({ numProcessed: processedImages.length }, 'Procesamiento de imágenes completado');
+    logger.info({ numProcessed: processedImages.length }, 'Image processing completed');
 
-    // Crear nombre para el ZIP basado en la marca de tiempo y un identificador aleatorio
+    // Create ZIP name based on timestamp and random identifier
     const zipFileName = `converted_images_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
 
-    // Crear ZIP con las imágenes procesadas
-    logger.info({ zipFileName }, 'Iniciando creación de archivo ZIP');
+    // Create ZIP with processed images
+    logger.info({ zipFileName }, 'Starting ZIP file creation');
     zipPath = await createZipFromImages(processedImages, zipFileName);
-    logger.info({ zipPath }, 'Archivo ZIP creado exitosamente');
+    logger.info({ zipPath }, 'ZIP file created successfully');
 
-    // Añadir el ZIP a la lista global de limpieza
+    // Add ZIP to global cleanup list
     allTempFiles.push(zipPath);
 
-    // --- Limpieza Inmediata de Originales y Procesados ---
-    logger.debug('Limpiando archivos originales y procesados...');
-    // Eliminar archivos originales
+    // --- Immediate Cleanup of Originals and Processed ---
+    logger.debug('Cleaning up original and processed files...');
+    // Delete original files
     req.files.forEach(file => {
       safelyDeleteFile(file.path);
     });
-    // Eliminar imágenes procesadas individuales
+    // Delete individual processed images
     processedImages.forEach(img => {
       safelyDeleteFile(img.path);
     });
-    logger.debug('Limpieza inmediata completada.');
+    logger.debug('Immediate cleanup completed.');
     // ------------------------------------------------------
 
-    // Devolver la URL para descargar el ZIP
+    // Return URL to download the ZIP
     const zipUrl = `/temp/output/${path.basename(zipPath)}`;
-    logger.info({ zipUrl }, 'URL del ZIP generada para la respuesta');
+    logger.info({ zipUrl }, 'ZIP URL generated for response');
 
-    // Registrar uso para auditoría con logger.info
+    // Log usage for audit with logger.info
     logger.info(
       {
         ip: clientIP,
@@ -184,13 +190,13 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
         userAgent: req.headers['user-agent'] || 'unknown',
         zipFile: path.basename(zipPath),
       },
-      'Conversión de imágenes completada exitosamente'
+      'Image conversion completed successfully'
     );
 
-    // Preparar respuesta
+    // Prepare response
     const responseData = {
       success: true,
-      message: 'Imágenes convertidas correctamente',
+      message: 'Images converted successfully',
       zipUrl,
       images: processedImages.map(img => ({
         originalName: path.basename(img.path),
@@ -200,13 +206,13 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
       })),
     };
 
-    // Enviar respuesta
-    logger.info({ responseData }, 'Enviando respuesta exitosa al cliente');
+    // Send response
+    logger.info({ responseData }, 'Sending successful response to client');
     res.json(responseData);
 
-    // Configurar eliminación RETRASADA SOLO para el archivo ZIP
-    logger.debug({ zipFile: zipPath }, `Programando limpieza retrasada para: ${zipPath}`);
-    cleanTempFiles([zipPath]); // Solo el ZIP
+    // Configure DELAYED deletion ONLY for the ZIP file
+    logger.debug({ zipFile: zipPath }, `Scheduling delayed cleanup for: ${zipPath}`);
+    cleanTempFiles([zipPath]); // Only the ZIP
   } catch (error: unknown) {
     logger.error(
       {
@@ -214,20 +220,20 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
         ip: req?.ip,
         userAgent: req?.headers ? req.headers['user-agent'] : undefined,
       },
-      'Error durante la conversión de imágenes'
+      'Error during image conversion'
     );
 
-    // Limpieza INMEDIATA de TODOS los archivos temporales en caso de error
+    // IMMEDIATE cleanup of ALL temporary files in case of error
     logger.warn(
       { numFiles: allTempFiles.length },
-      'Error detectado. Iniciando limpieza inmediata de todos los archivos temporales...'
+      'Error detected. Starting immediate cleanup of all temporary files...'
     );
     allTempFiles.forEach(filePath => {
       safelyDeleteFile(filePath);
     });
-    logger.warn('Limpieza por error completada.');
+    logger.warn('Error cleanup completed.');
 
-    // Enviar respuesta de error
+    // Send error response
     if (error instanceof AppError) {
       res.status(error.statusCode).json({
         success: false,
@@ -238,12 +244,12 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
         },
       });
     } else {
-      // Error genérico
+      // Generic error
       res.status(500).json({
         success: false,
         error: {
-          message: 'Error al procesar las imágenes',
-          details: error instanceof Error ? error.message : 'Error desconocido genérico',
+          message: 'Error processing images',
+          details: error instanceof Error ? error.message : 'Unknown generic error',
         },
       });
     }
@@ -251,7 +257,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
 };
 
 /**
- * Devuelve los formatos de imagen disponibles
+ * Returns available image formats
  */
 export const getFormats = (_req: Request, res: Response): void => {
   res.json({

@@ -1,14 +1,17 @@
 services:
-  backend:
+  # Backend para desarrollo
+  backend-dev:
     build:
       context: ./backend
       target: development
     container_name: image-transformer-backend-dev
+    ports:
+      - '3001:3001'
     volumes:
       - ./backend:/app:delegated
       - /app/node_modules
-    ports:
-      - "3001:3001"
+      - backend-temp:/app/temp
+      - backend-logs:/app/logs
     environment:
       - NODE_ENV=development
       - PORT=3001
@@ -16,29 +19,61 @@ services:
       - DEBUG=tsx:*
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
-      - FAST_REFRESH=true
+      - LOG_LEVEL=debug
     env_file:
       - ./backend/.env
     restart: unless-stopped
     networks:
       - image-transformer-network
     healthcheck:
-      test: [ "CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001" ]
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001']
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles:
+      - development
 
-  frontend:
+  # Backend para producción
+  backend-prod:
+    build:
+      context: ./backend
+      target: production
+    container_name: image-transformer-backend-prod
+    ports:
+      - '3001:3001'
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - LOG_LEVEL=silent
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - image-transformer-network
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - backend-temp:/app/temp
+    logging:
+      driver: "none"
+    profiles:
+      - production
+
+  # Frontend para desarrollo
+  frontend-dev:
     build:
       context: .
       target: development
     container_name: image-transformer-frontend-dev
+    ports:
+      - '5173:5173'
     volumes:
       - ./:/app:delegated
       - /app/node_modules
       - ./node_modules/.vite:/app/node_modules/.vite
-    ports:
-      - "5173:5173"
     environment:
       - NODE_ENV=development
       - VITE_API_URL=http://localhost:3001/api
@@ -46,13 +81,42 @@ services:
       - WATCHPACK_POLLING=true
       - FAST_REFRESH=true
       - VITE_HMR=true
+      - VITE_DEBUG=true
     depends_on:
-      - backend
+      - backend-dev
     restart: unless-stopped
     networks:
       - image-transformer-network
     command: pnpm run dev -- --host 0.0.0.0
+    profiles:
+      - development
+
+  # Frontend para producción
+  frontend-prod:
+    build:
+      context: .
+      target: production
+    container_name: image-transformer-frontend-prod
+    ports:
+      - '80:80'
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend-prod
+    restart: unless-stopped
+    networks:
+      - image-transformer-network
+    logging:
+      driver: "none"
+    profiles:
+      - production
 
 networks:
   image-transformer-network:
     driver: bridge
+
+volumes:
+  backend-temp:
+    driver: local
+  backend-logs:
+    driver: local

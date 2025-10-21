@@ -1,4 +1,5 @@
 import { ConversionOptions, ImageInfo } from '../types/image';
+import { logger, logApiError, logSuccess } from './logger';
 
 const API_URL = 'http://localhost:3001/api';
 
@@ -52,7 +53,7 @@ export const convertImagesAPI = async (
       formData.append('maintainAspectRatio', options.maintainAspectRatio.toString());
     }
 
-    console.warn('Enviando solicitud al servidor:', {
+    logger.debug('Enviando solicitud al servidor:', {
       formato: options.format,
       calidad: options.quality,
       ancho: options.width,
@@ -74,7 +75,7 @@ export const convertImagesAPI = async (
         errorMessage = errorData.error || errorData.message || errorMessage;
       } catch (parseError) {
         const error = parseError instanceof Error ? parseError : new Error(String(parseError));
-        console.error('Error al procesar la respuesta de error:', error);
+        logApiError('parseErrorResponse', error);
       }
       throw new Error(errorMessage);
     }
@@ -87,11 +88,11 @@ export const convertImagesAPI = async (
 
     // Construir la URL completa para descargar el ZIP
     const zipDownloadUrl = `http://localhost:3001${data.zipUrl}`;
-    console.warn('URL de descarga generada:', zipDownloadUrl);
+    logSuccess('imageConversion', { zipUrl: zipDownloadUrl, imagesCount: data.images.length });
     return zipDownloadUrl;
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error('Error al convertir imágenes:', err);
+    logApiError('convertImages', err);
     throw err;
   }
 };
@@ -111,7 +112,7 @@ export const getAvailableFormats = async (): Promise<string[]> => {
     return data.formats || [];
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
-    console.error('Error al obtener formatos:', err);
+    logApiError('getFormats', err);
     return ['jpeg', 'png', 'webp', 'avif', 'gif']; // Formatos por defecto
   }
 };
