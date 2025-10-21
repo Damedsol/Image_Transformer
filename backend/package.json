@@ -1,6 +1,6 @@
 {
   "name": "image-transformer-backend",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Backend para convertir imágenes usando Sharp",
   "main": "dist/index.js",
   "type": "module",
