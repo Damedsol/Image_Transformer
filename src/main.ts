@@ -14,16 +14,16 @@ import {
 import { logApiError } from './utils/logger';
 
 /**
- * Detecta preferencias de accesibilidad y carga opciones correspondientes
+ * Detects accessibility preferences and loads corresponding options
  */
 function setupAccessibilityFeatures() {
-  // Detectar modo oscuro
+  // Detect dark mode
   const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
 
-  // Detectar preferencia de reducción de movimiento
+  // Detect reduced motion preference
   const reducedMotionMediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-  // Añadir clases al body según preferencias del usuario
+  // Add classes to body according to user preferences
   function updateBodyClasses() {
     if (prefersDarkMode()) {
       document.body.classList.add('dark-mode');
@@ -34,7 +34,7 @@ function setupAccessibilityFeatures() {
     if (prefersReducedMotion()) {
       document.body.classList.add('reduced-motion');
 
-      // Actualizar el checkbox de reducir movimiento si existe
+      // Update the reduce motion checkbox if it exists
       const reduceMotionCheckbox = document.getElementById('reduce-motion') as HTMLInputElement;
       if (reduceMotionCheckbox) {
         reduceMotionCheckbox.checked = true;
@@ -44,19 +44,19 @@ function setupAccessibilityFeatures() {
     }
   }
 
-  // Actualizar al cargar
+  // Update on load
   updateBodyClasses();
 
-  // Escuchar cambios en las preferencias
+  // Listen for preference changes
   darkModeMediaQuery.addEventListener('change', updateBodyClasses);
   reducedMotionMediaQuery.addEventListener('change', updateBodyClasses);
 }
 
 /**
- * Configura la detección de eventos táctiles para mejorar UX
+ * Sets up touch event detection to improve UX
  */
 function setupTouchDetection() {
-  // Detectar si el dispositivo es táctil
+  // Detect if device is touch-enabled
   function updateTouchClass() {
     if (isTouchDevice()) {
       document.body.classList.add('touch-device');
@@ -65,56 +65,56 @@ function setupTouchDetection() {
     }
   }
 
-  // Actualizar al cargar
+  // Update on load
   updateTouchClass();
 
-  // Escuchar cambios (por ejemplo, al conectar/desconectar dispositivos)
+  // Listen for changes (e.g., when connecting/disconnecting devices)
   window.addEventListener('resize', updateTouchClass);
 }
 
 /**
- * Configura el anuncio de estado para lectores de pantalla
+ * Sets up status announcements for screen readers
  */
 function setupScreenReaderAnnouncer() {
   const statusAnnouncer = document.getElementById('status-announcer');
 
   if (statusAnnouncer) {
-    // Verificar si hay errores en la carga inicial
+    // Check for errors during initial load
     window.addEventListener('error', e => {
-      announceToScreenReader(`Error en la aplicación: ${e.message}`);
+      announceToScreenReader(`Application error: ${e.message}`);
     });
 
-    // Anunciar cuando la aplicación esté completamente cargada
+    // Announce when application is fully loaded
     window.addEventListener('load', () => {
       announceToScreenReader(
-        'Aplicación de conversión de imágenes cargada correctamente. Puede empezar a usar el conversor.'
+        'Image conversion application loaded successfully. You can start using the converter.'
       );
     });
   }
 }
 
 /**
- * Inicializa el diálogo de accesibilidad
+ * Initializes the accessibility dialog
  */
 function setupAccessibilityDialog() {
   const dialog = document.getElementById('a11y-dialog') as HTMLDialogElement;
   const a11yButton = document.getElementById('open-a11y-dialog') as HTMLButtonElement;
   const closeButton = document.getElementById('close-a11y-dialog') as HTMLButtonElement;
 
-  // Si no se encuentran los elementos, salir
+  // If elements are not found, exit
   if (!dialog || !a11yButton || !closeButton) {
-    logApiError('accessibilityElements', new Error('Elementos de accesibilidad no encontrados'));
+    logApiError('accessibilityElements', new Error('Accessibility elements not found'));
     return;
   }
 
-  // Configurar botón de accesibilidad en el encabezado
+  // Configure accessibility button in header
   if (a11yButton) {
     a11yButton.addEventListener('click', e => {
       e.preventDefault();
       openAccessibilityDialog();
     });
 
-    // Añadir contenido accesible al botón
+    // Add accessible content to button
     a11yButton.innerHTML = `
       <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -124,47 +124,47 @@ function setupAccessibilityDialog() {
         <path d="M4.93 7.5a8 8 0 0 1 14.14 0"></path>
         <path d="M4.93 16.5a8 8 0 0 0 14.14 0"></path>
       </svg>
-      <span class="sr-only">Opciones de accesibilidad</span>
+      <span class="sr-only">Accessibility options</span>
     `;
   }
 
-  // Configurar cierre del diálogo
+  // Configure dialog close
   if (closeButton) {
     closeButton.addEventListener('click', closeAccessibilityDialog);
   }
 
-  // Cargar preferencias del usuario
+  // Load user preferences
   loadUserPreferences();
 
-  // Manejar cambios en opciones de alto contraste
+  // Handle high contrast option changes
   const highContrastToggle = dialog.querySelector('#high-contrast') as HTMLInputElement;
   if (highContrastToggle) {
     highContrastToggle.addEventListener('change', () => {
       const isHighContrast = highContrastToggle.checked;
       savePreference('highContrast', isHighContrast ? 'true' : 'false', highContrastToggle);
       document.body.classList.toggle('high-contrast', isHighContrast);
-      announcePreferenceChange('Alto contraste', isHighContrast ? 'activado' : 'desactivado');
+      announcePreferenceChange('High contrast', isHighContrast ? 'enabled' : 'disabled');
     });
   }
 
-  // Manejar cambios en opciones de fuente para dislexia
+  // Handle dyslexic font option changes
   const dyslexicFontToggle = dialog.querySelector('#dyslexic-font') as HTMLInputElement;
   if (dyslexicFontToggle) {
     dyslexicFontToggle.addEventListener('change', () => {
       const isDyslexicFont = dyslexicFontToggle.checked;
       savePreference('dyslexicFont', isDyslexicFont ? 'true' : 'false', dyslexicFontToggle);
       document.body.classList.toggle('dyslexic-font', isDyslexicFont);
-      announcePreferenceChange('Fuente para dislexia', isDyslexicFont ? 'activada' : 'desactivada');
+      announcePreferenceChange('Dyslexic font', isDyslexicFont ? 'enabled' : 'disabled');
     });
   }
 
-  // Manejar cambios en opciones de tamaño de fuente
+  // Handle font size option changes
   const fontSizeOptions = dialog.querySelectorAll('input[name="font-size"]');
   fontSizeOptions.forEach(option => {
     const radio = option as HTMLInputElement;
     radio.addEventListener('change', () => {
       if (radio.checked) {
-        // Eliminar clases previas de tamaño de fuente
+        // Remove previous font size classes
         document.body.classList.remove('font-size-large', 'font-size-larger', 'font-size-largest');
 
         if (radio.value !== 'normal') {
@@ -172,29 +172,29 @@ function setupAccessibilityDialog() {
         }
 
         savePreference('fontSize', radio.value, radio);
-        announcePreferenceChange('Tamaño de fuente', getFontSizeName(radio.value));
+        announcePreferenceChange('Font size', getFontSizeName(radio.value));
       }
     });
   });
 
-  // Manejar cambios en opciones de movimiento reducido
+  // Handle reduced motion option changes
   const reducedMotionToggle = dialog.querySelector('#reduced-motion') as HTMLInputElement;
   if (reducedMotionToggle) {
     reducedMotionToggle.addEventListener('change', () => {
       const isReducedMotion = reducedMotionToggle.checked;
       savePreference('reducedMotion', isReducedMotion ? 'true' : 'false', reducedMotionToggle);
       document.body.classList.toggle('reduced-motion', isReducedMotion);
-      announcePreferenceChange('Movimiento reducido', isReducedMotion ? 'activado' : 'desactivado');
+      announcePreferenceChange('Reduced motion', isReducedMotion ? 'enabled' : 'disabled');
     });
   }
 
-  // Manejar cambios en opciones de espaciado de texto
+  // Handle text spacing option changes
   const textSpacingOptions = dialog.querySelectorAll('input[name="text-spacing"]');
   textSpacingOptions.forEach(option => {
     const radio = option as HTMLInputElement;
     radio.addEventListener('change', () => {
       if (radio.checked) {
-        // Eliminar clases previas de espaciado de texto
+        // Remove previous text spacing classes
         document.body.classList.remove('text-spacing-wider', 'text-spacing-widest');
 
         if (radio.value !== 'normal') {
@@ -202,42 +202,42 @@ function setupAccessibilityDialog() {
         }
 
         savePreference('textSpacing', radio.value, radio);
-        announcePreferenceChange('Espaciado de texto', getTextSpacingName(radio.value));
+        announcePreferenceChange('Text spacing', getTextSpacingName(radio.value));
       }
     });
   });
 }
 
 /**
- * Obtiene el nombre legible del tamaño de fuente
+ * Gets the readable name for font size
  */
 function getFontSizeName(value: string): string {
   switch (value) {
     case 'large':
-      return 'grande';
+      return 'large';
     case 'larger':
-      return 'muy grande';
+      return 'extra large';
     default:
-      return 'predeterminado';
+      return 'default';
   }
 }
 
 /**
- * Obtiene el nombre legible del espaciado de texto
+ * Gets the readable name for text spacing
  */
 function getTextSpacingName(value: string): string {
   switch (value) {
     case 'medium':
-      return 'medio';
+      return 'medium';
     case 'large':
-      return 'amplio';
+      return 'wide';
     default:
-      return 'predeterminado';
+      return 'default';
   }
 }
 
 /**
- * Configura atajos de teclado para funciones de accesibilidad
+ * Sets up keyboard shortcuts for accessibility functions
  */
 function setupKeyboardShortcuts() {
   let a11yDialog;
@@ -246,11 +246,11 @@ function setupKeyboardShortcuts() {
   let convertButton;
 
   document.addEventListener('keydown', event => {
-    // Solo procesar si Ctrl+Alt está presionado (o Cmd+Alt en Mac)
+    // Only process if Ctrl+Alt is pressed (or Cmd+Alt on Mac)
     if ((event.ctrlKey || event.metaKey) && event.altKey) {
       switch (event.key.toLowerCase()) {
         case 'a':
-          // Abrir/cerrar diálogo de accesibilidad
+          // Open/close accessibility dialog
           event.preventDefault();
           a11yDialog = document.getElementById('a11y-dialog');
           if (a11yDialog) {
@@ -263,7 +263,7 @@ function setupKeyboardShortcuts() {
           break;
 
         case 'c':
-          // Alternar alto contraste
+          // Toggle high contrast
           event.preventDefault();
           highContrastCheckbox = document.getElementById('high-contrast') as HTMLInputElement;
           if (highContrastCheckbox) {
@@ -273,24 +273,24 @@ function setupKeyboardShortcuts() {
           break;
 
         case 'd':
-          // Activar zona de carga de imágenes
+          // Activate image upload area
           event.preventDefault();
           dropZone = document.querySelector('drop-zone') as HTMLElement;
           if (dropZone) {
             dropZone.click();
-            announceToScreenReader('Activada la selección de archivos para cargar una imagen');
+            announceToScreenReader('File selection activated to upload an image');
           }
           break;
 
         case 's':
-          // Iniciar conversión
+          // Start conversion
           event.preventDefault();
           convertButton = document.querySelector(
             'button[data-action="convert"]'
           ) as HTMLButtonElement;
           if (convertButton) {
             convertButton.click();
-            announceToScreenReader('Iniciando proceso de conversión de imagen');
+            announceToScreenReader('Starting image conversion process');
           }
           break;
       }
@@ -299,7 +299,7 @@ function setupKeyboardShortcuts() {
 }
 
 /**
- * Abre el diálogo de accesibilidad
+ * Opens the accessibility dialog
  */
 function openAccessibilityDialog() {
   const a11yDialog = document.getElementById('a11y-dialog');
@@ -307,7 +307,7 @@ function openAccessibilityDialog() {
     a11yDialog.removeAttribute('hidden');
     a11yDialog.setAttribute('aria-hidden', 'false');
 
-    // Enfocar el primer elemento interactivo
+    // Focus the first interactive element
     const firstFocusable = a11yDialog.querySelector(
       'button, [href], input, select, textarea'
     ) as HTMLElement;
@@ -315,13 +315,13 @@ function openAccessibilityDialog() {
       firstFocusable.focus();
     }
 
-    // Anunciar apertura
-    announceToScreenReader('Diálogo de opciones de accesibilidad abierto');
+    // Announce opening
+    announceToScreenReader('Accessibility options dialog opened');
   }
 }
 
 /**
- * Cierra el diálogo de accesibilidad
+ * Closes the accessibility dialog
  */
 function closeAccessibilityDialog() {
   const a11yDialog = document.getElementById('a11y-dialog');
@@ -331,13 +331,13 @@ function closeAccessibilityDialog() {
     a11yDialog.setAttribute('hidden', 'true');
     a11yDialog.setAttribute('aria-hidden', 'true');
 
-    // Devolver el foco al botón de apertura
+    // Return focus to the open button
     if (openBtn) {
       openBtn.focus();
     }
 
-    // Anunciar cierre
-    announceToScreenReader('Diálogo de opciones de accesibilidad cerrado');
+    // Announce closing
+    announceToScreenReader('Accessibility options dialog closed');
   }
 }
 
@@ -349,26 +349,26 @@ document.addEventListener('DOMContentLoaded', () => {
       <image-converter></image-converter>
     `;
 
-    // Configurar características de accesibilidad
+    // Set up accessibility features
     setupAccessibilityFeatures();
     setupTouchDetection();
     setupScreenReaderAnnouncer();
     setupAccessibilityDialog();
     setupKeyboardShortcuts();
 
-    // Configurar detección de estado de conexión
+    // Set up connection status detection
     setupOfflineDetection();
   }
 });
 
 /**
- * Guarda una preferencia de accesibilidad en localStorage
+ * Saves an accessibility preference to localStorage
  */
 function savePreference(key: string, value: string, targetElement?: HTMLElement) {
   try {
     localStorage.setItem(`a11y-${key}`, value);
 
-    // Mostrar feedback visual cerca del elemento que cambió
+    // Show visual feedback near the element that changed
     const confirmIcon = document.createElement('div');
     confirmIcon.className = 'save-confirm';
     confirmIcon.innerHTML = `
@@ -377,22 +377,22 @@ function savePreference(key: string, value: string, targetElement?: HTMLElement)
       </svg>
     `;
 
-    // Si tenemos un elemento objetivo, posicionar el check junto a él
+    // If we have a target element, position the check next to it
     if (targetElement) {
-      // Obtener el contenedor padre para posicionar relativamente
+      // Get the parent container to position relatively
       const optionContainer = targetElement.closest('.a11y-option');
       if (optionContainer) {
         optionContainer.appendChild(confirmIcon);
       } else {
-        // Fallback al diálogo
+        // Fallback to dialog
         document.getElementById('a11y-dialog')?.appendChild(confirmIcon);
       }
     } else {
-      // Fallback al diálogo
+      // Fallback to dialog
       document.getElementById('a11y-dialog')?.appendChild(confirmIcon);
     }
 
-    // Eliminar el ícono después de la animación
+    // Remove the icon after animation
     setTimeout(() => {
       confirmIcon.classList.add('fade-out');
       setTimeout(() => confirmIcon.remove(), 300);
@@ -403,18 +403,18 @@ function savePreference(key: string, value: string, targetElement?: HTMLElement)
 }
 
 /**
- * Anuncia los cambios de preferencias al lector de pantalla
+ * Announces preference changes to screen reader
  */
 function announcePreferenceChange(option: string, value: string) {
   announceToScreenReader(`${option}: ${value}`);
 }
 
 /**
- * Carga las preferencias de accesibilidad guardadas del usuario
+ * Loads saved user accessibility preferences
  */
 function loadUserPreferences() {
   try {
-    // Alto contraste
+    // High contrast
     const highContrast = localStorage.getItem('a11y-highContrast');
     if (highContrast === 'true') {
       document.body.classList.add('high-contrast');
@@ -422,7 +422,7 @@ function loadUserPreferences() {
       if (highContrastToggle) highContrastToggle.checked = true;
     }
 
-    // Fuente para dislexia
+    // Dyslexic font
     const dyslexicFont = localStorage.getItem('a11y-dyslexicFont');
     if (dyslexicFont === 'true') {
       document.body.classList.add('dyslexic-font');
@@ -430,7 +430,7 @@ function loadUserPreferences() {
       if (dyslexicFontToggle) dyslexicFontToggle.checked = true;
     }
 
-    // Tamaño de fuente
+    // Font size
     const fontSize = localStorage.getItem('a11y-fontSize');
     if (fontSize && fontSize !== 'normal') {
       document.body.classList.add(`font-size-${fontSize}`);
@@ -440,7 +440,7 @@ function loadUserPreferences() {
       if (fontSizeRadio) fontSizeRadio.checked = true;
     }
 
-    // Movimiento reducido
+    // Reduced motion
     const reducedMotion = localStorage.getItem('a11y-reducedMotion');
     if (reducedMotion === 'true') {
       document.body.classList.add('reduced-motion');
@@ -448,7 +448,7 @@ function loadUserPreferences() {
       if (reducedMotionToggle) reducedMotionToggle.checked = true;
     }
 
-    // Espaciado de texto
+    // Text spacing
     const textSpacing = localStorage.getItem('a11y-textSpacing');
     if (textSpacing && textSpacing !== 'normal') {
       document.body.classList.add(`text-spacing-${textSpacing}`);

@@ -1,11 +1,11 @@
 /**
- * Logger condicional para el frontend
- * Solo genera logs en modo desarrollo
+ * Conditional logger for frontend
+ * Only generates logs in development mode
  */
 
 const isDevelopment = import.meta.env.DEV;
 
-// Logger silencioso para producción
+// Silent logger for production
 const silentLogger = {
   log: () => {},
   info: () => {},
@@ -14,36 +14,36 @@ const silentLogger = {
   debug: () => {},
 };
 
-// Logger de desarrollo con colores
+// Development logger with colors
 const devLogger = {
-  log: (...args: any[]) => console.log('[LOG]', ...args),
-  info: (...args: any[]) => console.info('[INFO]', ...args),
-  warn: (...args: any[]) => console.warn('[WARN]', ...args),
-  error: (...args: any[]) => console.error('[ERROR]', ...args),
-  debug: (...args: any[]) => console.debug('[DEBUG]', ...args),
+  log: (...args: unknown[]) => console.warn('[LOG]', ...args),
+  info: (...args: unknown[]) => console.warn('[INFO]', ...args),
+  warn: (...args: unknown[]) => console.warn('[WARN]', ...args),
+  error: (...args: unknown[]) => console.error('[ERROR]', ...args),
+  debug: (...args: unknown[]) => console.warn('[DEBUG]', ...args),
 };
 
-// Exportar logger condicional
+// Export conditional logger
 export const logger = isDevelopment ? devLogger : silentLogger;
 
-// Función helper para logging de errores de API
-export const logApiError = (context: string, error: any) => {
+// Helper function for API error logging
+export const logApiError = (context: string, error: unknown) => {
   if (isDevelopment) {
-    console.group(`🚨 API Error in ${context}`);
+    console.warn(`🚨 API Error in ${context}`);
     console.error('Error details:', error);
-    console.error('Stack trace:', error?.stack);
-    console.groupEnd();
+    if (error instanceof Error) {
+      console.error('Stack trace:', error.stack);
+    }
   }
 };
 
-// Función helper para logging de operaciones exitosas
-export const logSuccess = (context: string, data?: any) => {
+// Helper function for successful operation logging
+export const logSuccess = (context: string, data?: unknown) => {
   if (isDevelopment) {
-    console.group(`✅ Success in ${context}`);
+    console.warn(`✅ Success in ${context}`);
     if (data) {
-      console.log('Data:', data);
+      console.warn('Data:', data);
     }
-    console.groupEnd();
   }
 };
 

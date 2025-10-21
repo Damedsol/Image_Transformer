@@ -1,7 +1,7 @@
 import { isValidImage } from '../utils/fileUtils';
 
 /**
- * Componente DropZone para cargar imágenes mediante drag and drop o clic
+ * DropZone component for loading images via drag and drop or click
  */
 export class DropZone extends HTMLElement {
   private dropArea!: HTMLElement;
@@ -15,7 +15,7 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Callback que se ejecuta cuando el componente se conecta al DOM
+   * Callback that executes when the component connects to the DOM
    */
   connectedCallback() {
     this.render();
@@ -23,45 +23,45 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Configura los event listeners para el drag and drop y la selección de archivos
+   * Sets up event listeners for drag and drop and file selection
    */
   private setupEventListeners() {
     this.dropArea = this.querySelector('.dropzone') as HTMLElement;
     this.fileInput = this.querySelector('.file-input') as HTMLInputElement;
     this.statusElement = this.querySelector('.dropzone-status') as HTMLElement;
 
-    // Eventos de drag and drop
+    // Drag and drop events
     this.dropArea.addEventListener('dragover', this.handleDragOver.bind(this));
     this.dropArea.addEventListener('dragleave', this.handleDragLeave.bind(this));
     this.dropArea.addEventListener('drop', this.handleDrop.bind(this));
 
-    // Evento de selección de archivos a través del input
+    // File selection event through input
     this.fileInput.addEventListener('change', this.handleFileSelect.bind(this));
 
-    // Manejar clic en toda la zona para abrir el selector de archivos
+    // Handle click on the entire area to open file selector
     this.dropArea.addEventListener('click', this.handleAreaClick.bind(this));
 
-    // Prevenir que los clics en el contenido interno abran el selector múltiples veces
+    // Prevent clicks on internal content from opening the selector multiple times
     const dropzoneContent = this.querySelector('.dropzone-content');
     if (dropzoneContent) {
       dropzoneContent.addEventListener('click', _e => {
-        // No detener la propagación para que el clic llegue al dropArea
-        // Solo evitamos que el evento se dispare múltiples veces
+        // Don't stop propagation so the click reaches the dropArea
+        // We just prevent the event from firing multiple times
       });
     }
 
-    // Mejorar la accesibilidad del teclado
+    // Improve keyboard accessibility
     this.dropArea.addEventListener('keydown', e => {
-      // Activar el input file al presionar Enter o Space
+      // Activate file input when pressing Enter or Space
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         this.fileInput.click();
-        // Anunciar para lectores de pantalla
-        this.updateStatus('Seleccionando archivos...');
+        // Announce for screen readers
+        this.updateStatus('Selecting files...');
       }
     });
 
-    // Añadir feedback de enfoque
+    // Add focus feedback
     this.dropArea.addEventListener('focus', () => {
       this.dropArea.classList.add('focus-visible');
     });
@@ -72,7 +72,7 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Actualiza el estado para los lectores de pantalla
+   * Updates status for screen readers
    */
   private updateStatus(message: string) {
     if (this.statusElement) {
@@ -81,29 +81,29 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Registra el callback para cuando se seleccionan archivos
+   * Registers the callback for when files are selected
    */
   public setOnFilesSelectedCallback(callback: (files: FileList) => void) {
     this.onFilesSelected = callback;
   }
 
   /**
-   * Maneja el evento dragover
+   * Handles the dragover event
    */
   private handleDragOver(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
     this.dropArea.classList.add('drag-active');
-    this.updateStatus('Soltar para cargar las imágenes');
+    this.updateStatus('Drop to load images');
 
-    // Actualiza el cursor para indicar que se puede soltar
+    // Update cursor to indicate it can be dropped
     if (event.dataTransfer) {
       event.dataTransfer.dropEffect = 'copy';
     }
   }
 
   /**
-   * Maneja el evento dragleave
+   * Handles the dragleave event
    */
   private handleDragLeave(event: DragEvent) {
     event.preventDefault();
@@ -113,51 +113,51 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Maneja el evento drop
+   * Handles the drop event
    */
   private handleDrop(event: DragEvent) {
     event.preventDefault();
     event.stopPropagation();
     this.dropArea.classList.remove('drag-active');
-    this.updateStatus('Procesando archivos soltados...');
+    this.updateStatus('Processing dropped files...');
 
     if (event.dataTransfer && event.dataTransfer.files.length > 0) {
       const files = this.filterImageFiles(event.dataTransfer.files);
       if (files.length > 0) {
-        this.updateStatus(`${files.length} imágenes cargadas correctamente`);
+        this.updateStatus(`${files.length} images loaded successfully`);
         this.onFilesSelected(files);
       } else {
-        this.updateStatus('No se han cargado imágenes válidas');
-        this.showError('Solo se permiten archivos de imagen');
+        this.updateStatus('No valid images loaded');
+        this.showError('Only image files are allowed');
       }
     }
   }
 
   /**
-   * Maneja la selección de archivos desde el input
+   * Handles file selection from the input
    */
   private handleFileSelect(event: Event) {
     const input = event.target as HTMLInputElement;
-    this.updateStatus('Procesando archivos seleccionados...');
+    this.updateStatus('Processing selected files...');
 
     if (input.files && input.files.length > 0) {
       const files = this.filterImageFiles(input.files);
 
       if (files.length > 0) {
-        this.updateStatus(`${files.length} imágenes cargadas correctamente`);
+        this.updateStatus(`${files.length} images loaded successfully`);
         this.onFilesSelected(files);
       } else {
-        this.updateStatus('No se han cargado imágenes válidas');
-        this.showError('Solo se permiten archivos de imagen');
+        this.updateStatus('No valid images loaded');
+        this.showError('Only image files are allowed');
       }
     }
 
-    // Reinicia el input para permitir seleccionar el mismo archivo nuevamente
+    // Reset input to allow selecting the same file again
     input.value = '';
   }
 
   /**
-   * Filtra archivos que no son imágenes
+   * Filters files that are not images
    */
   private filterImageFiles(fileList: FileList): FileList {
     const validFiles: File[] = [];
@@ -169,7 +169,7 @@ export class DropZone extends HTMLElement {
       }
     }
 
-    // Crear un nuevo objeto FileList (hacemos un truco ya que FileList es inmutable)
+    // Create a new FileList object (we use a trick since FileList is immutable)
     const dataTransfer = new DataTransfer();
     validFiles.forEach(file => dataTransfer.items.add(file));
 
@@ -177,10 +177,10 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Muestra un mensaje de error
+   * Shows an error message
    */
   private showError(message: string) {
-    // Busca si ya existe un mensaje de error
+    // Check if an error message already exists
     let errorMessage = this.querySelector('.message-error');
 
     if (!errorMessage) {
@@ -193,7 +193,7 @@ export class DropZone extends HTMLElement {
 
     errorMessage.textContent = message;
 
-    // Elimina el mensaje después de 3 segundos
+    // Remove message after 3 seconds
     setTimeout(() => {
       if (errorMessage && errorMessage.parentNode) {
         errorMessage.parentNode.removeChild(errorMessage);
@@ -202,7 +202,7 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Renderiza el componente
+   * Renders the component
    */
   private render() {
     this.innerHTML = `
@@ -210,7 +210,7 @@ export class DropZone extends HTMLElement {
         class="dropzone" 
         tabindex="0" 
         role="button" 
-        aria-label="Zona para arrastrar y soltar imágenes" 
+        aria-label="Area to drag and drop images" 
         aria-describedby="dropzone-instructions"
       >
         <input 
@@ -218,7 +218,7 @@ export class DropZone extends HTMLElement {
           class="file-input" 
           accept="image/*" 
           multiple 
-          aria-label="Seleccionar imágenes" 
+          aria-label="Select images" 
         />
         <div class="dropzone-content">
           <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -226,9 +226,9 @@ export class DropZone extends HTMLElement {
             <polyline points="17 8 12 3 7 8"></polyline>
             <line x1="12" y1="3" x2="12" y2="15"></line>
           </svg>
-          <h2>Arrastra y suelta tus imágenes aquí</h2>
-          <p id="dropzone-instructions">o haz clic para seleccionar archivos</p>
-          <p class="dropzone-formats">Formatos soportados: PNG, JPEG, WEBP, GIF, BMP, TIFF, AVIF</p>
+          <h2>Drag and drop your images here</h2>
+          <p id="dropzone-instructions">or click to select files</p>
+          <p class="dropzone-formats">Supported formats: PNG, JPEG, WEBP, GIF, BMP, TIFF, AVIF</p>
           <div class="dropzone-status sr-only" aria-live="polite"></div>
         </div>
       </div>
@@ -236,16 +236,16 @@ export class DropZone extends HTMLElement {
   }
 
   /**
-   * Maneja el clic en cualquier parte de la zona de drop
+   * Handles click anywhere in the drop area
    */
   private handleAreaClick(event: MouseEvent) {
-    // Evitar activar el click si el target ya es el input
+    // Avoid activating the click if the target is already the input
     if (event.target !== this.fileInput) {
       this.fileInput.click();
-      this.updateStatus('Seleccionando archivos...');
+      this.updateStatus('Selecting files...');
     }
   }
 }
 
-// Registrar el componente
+// Register the component
 customElements.define('drop-zone', DropZone);

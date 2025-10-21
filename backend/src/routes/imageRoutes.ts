@@ -33,7 +33,11 @@ const convertRateLimiter = rateLimit({
 // Middleware simple para loguear inicio de petición /convert
 const logConvertRequestStart = (req: Request, _res: Response, next: NextFunction): void => {
   logger.info(
-    { ip: req.ip, userAgent: req.headers['user-agent'], body: req.body },
+    {
+      ip: req.ip,
+      userAgent: req.headers['user-agent'],
+      body: req.body as Record<string, unknown>,
+    },
     'Recibida solicitud POST /api/convert'
   );
   next();

@@ -69,7 +69,7 @@ export const protectFromPrototypePollution = (
   if (req.body && typeof req.body === 'object' && !Array.isArray(req.body)) {
     for (const prop of dangerousProps) {
       if (Object.prototype.hasOwnProperty.call(req.body, prop)) {
-        delete req.body[prop];
+        delete (req.body as Record<string, unknown>)[prop];
       }
     }
   }
@@ -79,7 +79,7 @@ export const protectFromPrototypePollution = (
     for (const prop of dangerousProps) {
       // Necesitamos verificar el objeto req.query directamente
       if (Object.prototype.hasOwnProperty.call(req.query, prop)) {
-        delete (req.query as any)[prop]; // Usar 'as any' temporalmente para permitir delete
+        delete (req.query as Record<string, unknown>)[prop];
       }
     }
   }

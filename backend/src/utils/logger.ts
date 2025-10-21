@@ -4,14 +4,14 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
-// Calcular __dirname
+// Calculate __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Verificar si estamos en modo desarrollo
+// Check if we're in development mode
 const isDevelopment = process.env.NODE_ENV === 'development';
 
-// Logger silencioso para producción
+// Silent logger for production
 const silentLogger = {
   info: (..._args: unknown[]) => {},
   error: (..._args: unknown[]) => {},
@@ -21,11 +21,11 @@ const silentLogger = {
   level: 'silent',
 };
 
-// Función para crear logger de desarrollo
+// Function to create development logger
 function createDevLogger(): pino.Logger {
   const logsDir = path.join(__dirname, '../../logs');
 
-  // Crear directorio de logs si no existe
+  // Create logs directory if it doesn't exist
   try {
     if (!fs.existsSync(logsDir)) {
       fs.mkdirSync(logsDir, { recursive: true });
@@ -35,7 +35,7 @@ function createDevLogger(): pino.Logger {
     process.exit(1);
   }
 
-  // Configuración del archivo de log dinámico
+  // Dynamic log file configuration
   const now = new Date();
   const day = String(now.getDate()).padStart(2, '0');
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -43,7 +43,7 @@ function createDevLogger(): pino.Logger {
   const logFileName = `${day}-${month}-${year}.log`;
   const logFilePath = path.join(logsDir, logFileName);
 
-  // Opciones de configuración para pino
+  // Configuration options for pino
   const pinoOptions = {
     level: process.env.LOG_LEVEL || 'info',
     timestamp: pino.stdTimeFunctions.isoTime,
@@ -54,13 +54,13 @@ function createDevLogger(): pino.Logger {
     },
   };
 
-  // Crear instancia del logger
+  // Create logger instance
   let logDestination;
   try {
     logDestination = pino.destination(logFilePath);
   } catch (destError) {
     console.error(
-      `Error crítico: No se pudo crear el destino del log en ${logFilePath}. Saliendo...`,
+      `Critical error: Could not create log destination at ${logFilePath}. Exiting...`,
       destError
     );
     process.exit(1);
@@ -68,14 +68,14 @@ function createDevLogger(): pino.Logger {
 
   const logger = pino(pinoOptions, logDestination);
 
-  // Loggear información inicial
+  // Log initial information
   logger.info('============================================');
-  logger.info(`Logging inicializado. Logs en: ${logFilePath}`);
-  logger.info(`Nivel de log actual: ${logger.level.toUpperCase()}`);
+  logger.info(`Logging initialized. Logs at: ${logFilePath}`);
+  logger.info(`Current log level: ${logger.level.toUpperCase()}`);
   logger.info('============================================');
 
   return logger;
 }
 
-// Exportar logger condicional
+// Export conditional logger
 export default isDevelopment ? createDevLogger() : silentLogger;

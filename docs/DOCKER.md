@@ -1,152 +1,152 @@
-# 🐳 Configuración Docker - Image Transformer
+# 🐳 Docker Configuration - Image Transformer
 
-Este proyecto utiliza un sistema de perfiles de Docker Compose para manejar tanto el entorno de desarrollo como el de producción con un solo archivo `docker-compose.yml`.
+This project uses a Docker Compose profiles system to handle both development and production environments with a single `docker-compose.yml` file.
 
-## 📋 Perfiles Disponibles
+## 📋 Available Profiles
 
-### 🔧 Desarrollo (`development`)
+### 🔧 Development (`development`)
 
-- **Backend**: Puerto 3001 con hot-reload
-- **Frontend**: Puerto 5173 con Vite dev server
-- **Volúmenes**: Montados para desarrollo en tiempo real
-- **Variables**: Configuradas para desarrollo
+- **Backend**: Port 3001 with hot-reload
+- **Frontend**: Port 5173 with Vite dev server
+- **Volumes**: Mounted for real-time development
+- **Variables**: Configured for development
 
-### 🚀 Producción (`production`)
+### 🚀 Production (`production`)
 
-- **Backend**: Puerto 3001 optimizado
-- **Frontend**: Puerto 80 con Nginx
-- **Volúmenes**: Solo para datos persistentes
-- **Variables**: Configuradas para producción
+- **Backend**: Port 3001 optimized
+- **Frontend**: Port 80 with Nginx
+- **Volumes**: Only for persistent data
+- **Variables**: Configured for production
 
-## 🚀 Comandos Disponibles
+## 🚀 Available Commands
 
-### Desarrollo
+### Development
 
 ```bash
-# Iniciar en modo desarrollo
+# Start in development mode
 npm run docker:dev
 
-# Detener servicios de desarrollo
+# Stop development services
 npm run docker:dev:down
 
-# Ver logs de desarrollo
+# View development logs
 npm run docker:dev:logs
 ```
 
-### Producción
+### Production
 
 ```bash
-# Iniciar en modo producción (en segundo plano)
+# Start in production mode (background)
 npm run docker:prod
 
-# Detener servicios de producción
+# Stop production services
 npm run docker:prod:down
 
-# Ver logs de producción
+# View production logs
 npm run docker:prod:logs
 ```
 
-### Comandos Generales
+### General Commands
 
 ```bash
-# Ver estado de todos los contenedores
+# View status of all containers
 npm run docker:status
 
-# Ver logs de frontend
+# View frontend logs
 npm run docker:frontend:logs
 
-# Ver logs de backend
+# View backend logs
 npm run docker:backend:logs
 
-# Limpiar sistema Docker
+# Clean Docker system
 npm run docker:prune
 ```
 
-## 🔧 Comandos Docker Compose Directos
+## 🔧 Direct Docker Compose Commands
 
-### Desarrollo
+### Development
 
 ```bash
-# Iniciar perfil de desarrollo
+# Start development profile
 docker compose --profile development up --build
 
-# Detener perfil de desarrollo
+# Stop development profile
 docker compose --profile development down
 
-# Ver logs
+# View logs
 docker compose --profile development logs -f
 ```
 
-### Producción
+### Production
 
 ```bash
-# Iniciar perfil de producción
+# Start production profile
 docker compose --profile production up --build -d
 
-# Detener perfil de producción
+# Stop production profile
 docker compose --profile production down
 
-# Ver logs
+# View logs
 docker compose --profile production logs -f
 ```
 
-## 📁 Estructura de Servicios
+## 📁 Service Structure
 
-### Desarrollo
+### Development
 
-- `backend-dev`: Backend con hot-reload
-- `frontend-dev`: Frontend con Vite dev server
+- `backend-dev`: Backend with hot-reload
+- `frontend-dev`: Frontend with Vite dev server
 
-### Producción
+### Production
 
-- `backend-prod`: Backend optimizado
-- `frontend-prod`: Frontend con Nginx
+- `backend-prod`: Optimized backend
+- `frontend-prod`: Frontend with Nginx
 
-## 🌐 Puertos
+## 🌐 Ports
 
-### Desarrollo
+### Development
 
 - **Frontend**: http://localhost:5173
 - **Backend**: http://localhost:3001
 
-### Producción
+### Production
 
 - **Frontend**: http://localhost:80
 - **Backend**: http://localhost:3001
 
-## 📦 Volúmenes
+## 📦 Volumes
 
-- `backend-temp`: Almacenamiento temporal para archivos procesados
-- Volúmenes de desarrollo: Montados para hot-reload
+- `backend-temp`: Temporary storage for processed files
+- Development volumes: Mounted for hot-reload
 
-## 🔄 Migración desde Configuración Anterior
+## 🔄 Migration from Previous Configuration
 
-Si tenías `docker-compose.prod.yml`, ya no es necesario. Ahora todo se maneja con perfiles:
+If you had `docker-compose.prod.yml`, it's no longer needed. Now everything is handled with profiles:
 
 ```bash
-# Antes
+# Before
 docker compose -f docker-compose.prod.yml up -d
 
-# Ahora
+# Now
 docker compose --profile production up --build -d
 ```
 
 ## 🛠️ Troubleshooting
 
-### Limpiar todo y empezar de nuevo
+### Clean everything and start fresh
 
 ```bash
 npm run docker:prune
 docker compose down --volumes --remove-orphans
 ```
 
-### Ver todos los servicios
+### View all services
 
 ```bash
 docker compose ps
 ```
 
-### Reconstruir imágenes
+### Rebuild images
 
 ```bash
 docker compose --profile development build --no-cache

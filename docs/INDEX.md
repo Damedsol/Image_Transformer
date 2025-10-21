@@ -1,41 +1,41 @@
-# 📋 Índice de Documentación
+# 📋 Documentation Index
 
-## 🎯 Documentación Principal
+## 🎯 Main Documentation
 
-| Documento                | Descripción                            | Estado      |
-| ------------------------ | -------------------------------------- | ----------- |
-| [README.md](README.md)   | Documentación general del proyecto     | ✅ Completo |
-| [DOCKER.md](DOCKER.md)   | Configuración de Docker y contenedores | ✅ Completo |
-| [LOGGING.md](LOGGING.md) | Sistema de logging condicional         | ✅ Completo |
+| Document                 | Description                        | Status      |
+| ------------------------ | ---------------------------------- | ----------- |
+| [README.md](README.md)   | General project documentation      | ✅ Complete |
+| [DOCKER.md](DOCKER.md)   | Docker and container configuration | ✅ Complete |
+| [LOGGING.md](LOGGING.md) | Conditional logging system         | ✅ Complete |
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 ### Frontend
 
 - **Framework**: TypeScript + Vite
-- **Componentes**: Web Components nativos
+- **Components**: Native Web Components
 - **Styling**: CSS Grid + Flexbox
-- **Build**: Vite con optimizaciones
+- **Build**: Vite with optimizations
 
 ### Backend
 
 - **Runtime**: Node.js + Express
-- **Procesamiento**: Sharp para imágenes
-- **Logging**: Pino (condicional)
-- **Validación**: Zod para esquemas
+- **Processing**: Sharp for images
+- **Logging**: Pino (conditional)
+- **Validation**: Zod for schemas
 
 ### DevOps
 
-- **Contenedores**: Docker + Docker Compose
-- **Perfiles**: Desarrollo vs Producción
-- **Servidor**: Nginx (producción)
-- **Logging**: Condicional por entorno
+- **Containers**: Docker + Docker Compose
+- **Profiles**: Development vs Production
+- **Server**: Nginx (production)
+- **Logging**: Conditional by environment
 
-## 🔧 Configuración
+## 🔧 Configuration
 
-### Variables de Entorno
+### Environment Variables
 
-#### Desarrollo
+#### Development
 
 ```bash
 NODE_ENV=development
@@ -43,7 +43,7 @@ LOG_LEVEL=debug
 VITE_DEBUG=true
 ```
 
-#### Producción
+#### Production
 
 ```bash
 NODE_ENV=production
@@ -52,7 +52,7 @@ LOG_LEVEL=silent
 
 ### Docker Profiles
 
-#### Desarrollo
+#### Development
 
 ```yaml
 profiles: [development]
@@ -63,7 +63,7 @@ volumes:
   - backend-logs:/app/logs
 ```
 
-#### Producción
+#### Production
 
 ```yaml
 profiles: [production]
@@ -74,71 +74,71 @@ logging:
   driver: 'none'
 ```
 
-## 🚀 Comandos de Despliegue
+## 🚀 Deployment Commands
 
-### Desarrollo
+### Development
 
 ```bash
-# Iniciar con logs
+# Start with logs
 docker-compose --profile development up
 
-# Ver logs en tiempo real
+# View logs in real time
 docker-compose logs -f backend-dev
 ```
 
-### Producción
+### Production
 
 ```bash
-# Iniciar optimizado
+# Start optimized
 docker-compose --profile production up
 
-# Verificar sin logs
+# Verify no logs
 docker-compose logs backend-prod
 ```
 
-## 📊 Monitoreo
+## 📊 Monitoring
 
-### Desarrollo
+### Development
 
-- ✅ Logs en `backend/logs/`
-- ✅ Console logs frontend
-- ✅ Docker logs visibles
+- ✅ Logs in `backend/logs/`
+- ✅ Frontend console logs
+- ✅ Docker logs visible
 
-### Producción
+### Production
 
-- ❌ Sin logs (optimizado)
-- ❌ Sin archivos de log
-- ❌ Docker logging deshabilitado
+- ❌ No logs (optimized)
+- ❌ No log files
+- ❌ Docker logging disabled
 
 ## 🔍 Troubleshooting
 
-### Problemas Comunes
+### Common Issues
 
-1. **Logs aparecen en producción**
-   - Verificar `NODE_ENV=production`
-   - Verificar `LOG_LEVEL=silent`
+1. **Logs appear in production**
+   - Check `NODE_ENV=production`
+   - Check `LOG_LEVEL=silent`
 
-2. **No aparecen logs en desarrollo**
-   - Verificar `NODE_ENV=development`
-   - Verificar permisos de escritura
+2. **Logs don't appear in development**
+   - Check `NODE_ENV=development`
+   - Check write permissions
 
-3. **Docker no inicia**
-   - Verificar perfiles correctos
-   - Verificar variables de entorno
+3. **Docker doesn't start**
+   - Check correct profiles
+   - Check environment variables
 
-## 📁 Estructura de Documentación
+## 📁 Documentation Structure
 
 ```
 docs/
-├── README.md          # Documentación general
-├── INDEX.md          # Este archivo (índice)
-├── DOCKER.md         # Configuración Docker
-└── LOGGING.md        # Sistema de logging
+├── README.md          # General documentation
+├── INDEX.md          # This file (index)
+├── DOCKER.md         # Docker configuration
+└── LOGGING.md        # Logging system
 ```
 
-## 🎯 Próximos Pasos
+## 🎯 Next Steps
 
-- [ ] Documentación de API
-- [ ] Guía de contribución
-- [ ] Testing y CI/CD
-- [ ] Monitoreo avanzado
+- [ ] API documentation
+- [ ] Contribution guide
+- [ ] Testing and CI/CD
+- [ ] Advanced monitoring

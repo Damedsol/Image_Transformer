@@ -1,141 +1,141 @@
-# 📚 Documentación - ImageTransformer
+# 📚 Documentation - ImageTransformer
 
-## 🎯 Descripción del Proyecto
+## 🎯 Project Description
 
-**ImageTransformer** es una aplicación web para convertir imágenes entre diferentes formatos (JPEG, PNG, WebP, AVIF, GIF) con opciones de redimensionamiento y compresión.
+**ImageTransformer** is a web application for converting images between different formats (JPEG, PNG, WebP, AVIF, GIF) with resizing and compression options.
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 - **Frontend**: TypeScript + Vite + Web Components
 - **Backend**: Node.js + Express + Sharp
-- **Contenedores**: Docker + Docker Compose
-- **Logging**: Sistema condicional (desarrollo/producción)
+- **Containers**: Docker + Docker Compose
+- **Logging**: Conditional system (development/production)
 
-## 📖 Documentación Disponible
+## 📖 Available Documentation
 
-### 🔧 Configuración y Despliegue
+### 🔧 Configuration and Deployment
 
-- [🐳 Docker Setup](DOCKER.md) - Configuración de contenedores y perfiles
-- [📝 Sistema de Logging](LOGGING.md) - Logging condicional para desarrollo/producción
+- [🐳 Docker Setup](DOCKER.md) - Container configuration and profiles
+- [📝 Logging System](LOGGING.md) - Conditional logging for development/production
 
-### 🚀 Inicio Rápido
+### 🚀 Quick Start
 
-#### Desarrollo
+#### Development
 
 ```bash
-# Iniciar con logs detallados
+# Start with detailed logs
 docker-compose --profile development up
 ```
 
-#### Producción
+#### Production
 
 ```bash
-# Iniciar sin logs (optimizado)
+# Start without logs (optimized)
 docker-compose --profile production up
 ```
 
-## 🎯 Características Principales
+## 🎯 Main Features
 
-### ✅ **Funcionalidades**
+### ✅ **Functionality**
 
-- Conversión de imágenes entre formatos
-- Redimensionamiento con mantenimiento de aspecto
-- Compresión con control de calidad
-- Descarga en archivo ZIP
-- Interfaz accesible y responsive
+- Image conversion between formats
+- Resizing with aspect ratio maintenance
+- Compression with quality control
+- ZIP file download
+- Accessible and responsive interface
 
-### 🔒 **Seguridad**
+### 🔒 **Security**
 
-- Rate limiting por IP
-- Validación de tipos de archivo
-- Límites de tamaño y cantidad
-- Headers de seguridad (Helmet)
-- CORS configurado
+- IP rate limiting
+- File type validation
+- Size and quantity limits
+- Security headers (Helmet)
+- CORS configured
 
-### 📊 **Rendimiento**
+### 📊 **Performance**
 
-- Procesamiento asíncrono
-- Limpieza automática de archivos temporales
-- Logging condicional (cero overhead en producción)
-- Compresión gzip
+- Asynchronous processing
+- Automatic cleanup of temporary files
+- Conditional logging (zero overhead in production)
+- Gzip compression
 
-## 🛠️ Tecnologías
+## 🛠️ Technologies
 
 ### Frontend
 
-- **TypeScript** - Tipado estático
-- **Vite** - Build tool moderno
-- **Web Components** - Componentes reutilizables
-- **CSS Grid/Flexbox** - Layout responsive
+- **TypeScript** - Static typing
+- **Vite** - Modern build tool
+- **Web Components** - Reusable components
+- **CSS Grid/Flexbox** - Responsive layout
 
 ### Backend
 
-- **Node.js** - Runtime de JavaScript
-- **Express** - Framework web
-- **Sharp** - Procesamiento de imágenes
-- **Pino** - Logger de alto rendimiento
-- **Zod** - Validación de esquemas
+- **Node.js** - JavaScript runtime
+- **Express** - Web framework
+- **Sharp** - Image processing
+- **Pino** - High-performance logger
+- **Zod** - Schema validation
 
 ### DevOps
 
-- **Docker** - Contenedores
-- **Docker Compose** - Orquestación
-- **Nginx** - Servidor web (producción)
-- **Multi-stage builds** - Optimización de imágenes
+- **Docker** - Containers
+- **Docker Compose** - Orchestration
+- **Nginx** - Web server (production)
+- **Multi-stage builds** - Image optimization
 
-## 📁 Estructura del Proyecto
+## 📁 Project Structure
 
 ```
 imageTransformer/
-├── backend/                 # API Node.js
+├── backend/                 # Node.js API
 │   ├── src/
-│   │   ├── controllers/     # Controladores de rutas
-│   │   ├── middlewares/    # Middlewares de seguridad
-│   │   ├── routes/         # Definición de rutas
-│   │   └── utils/          # Utilidades (logger, procesamiento)
-│   ├── logs/               # Logs de desarrollo
-│   └── temp/               # Archivos temporales
-├── src/                    # Frontend TypeScript
+│   │   ├── controllers/     # Route controllers
+│   │   ├── middlewares/    # Security middlewares
+│   │   ├── routes/         # Route definitions
+│   │   └── utils/          # Utilities (logger, processing)
+│   ├── logs/               # Development logs
+│   └── temp/               # Temporary files
+├── src/                    # TypeScript Frontend
 │   ├── components/         # Web Components
-│   ├── utils/             # Utilidades frontend
-│   └── types/             # Definiciones TypeScript
-├── docs/                  # Documentación
-├── docker/                # Configuración Docker
-└── scripts/               # Scripts de utilidad
+│   ├── utils/             # Frontend utilities
+│   └── types/             # TypeScript definitions
+├── docs/                  # Documentation
+├── docker/                # Docker configuration
+└── scripts/               # Utility scripts
 ```
 
-## 🔍 Monitoreo y Logs
+## 🔍 Monitoring and Logs
 
-### Desarrollo
+### Development
 
-- Logs detallados en `backend/logs/`
-- Console logs en frontend
-- Docker logs visibles
+- Detailed logs in `backend/logs/`
+- Console logs in frontend
+- Docker logs visible
 
-### Producción
+### Production
 
-- Sin logs (rendimiento optimizado)
-- Sin archivos de log
-- Docker logging deshabilitado
+- No logs (optimized performance)
+- No log files
+- Docker logging disabled
 
-## 🚀 Comandos Útiles
+## 🚀 Useful Commands
 
 ```bash
-# Desarrollo
+# Development
 docker-compose --profile development up
 docker-compose --profile development down
 
-# Producción
+# Production
 docker-compose --profile production up
 docker-compose --profile production down
 
-# Ver logs (solo desarrollo)
+# View logs (development only)
 docker-compose logs -f backend-dev
 
-# Limpiar contenedores
+# Clean containers
 docker-compose down --volumes --remove-orphans
 ```
 
-## 📞 Soporte
+## 📞 Support
 
-Para más información, consulta la documentación específica en cada archivo de la carpeta `docs/`.
+For more information, check the specific documentation in each file in the `docs/` folder.

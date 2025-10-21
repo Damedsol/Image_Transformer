@@ -1,34 +1,34 @@
-# 📝 Sistema de Logging - ImageTransformer
+# 📝 Logging System - ImageTransformer
 
-## 🎯 Objetivo
+## 🎯 Objective
 
-Este proyecto implementa un sistema de logging **condicional** que:
+This project implements a **conditional** logging system that:
 
-- ✅ **Desarrollo**: Genera logs detallados para debugging
-- ❌ **Producción**: Completamente silencioso, sin logs
+- ✅ **Development**: Generates detailed logs for debugging
+- ❌ **Production**: Completely silent, no logs
 
-## 🏗️ Arquitectura
+## 🏗️ Architecture
 
 ### Backend (Node.js + Pino)
 
-- **Desarrollo**: Logs en archivos JSON en `backend/logs/`
-- **Producción**: Logger silencioso (no genera archivos ni output)
+- **Development**: JSON logs in `backend/logs/`
+- **Production**: Silent logger (no files or output generated)
 
 ### Frontend (TypeScript + Vite)
 
-- **Desarrollo**: Console logs con colores y contexto
-- **Producción**: Logger silencioso (no output en consola)
+- **Development**: Console logs with colors and context
+- **Production**: Silent logger (no console output)
 
-## 🔧 Configuración
+## 🔧 Configuration
 
-### Variables de Entorno
+### Environment Variables
 
 ```bash
-# Desarrollo
+# Development
 NODE_ENV=development
 LOG_LEVEL=debug
 
-# Producción
+# Production
 NODE_ENV=production
 LOG_LEVEL=silent
 ```
@@ -36,13 +36,13 @@ LOG_LEVEL=silent
 ### Docker Profiles
 
 ```yaml
-# Desarrollo
+# Development
 profiles: [development]
 environment:
   - NODE_ENV=development
   - LOG_LEVEL=debug
 
-# Producción
+# Production
 profiles: [production]
 environment:
   - NODE_ENV=production
@@ -51,119 +51,119 @@ logging:
   driver: "none"
 ```
 
-## 📁 Estructura de Logs
+## 📁 Log Structure
 
 ```
 backend/
-├── logs/                    # Solo en desarrollo
-│   ├── 25-12-24.log        # Archivos diarios
+├── logs/                    # Only in development
+│   ├── 25-12-24.log        # Daily files
 │   └── 26-12-24.log
 └── src/utils/
-    └── logger.ts           # Logger condicional
+    └── logger.ts           # Conditional logger
 ```
 
-## 🚀 Uso
+## 🚀 Usage
 
-### Desarrollo
+### Development
 
 ```bash
-# Iniciar con logs
+# Start with logs
 docker-compose --profile development up
 
-# Ver logs en tiempo real
+# View logs in real time
 docker-compose logs -f backend-dev
 ```
 
-### Producción
+### Production
 
 ```bash
-# Iniciar sin logs
+# Start without logs
 docker-compose --profile production up
 
-# Verificar que no hay logs
-docker-compose logs backend-prod  # Debería estar vacío
+# Verify no logs
+docker-compose logs backend-prod  # Should be empty
 ```
 
-## 🧹 Limpieza de Logs
+## 🧹 Log Cleanup
 
-### Automática
+### Automatic
 
-El sistema de logging condicional **no requiere limpieza manual**:
+The conditional logging system **does not require manual cleanup**:
 
-- **Desarrollo**: Los logs se generan solo cuando es necesario
-- **Producción**: No se generan logs en absoluto
-- **Docker**: Los volúmenes se manejan automáticamente
+- **Development**: Logs are generated only when needed
+- **Production**: No logs are generated at all
+- **Docker**: Volumes are managed automatically
 
-### Manual (solo si es necesario)
+### Manual (only if necessary)
 
 ```bash
-# Limpiar logs del backend (desarrollo)
+# Clean backend logs (development)
 rm -rf backend/logs/*
 
-# Limpiar logs de Docker
+# Clean Docker logs
 rm -rf logs/*
 ```
 
-## 🔍 Verificación
+## 🔍 Verification
 
-### Desarrollo
+### Development
 
-- ✅ Logs aparecen en `backend/logs/`
-- ✅ Console logs en frontend
-- ✅ Docker logs visibles
+- ✅ Logs appear in `backend/logs/`
+- ✅ Console logs in frontend
+- ✅ Docker logs visible
 
-### Producción
+### Production
 
-- ❌ No hay archivos en `backend/logs/`
-- ❌ No hay console logs
-- ❌ Docker logging deshabilitado
+- ❌ No files in `backend/logs/`
+- ❌ No console logs
+- ❌ Docker logging disabled
 
-## 📊 Tipos de Logs
+## 📊 Log Types
 
 ### Backend
 
-- `logger.info()` - Información general
-- `logger.error()` - Errores
-- `logger.warn()` - Advertencias
-- `logger.debug()` - Debug detallado
+- `logger.info()` - General information
+- `logger.error()` - Errors
+- `logger.warn()` - Warnings
+- `logger.debug()` - Detailed debug
 
 ### Frontend
 
-- `logApiError()` - Errores de API
-- `logSuccess()` - Operaciones exitosas
-- `logger.debug()` - Debug general
+- `logApiError()` - API errors
+- `logSuccess()` - Successful operations
+- `logger.debug()` - General debug
 
-## ⚡ Rendimiento
+## ⚡ Performance
 
-### Desarrollo
+### Development
 
-- Logs detallados para debugging
-- Archivos de log para análisis
-- Console output para desarrollo
+- Detailed logs for debugging
+- Log files for analysis
+- Console output for development
 
-### Producción
+### Production
 
-- **Cero overhead** de logging
-- **Cero archivos** de log
-- **Cero output** en consola
-- Máximo rendimiento
+- **Zero overhead** from logging
+- **Zero log files**
+- **Zero console output**
+- Maximum performance
 
-## 🛡️ Seguridad
+## 🛡️ Security
 
-- **Desarrollo**: Logs pueden contener información sensible
-- **Producción**: Completamente silencioso, sin exposición de datos
-- **Docker**: Logging driver deshabilitado en producción
+- **Development**: Logs may contain sensitive information
+- **Production**: Completely silent, no data exposure
+- **Docker**: Logging driver disabled in production
 
 ## 🔧 Troubleshooting
 
-### Si aparecen logs en producción:
+### If logs appear in production:
 
-1. Verificar `NODE_ENV=production`
-2. Verificar `LOG_LEVEL=silent`
-3. Verificar Docker logging driver
+1. Check `NODE_ENV=production`
+2. Check `LOG_LEVEL=silent`
+3. Check Docker logging driver
 
-### Si no aparecen logs en desarrollo:
+### If logs don't appear in development:
 
-1. Verificar `NODE_ENV=development`
-2. Verificar `LOG_LEVEL=debug`
-3. Verificar permisos de escritura en `backend/logs/`
+1. Check `NODE_ENV=development`
+2. Check `LOG_LEVEL=debug`
+3. Check write permissions in `backend/logs/`

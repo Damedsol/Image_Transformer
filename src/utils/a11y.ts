@@ -1,32 +1,32 @@
 /**
- * Utilidades para mejorar la accesibilidad en la aplicación
+ * Utilities to improve accessibility in the application
  */
 
 /**
- * Verifica si el usuario prefiere el modo oscuro
+ * Checks if the user prefers dark mode
  */
 export function prefersDarkMode(): boolean {
   return window.matchMedia('(prefers-color-scheme: dark)').matches;
 }
 
 /**
- * Verifica si el usuario prefiere reducir el movimiento
+ * Checks if the user prefers reduced motion
  */
 export function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
 /**
- * Detecta si el dispositivo es táctil
+ * Detects if the device is touch-enabled
  */
 export function isTouchDevice(): boolean {
   return 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 }
 
 /**
- * Anuncia un mensaje para lectores de pantalla
- * @param message Mensaje a anunciar
- * @param element Elemento donde anunciar (por defecto busca #status-announcer)
+ * Announces a message to screen readers
+ * @param message Message to announce
+ * @param element Element where to announce (defaults to #status-announcer)
  */
 export function announceToScreenReader(message: string, element?: HTMLElement): void {
   const announcer = element || document.getElementById('status-announcer');
@@ -36,7 +36,7 @@ export function announceToScreenReader(message: string, element?: HTMLElement): 
 }
 
 /**
- * Añade atributos ARIA para hacer un elemento focusable y navegable
+ * Adds ARIA attributes to make an element focusable and navigable
  */
 export function makeElementFocusable(element: HTMLElement, label: string): void {
   element.setAttribute('tabindex', '0');
@@ -45,12 +45,12 @@ export function makeElementFocusable(element: HTMLElement, label: string): void 
 }
 
 /**
- * Establece el estado de carga para un botón o control
+ * Sets the loading state for a button or control
  */
 export function setLoadingState(
   element: HTMLElement,
   isLoading: boolean,
-  loadingText = 'Cargando...'
+  loadingText = 'Loading...'
 ): void {
   if (isLoading) {
     element.setAttribute('aria-busy', 'true');
@@ -58,12 +58,12 @@ export function setLoadingState(
       element.disabled = true;
     }
 
-    // Guardar el texto original si no se ha guardado ya
+    // Save original text if not already saved
     if (!element.dataset.originalText) {
       element.dataset.originalText = element.textContent || '';
     }
 
-    // Cambiar el texto y añadir un indicador de carga
+    // Change text and add loading indicator
     element.innerHTML = `
       <svg class="spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
         <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
@@ -76,7 +76,7 @@ export function setLoadingState(
       element.disabled = false;
     }
 
-    // Restaurar el texto original
+    // Restore original text
     if (element.dataset.originalText) {
       element.textContent = element.dataset.originalText;
       delete element.dataset.originalText;
@@ -85,7 +85,7 @@ export function setLoadingState(
 }
 
 /**
- * Configura una navegación con teclado para elementos en una lista
+ * Sets up keyboard navigation for elements in a list
  */
 export function setupKeyboardNavigation(
   container: HTMLElement,
@@ -102,7 +102,7 @@ export function setupKeyboardNavigation(
 }
 
 /**
- * Crea un elemento de alerta que se anuncia a lectores de pantalla
+ * Creates an alert element that announces to screen readers
  */
 export function createAlert(
   message: string,
@@ -115,7 +115,7 @@ export function createAlert(
   alert.setAttribute('aria-live', 'assertive');
   alert.textContent = message;
 
-  // Auto-eliminar después del tiempo especificado
+  // Auto-remove after specified time
   if (duration > 0) {
     setTimeout(() => {
       if (alert.parentNode) {
@@ -128,7 +128,7 @@ export function createAlert(
 }
 
 /**
- * Aplica etiquetas adecuadas a una estructura de datos en árbol
+ * Applies appropriate labels to a tree data structure
  */
 export function labelTreeStructure(
   container: HTMLElement,
@@ -139,11 +139,11 @@ export function labelTreeStructure(
   const list = container.querySelector(listSelector);
   if (!list) return;
 
-  // Añadir atributos ARIA a la lista
+  // Add ARIA attributes to the list
   list.setAttribute('role', 'tree');
   list.setAttribute('aria-labelledby', headingId);
 
-  // Añadir atributos ARIA a cada elemento
+  // Add ARIA attributes to each item
   const items = list.querySelectorAll(itemSelector);
   items.forEach((item, index) => {
     item.setAttribute('role', 'treeitem');
@@ -152,7 +152,7 @@ export function labelTreeStructure(
 }
 
 /**
- * Mejora la accesibilidad del modal/diálogo
+ * Improves modal/dialog accessibility
  */
 export function setupAccessibleDialog(
   dialogElement: HTMLElement,
@@ -166,18 +166,18 @@ export function setupAccessibleDialog(
   const closeButton = document.querySelector(closeButtonSelector) as HTMLElement;
   let previousFocus: HTMLElement | null = null;
 
-  // Función para abrir el diálogo
+  // Function to open the dialog
   const open = () => {
     if (!dialogElement) return;
 
-    // Guardar el elemento que tenía el foco
+    // Save the element that had focus
     previousFocus = document.activeElement as HTMLElement;
 
-    // Mostrar el diálogo
+    // Show the dialog
     dialogElement.removeAttribute('hidden');
     dialogElement.setAttribute('aria-hidden', 'false');
 
-    // Enfocar el primer elemento interactivo
+    // Focus the first interactive element
     const firstFocusable = dialogElement.querySelector(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     ) as HTMLElement;
@@ -185,28 +185,28 @@ export function setupAccessibleDialog(
       firstFocusable.focus();
     }
 
-    // Anunciar a lectores de pantalla
-    announceToScreenReader('Diálogo abierto');
+    // Announce to screen readers
+    announceToScreenReader('Dialog opened');
   };
 
-  // Función para cerrar el diálogo
+  // Function to close the dialog
   const close = () => {
     if (!dialogElement) return;
 
-    // Ocultar el diálogo
+    // Hide the dialog
     dialogElement.setAttribute('hidden', 'true');
     dialogElement.setAttribute('aria-hidden', 'true');
 
-    // Devolver el foco al elemento anterior
+    // Return focus to the previous element
     if (previousFocus) {
       previousFocus.focus();
     }
 
-    // Anunciar a lectores de pantalla
-    announceToScreenReader('Diálogo cerrado');
+    // Announce to screen readers
+    announceToScreenReader('Dialog closed');
   };
 
-  // Configurar event listeners
+  // Set up event listeners
   if (openButton) {
     openButton.addEventListener('click', open);
   }
@@ -215,14 +215,14 @@ export function setupAccessibleDialog(
     closeButton.addEventListener('click', close);
   }
 
-  // Configurar cierre con ESC
+  // Set up ESC key to close
   dialogElement.addEventListener('keydown', e => {
     if (e.key === 'Escape') {
       close();
     }
   });
 
-  // Atrapar el foco dentro del diálogo
+  // Trap focus within the dialog
   dialogElement.addEventListener('keydown', e => {
     if (e.key === 'Tab') {
       const focusables = dialogElement.querySelectorAll(
