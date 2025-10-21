@@ -117,7 +117,13 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
     }
 
     // Opciones de conversión validadas
-    const options: ConversionOptions = validationResult.data;
+    const options: ConversionOptions = {
+      format: validationResult.data.format,
+      width: validationResult.data.width,
+      height: validationResult.data.height,
+      quality: validationResult.data.quality,
+      maintainAspectRatio: validationResult.data.maintainAspectRatio,
+    };
     logger.info({ options }, 'Opciones de conversión validadas');
 
     // Añadir archivos originales a la lista global de limpieza

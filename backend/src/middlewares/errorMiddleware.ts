@@ -11,14 +11,14 @@ export const errorHandler: ErrorRequestHandler = (
   _req: Request,
   res: Response,
   _next: NextFunction
-) => {
+): void => {
   // Loguear el error usando el logger centralizado
   // Incluir el objeto de error completo para tener stack trace y detalles
   logger.error({ err }, 'Error no manejado interceptado por errorHandler');
 
   // Si es un AppError personalizado, usar su código de estado y detalles
   if (err instanceof AppError) {
-    return res.status(err.statusCode).json({
+    res.status(err.statusCode).json({
       success: false,
       error: {
         message: err.message,
@@ -26,18 +26,20 @@ export const errorHandler: ErrorRequestHandler = (
         details: err.details && process.env.NODE_ENV === 'development' ? err.details : undefined,
       },
     });
+    return;
   }
 
   // Categorizar errores comunes
   // Errores de validación
   if (err.message.includes('Validation error') || err.message.includes('validation failed')) {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: 'Datos de entrada inválidos',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
+    return;
   }
 
   // Errores de autenticación
@@ -46,35 +48,38 @@ export const errorHandler: ErrorRequestHandler = (
     err.message.includes('token') ||
     err.message.includes('unauthorized')
   ) {
-    return res.status(401).json({
+    res.status(401).json({
       success: false,
       error: {
         message: 'Error de autenticación',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
+    return;
   }
 
   // Errores de autorización
   if (err.message.includes('permission') || err.message.includes('forbidden')) {
-    return res.status(403).json({
+    res.status(403).json({
       success: false,
       error: {
         message: 'No tiene permisos para realizar esta acción',
         details: process.env.NODE_ENV === 'development' ? err.message : undefined,
       },
     });
+    return;
   }
 
   // Errores de Multer (subida de archivos)
   if (err.message.includes('Solo se permiten imágenes') || err.name === 'MulterError') {
-    return res.status(400).json({
+    res.status(400).json({
       success: false,
       error: {
         message: err.message || 'Error en la subida de archivos',
         details: process.env.NODE_ENV === 'development' ? err.stack : undefined,
       },
     });
+    return;
   }
 
   // Error genérico (500 - Internal Server Error)
