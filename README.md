@@ -80,14 +80,19 @@ A powerful web application for transforming and converting images between differ
 4. Start the development services:
 
    ```bash
-   # Using Docker
-   pnpm docker:dev
+   # Using Docker (Development)
+   docker compose --profile development up --build
+
+   # Using Docker (Production)
+   docker compose --profile production up --build -d
 
    # Without Docker
    pnpm dev
    ```
 
-5. Open your browser at [http://localhost:5173](http://localhost:5173)
+5. Open your browser at:
+   - **Development**: [http://localhost:5173](http://localhost:5173)
+   - **Production**: [http://localhost:80](http://localhost:80)
 
 ## How to Use the Application
 
@@ -122,10 +127,69 @@ A powerful web application for transforming and converting images between differ
 - `pnpm lint`: Run ESLint to check the code
 - `pnpm format`: Format the code with Prettier
 - `pnpm lint:fix`: Run lint with automatic fixing
-- `pnpm docker:dev`: Start development environment in Docker
-- `pnpm docker:prod`: Start production environment in Docker
-- `pnpm docker:logs`: View Docker logs
-- `pnpm docker:prune`: Clean up Docker resources
+
+## Docker Commands
+
+### Development
+
+```bash
+# Start development environment
+docker compose --profile development up --build
+
+# Stop development environment
+docker compose --profile development down
+
+# View development logs
+docker compose --profile development logs -f
+```
+
+### Production
+
+```bash
+# Start production environment
+docker compose --profile production up --build -d
+
+# Stop production environment
+docker compose --profile production down
+
+# View production logs
+docker compose --profile production logs -f
+```
+
+### General Docker Commands
+
+```bash
+# View all containers
+docker compose ps
+
+# View logs for specific services
+docker compose logs -f backend-dev backend-prod
+docker compose logs -f frontend-dev frontend-prod
+
+# Clean up Docker resources
+docker system prune -f
+```
+
+## Docker Configuration
+
+This project uses Docker Compose with profiles to manage both development and production environments:
+
+### Profiles Available
+
+- **`development`**: Hot-reload enabled, volumes mounted, ports 5173/3001
+- **`production`**: Optimized build, Nginx frontend, ports 80/3001
+
+### Services
+
+- **Backend**: Node.js with Express and Sharp for image processing
+- **Frontend**: Vite dev server (dev) or Nginx (prod)
+
+### Volumes
+
+- `backend-temp`: Persistent storage for processed files
+- Development volumes: Mounted for hot-reload
+
+For detailed Docker documentation, see [DOCKER.md](./DOCKER.md).
 
 ## Development Workflow
 
