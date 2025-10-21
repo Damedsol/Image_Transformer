@@ -2,6 +2,7 @@ import { ImageInfo, ConversionOptions, ConversionStatus } from '../types/image';
 import { DropZoneElement, ConversionOptionsElement } from '../types/components';
 import { prepareImageFile } from '../utils/fileUtils';
 import { convertImagesAPI } from '../utils/api';
+import { logApiError } from '../utils/logger';
 
 /**
  * Componente principal para el conversor de imágenes
@@ -108,7 +109,7 @@ export class ImageConverter extends HTMLElement {
           this.images.push(imageInfo);
           return imageInfo;
         } catch (error) {
-          console.error('Error al procesar el archivo:', error);
+          logApiError('processFile', error);
           this.showMessage(`Error al procesar el archivo ${file.name}`, 'error');
           return null;
         }
@@ -139,7 +140,7 @@ export class ImageConverter extends HTMLElement {
       // Actualizamos el estado
       this.updateStatus('idle');
     } catch (error) {
-      console.error('Error al seleccionar archivos:', error);
+      logApiError('selectFiles', error);
       this.showMessage('Error al seleccionar archivos', 'error');
       this.updateStatus('error');
       this.announceStatus('Error al cargar las imágenes. Por favor, inténtelo de nuevo.');
@@ -228,7 +229,7 @@ export class ImageConverter extends HTMLElement {
         convertButton.innerHTML = 'Convertir imágenes';
       }
     } catch (error) {
-      console.error('Error al convertir imágenes:', error);
+      logApiError('convertImages', error);
       this.showMessage('Error al convertir imágenes', 'error');
       this.announceStatus('Error durante la conversión de imágenes.');
       this.updateStatus('error');

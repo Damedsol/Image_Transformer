@@ -11,6 +11,7 @@ import {
   isTouchDevice,
   announceToScreenReader,
 } from './utils/a11y';
+import { logApiError } from './utils/logger';
 
 /**
  * Detecta preferencias de accesibilidad y carga opciones correspondientes
@@ -102,11 +103,7 @@ function setupAccessibilityDialog() {
 
   // Si no se encuentran los elementos, salir
   if (!dialog || !a11yButton || !closeButton) {
-    console.error('Elementos de accesibilidad no encontrados:', {
-      dialog,
-      a11yButton,
-      closeButton,
-    });
+    logApiError('accessibilityElements', new Error('Elementos de accesibilidad no encontrados'));
     return;
   }
 
@@ -401,7 +398,7 @@ function savePreference(key: string, value: string, targetElement?: HTMLElement)
       setTimeout(() => confirmIcon.remove(), 300);
     }, 1500);
   } catch (error) {
-    console.error(`Error al guardar preferencia ${key}:`, error);
+    logApiError(`savePreference_${key}`, error);
   }
 }
 
@@ -461,6 +458,6 @@ function loadUserPreferences() {
       if (textSpacingRadio) textSpacingRadio.checked = true;
     }
   } catch (error) {
-    console.error('Error al cargar preferencias de usuario:', error);
+    logApiError('loadUserPreferences', error);
   }
 }
