@@ -5,7 +5,7 @@ import { formatFileSize } from '../utils/fileUtils';
  * Componente para mostrar la vista previa de las imágenes seleccionadas
  */
 export class ImagePreview extends HTMLElement {
-  private imageInfo: ImageInfo;
+  private imageInfo!: ImageInfo;
   private onRemove: (id: string) => void;
 
   constructor() {

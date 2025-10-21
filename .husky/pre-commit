@@ -1,9 +1,20 @@
 #!/bin/sh
-# Run lint-staged to check only modified files
-echo "🔍 Running lint checks on staged files..."
+# Run comprehensive checks before commit
+echo "🔍 Running pre-commit checks..."
 echo "📋 Checking code quality, formatting, and type safety..."
 
-# Execute lint-staged with detailed output
+# Run TypeScript type checking first
+echo "🔧 Running TypeScript type checking..."
+pnpm type-check
+if [ $? -ne 0 ]; then
+    echo "❌ TypeScript type checking failed. Please fix type errors before committing."
+    echo "💡 Check the TypeScript errors above and fix them."
+    exit 1
+fi
+echo "✅ TypeScript type checking passed!"
+
+# Run lint-staged for code quality and formatting
+echo "🔧 Running lint and format checks on staged files..."
 pnpm lint-staged
 
 # Check if lint-staged succeeded
