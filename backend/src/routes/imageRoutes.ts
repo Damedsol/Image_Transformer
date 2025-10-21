@@ -3,7 +3,7 @@ import { convertImages, getFormats } from '../controllers/imageController.js';
 import { upload } from '../middlewares/uploadMiddleware.js';
 import { errorHandler } from '../middlewares/errorMiddleware.js';
 import { apiRateLimiter } from '../middlewares/securityMiddleware.js';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { AppError } from '../utils/apiError.js';
 import logger from '../utils/logger.js';
 import { Request, Response, NextFunction } from 'express';
@@ -16,9 +16,10 @@ const convertRateLimiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_IMAGE_UPLOAD_MAX || '20'), // 20 peticiones por hora
   standardHeaders: true,
   legacyHeaders: false,
-  // Identificar al cliente mediante IP y user-agent para mayor precisión
+  // Identificar al cliente mediante IP y user-agent para mayor precisión con soporte IPv6
   keyGenerator: req => {
-    return `${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
+    const ip = ipKeyGenerator(req.ip || 'unknown');
+    return `${ip}-${req.headers['user-agent'] || 'unknown'}`;
   },
   handler: (_req, _res, next) => {
     next(

@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import helmet from 'helmet';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 import { AppError } from '../utils/apiError.js';
 
 /**
@@ -44,9 +44,10 @@ export const apiRateLimiter = rateLimit({
   max: parseInt(process.env.RATE_LIMIT_MAX || '100'), // 100 peticiones por ventana
   standardHeaders: true,
   legacyHeaders: false,
-  // Usar múltiples factores para identificar al cliente
+  // Usar múltiples factores para identificar al cliente con soporte IPv6
   keyGenerator: req => {
-    return `${req.ip}-${req.headers['user-agent'] || 'unknown'}`;
+    const ip = ipKeyGenerator(req.ip || 'unknown');
+    return `${ip}-${req.headers['user-agent'] || 'unknown'}`;
   },
   handler: (_req: Request, _res: Response, next: NextFunction) => {
     next(AppError.tooManyRequests());
