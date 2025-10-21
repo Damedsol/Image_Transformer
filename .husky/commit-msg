@@ -1,2 +1,5 @@
-# Validar el mensaje de commit usando commitlint
-pnpm commitlint --edit ${1} 
+#!/bin/sh
+# Validate commit message using commitlint
+echo "🔍 Validating commit message format..."
+pnpm commitlint --edit ${1}
+echo "✅ Commit message validation passed!" 
