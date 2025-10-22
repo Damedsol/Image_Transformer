@@ -1,7 +1,7 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-1.1.0-blue.svg)](https://github.com/Damedsol/Image_Transformer)
+[![Version](https://img.shields.io/badge/version-1.1.2-blue.svg)](https://github.com/Damedsol/Image_Transformer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7.1.11-646CFF?logo=vite)](https://vitejs.dev/)
 [![Sharp](https://img.shields.io/badge/Sharp-0.34.4-green?logo=sharp)](https://sharp.pixelplumbing.com/)
