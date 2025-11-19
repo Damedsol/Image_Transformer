@@ -1,7 +1,9 @@
 import { ConversionOptions, ImageInfo } from '../types/image';
 import { logger, logApiError, logSuccess } from './logger';
 
-const API_URL = 'http://localhost:3001/api';
+// Usar variable de entorno o fallback a localhost para desarrollo
+const API_URL: string =
+  (import.meta.env.VITE_API_URL as string | undefined) || 'http://localhost:3001/api';
 
 /**
  * Interfaz para la respuesta de la API al convertir imágenes
@@ -87,7 +89,11 @@ export const convertImagesAPI = async (
     }
 
     // Construir la URL completa para descargar el ZIP
-    const zipDownloadUrl = `http://localhost:3001${data.zipUrl}`;
+    // Si data.zipUrl ya es una URL completa, usarla directamente; si no, construirla
+    const baseUrl = API_URL.replace('/api', '');
+    const zipDownloadUrl = data.zipUrl.startsWith('http')
+      ? data.zipUrl
+      : `${baseUrl}${data.zipUrl}`;
     logSuccess('imageConversion', { zipUrl: zipDownloadUrl, imagesCount: data.images.length });
     return zipDownloadUrl;
   } catch (error) {
