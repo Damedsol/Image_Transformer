@@ -30,12 +30,33 @@ app.use(preventClickjacking);
 app.use(protectFromPrototypePollution);
 
 // Configuración de CORS
+const getCorsOrigins = (): string[] => {
+  if (process.env.NODE_ENV === 'production') {
+    const origins: string[] = [];
+
+    // Agregar origen desde variable de entorno (para Netlify u otros servicios)
+    if (process.env.CORS_ORIGIN) {
+      origins.push(process.env.CORS_ORIGIN);
+    }
+
+    // Agregar múltiples orígenes si están separados por coma
+    if (process.env.CORS_ORIGINS) {
+      origins.push(...process.env.CORS_ORIGINS.split(',').map(o => o.trim()));
+    }
+
+    // Permitir localhost para desarrollo local incluso en producción
+    origins.push('http://localhost:5173', 'http://localhost:3000');
+
+    return origins.length > 0 ? origins : ['http://localhost'];
+  }
+
+  // Desarrollo: permitir todos los orígenes locales
+  return ['http://localhost:3000', 'http://localhost:5173', 'http://localhost'];
+};
+
 app.use(
   cors({
-    origin:
-      process.env.NODE_ENV === 'production'
-        ? ['http://localhost', 'https://yourdomain.com'] // Dominio en producción + localhost
-        : ['http://localhost:3000', 'http://localhost:5173', 'http://localhost'], // Permitir frontend dev y prod
+    origin: getCorsOrigins(),
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     credentials: true,
