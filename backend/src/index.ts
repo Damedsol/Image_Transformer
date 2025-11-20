@@ -24,45 +24,91 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Aplicar middlewares de seguridad
-app.use(configureHelmet());
-app.use(preventClickjacking);
-app.use(protectFromPrototypePollution);
+// Configuración de CORS (DEBE ir antes de Helmet)
+/**
+ * Normaliza una URL eliminando trailing slash y validando formato
+ */
+const normalizeOrigin = (origin: string): string | null => {
+  const trimmed = origin.trim();
+  if (!trimmed) return null;
 
-// Configuración de CORS
+  // Validar que sea una URL válida (http o https)
+  try {
+    const url = new URL(trimmed);
+    // Solo permitir http y https
+    if (url.protocol !== 'http:' && url.protocol !== 'https:') {
+      return null;
+    }
+    // Retornar sin trailing slash
+    return url.origin;
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Obtiene los orígenes CORS permitidos de forma segura
+ */
 const getCorsOrigins = (): string[] => {
   if (process.env.NODE_ENV === 'production') {
     const origins: string[] = [];
 
     // Agregar origen desde variable de entorno (para Netlify u otros servicios)
     if (process.env.CORS_ORIGIN) {
-      origins.push(process.env.CORS_ORIGIN);
+      const normalized = normalizeOrigin(process.env.CORS_ORIGIN);
+      if (normalized) {
+        origins.push(normalized);
+      } else {
+        logger.warn({ corsOrigin: process.env.CORS_ORIGIN }, 'CORS_ORIGIN inválido, será ignorado');
+      }
     }
 
     // Agregar múltiples orígenes si están separados por coma
     if (process.env.CORS_ORIGINS) {
-      origins.push(...process.env.CORS_ORIGINS.split(',').map(o => o.trim()));
+      const multipleOrigins = process.env.CORS_ORIGINS.split(',')
+        .map(normalizeOrigin)
+        .filter((origin): origin is string => origin !== null);
+      origins.push(...multipleOrigins);
     }
 
-    // Permitir localhost para desarrollo local incluso en producción
-    origins.push('http://localhost:5173', 'http://localhost:3000');
+    // En producción, solo permitir localhost si se especifica explícitamente
+    // Esto es útil para testing local contra producción
+    if (process.env.ALLOW_LOCALHOST === 'true') {
+      origins.push('http://localhost:5173', 'http://localhost:3000');
+    }
 
-    return origins.length > 0 ? origins : ['http://localhost'];
+    // Si no hay orígenes configurados en producción, lanzar error
+    if (origins.length === 0) {
+      logger.error('No CORS origins configured in production! This is a security risk.');
+      throw new Error(
+        'CORS_ORIGIN must be configured in production environment for security reasons'
+      );
+    }
+
+    return origins;
   }
 
   // Desarrollo: permitir todos los orígenes locales
   return ['http://localhost:3000', 'http://localhost:5173', 'http://localhost'];
 };
 
+const corsOrigins = getCorsOrigins();
+logger.info({ corsOrigins, nodeEnv: process.env.NODE_ENV }, 'CORS origins configured');
+
 app.use(
   cors({
-    origin: getCorsOrigins(),
+    origin: corsOrigins,
     methods: ['GET', 'POST', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
     credentials: true,
     maxAge: 600, // 10 minutos
   })
 );
+
+// Aplicar middlewares de seguridad (después de CORS)
+app.use(configureHelmet());
+app.use(preventClickjacking);
+app.use(protectFromPrototypePollution);
 
 // Aplicar limitador de tasa a todas las rutas de la API
 app.use('/api', apiRateLimiter);

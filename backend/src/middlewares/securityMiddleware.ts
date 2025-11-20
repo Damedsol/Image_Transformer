@@ -6,32 +6,81 @@ import { AppError } from '../utils/apiError.js';
 /**
  * Configuración de Helmet con opciones de seguridad
  */
+/**
+ * Configuración de Helmet con políticas de seguridad estrictas
+ * Compatible con CORS pero manteniendo seguridad
+ */
 export const configureHelmet = (): RequestHandler => {
+  // Obtener orígenes permitidos desde variables de entorno para CSP
+  const allowedOrigins: string[] = [];
+  if (process.env.CORS_ORIGIN) {
+    try {
+      const url = new URL(process.env.CORS_ORIGIN);
+      allowedOrigins.push(url.origin);
+    } catch {
+      // Ignorar si no es una URL válida
+    }
+  }
+  if (process.env.CORS_ORIGINS) {
+    process.env.CORS_ORIGINS.split(',').forEach(origin => {
+      try {
+        const url = new URL(origin.trim());
+        allowedOrigins.push(url.origin);
+      } catch {
+        // Ignorar si no es una URL válida
+      }
+    });
+  }
+
+  // Backend URL para connectSrc
+  const backendUrl = process.env.BACKEND_URL || 'https://image-transformer-r99u.onrender.com';
+  let backendOrigin: string;
+  try {
+    const url = new URL(backendUrl);
+    backendOrigin = url.origin;
+  } catch {
+    backendOrigin = 'https://image-transformer-r99u.onrender.com';
+  }
+
   return helmet({
     contentSecurityPolicy: {
       directives: {
         defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        styleSrc: ["'self'", "'unsafe-inline'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline necesario para algunos frameworks
+        styleSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline necesario para estilos inline
         imgSrc: ["'self'", 'data:', 'blob:'],
-        connectSrc: ["'self'"],
+        // Permitir conexiones solo a orígenes específicos y conocidos
+        connectSrc: [
+          "'self'",
+          backendOrigin,
+          ...allowedOrigins,
+          // Permitir conexiones desde el frontend al backend
+          'https://*.onrender.com',
+        ],
         fontSrc: ["'self'"],
-        objectSrc: ["'none'"],
+        objectSrc: ["'none'"], // Bloquear plugins
         mediaSrc: ["'self'"],
-        frameSrc: ["'none'"],
+        frameSrc: ["'none'"], // Bloquear iframes
         workerSrc: ["'self'", 'blob:'],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
       },
     },
-    crossOriginEmbedderPolicy: true,
-    crossOriginOpenerPolicy: true,
-    crossOriginResourcePolicy: { policy: 'same-site' },
+    // Configuración balanceada: permitir CORS pero mantener seguridad
+    crossOriginEmbedderPolicy: false, // Necesario para CORS con credenciales
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' }, // Más seguro que unsafe-none
+    crossOriginResourcePolicy: { policy: 'cross-origin' }, // Necesario para CORS
     xssFilter: true,
     noSniff: true,
-    referrerPolicy: { policy: 'no-referrer' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' }, // Más seguro que no-referrer
     hsts: {
-      maxAge: 15552000, // 180 días
+      maxAge: 31536000, // 1 año (máximo recomendado)
       includeSubDomains: true,
       preload: true,
+    },
+    // Prevenir clickjacking
+    frameguard: {
+      action: 'deny',
     },
   });
 };
