@@ -20,6 +20,8 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - LOG_LEVEL=debug
+      # En desarrollo, localhost se permite automáticamente
+      # CORS_ORIGIN es opcional en desarrollo
     env_file:
       - ./backend/.env
     restart: unless-stopped
@@ -45,6 +47,9 @@ services:
       - NODE_ENV=production
       - PORT=3001
       - LOG_LEVEL=silent
+      # CORS_ORIGIN debe estar configurado en .env o aquí
+      # Ejemplo: - CORS_ORIGIN=http://localhost:5173 (para desarrollo local con Docker)
+      # O usar ALLOW_LOCALHOST=true si necesitas localhost en producción
     env_file:
       - ./backend/.env
     restart: unless-stopped
