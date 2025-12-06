@@ -26,11 +26,11 @@ importers:
         specifier: 17.2.3
         version: 17.2.3
       express:
-        specifier: 5.1.0
-        version: 5.1.0
+        specifier: 5.2.0
+        version: 5.2.0
       express-rate-limit:
         specifier: 8.1.0
-        version: 8.1.0(express@5.1.0)
+        version: 8.1.0(express@5.2.0)
       helmet:
         specifier: 8.1.0
         version: 8.1.0
@@ -986,8 +986,8 @@ packages:
     peerDependencies:
       express: '>= 4.11'
 
-  express@5.1.0:
-    resolution: {integrity: sha512-DT9ck5YIRU+8GYzzU5kT3eHGA5iL+1Zd0EutOmTE9Dtk+Tvuzd23VBU+ec7HPNSTxXYO55gPV/hq4pSBJDjFpA==}
+  express@5.2.0:
+    resolution: {integrity: sha512-XdpJDLxfztVY59X0zPI6sibRiGcxhTPXRD3IhJmjKf2jwMvkRGV1j7loB8U+heeamoU3XvihAaGRTR4aXXUN3A==}
     engines: {node: '>= 18'}
 
   fast-copy@3.0.2:
@@ -2646,12 +2646,12 @@ snapshots:
 
   events@3.3.0: {}
 
-  express-rate-limit@8.1.0(express@5.1.0):
+  express-rate-limit@8.1.0(express@5.2.0):
     dependencies:
-      express: 5.1.0
+      express: 5.2.0
       ip-address: 10.0.1
 
-  express@5.1.0:
+  express@5.2.0:
     dependencies:
       accepts: 2.0.0
       body-parser: 2.2.1
@@ -2660,6 +2660,7 @@ snapshots:
       cookie: 0.7.2
       cookie-signature: 1.2.2
       debug: 4.4.3(supports-color@5.5.0)
+      depd: 2.0.0
       encodeurl: 2.0.0
       escape-html: 1.0.3
       etag: 1.8.1
