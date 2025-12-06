@@ -53,7 +53,11 @@
   "pnpm": {
     "overrides": {
       "brace-expansion@^1.0.0": "1.1.12",
-      "brace-expansion@^2.0.0": "2.0.2"
+      "brace-expansion@^2.0.0": "2.0.2",
+      "glob": ">=10.5.0",
+      "jws": ">=3.2.3",
+      "js-yaml": ">=4.1.1",
+      "body-parser": ">=2.2.1"
     },
     "onlyBuiltDependencies": [
       "esbuild",
