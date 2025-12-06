@@ -1,11 +1,11 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-1.1.5-blue.svg)](https://github.com/Damedsol/Image_Transformer)
+[![Version](https://img.shields.io/badge/version-1.1.6-blue.svg)](https://github.com/Damedsol/Image_Transformer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-7.1.11-646CFF?logo=vite)](https://vitejs.dev/)
 [![Sharp](https://img.shields.io/badge/Sharp-0.34.4-green?logo=sharp)](https://sharp.pixelplumbing.com/)
-[![Express](https://img.shields.io/badge/Express-5.1.0-black?logo=express)](https://expressjs.com/)
+[![Express](https://img.shields.io/badge/Express-5.2.0-black?logo=express)](https://expressjs.com/)
 
 ## Description
 
@@ -46,7 +46,7 @@ For detailed documentation, see the [docs/](docs/) folder:
 ### Backend
 
 - Node.js (ES2022)
-- Express 5.1.0
+- Express 5.2.0
 - Sharp 0.34.4 (image processing)
 - Multer 2.0.2 (file uploads)
 - Archiver 7.0.1 (ZIP creation)
@@ -214,7 +214,7 @@ This project uses Docker Compose with profiles to manage both development and pr
 
 ### Services
 
-- **Backend**: Node.js with Express 5.1.0 and Sharp 0.34.4 for image processing
+- **Backend**: Node.js with Express 5.2.0 and Sharp 0.34.4 for image processing
 - **Frontend**: Vite 7.1.11 dev server (dev) or Nginx (prod)
 
 ### Volumes
