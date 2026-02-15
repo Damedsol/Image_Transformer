@@ -20,25 +20,6 @@ export interface ConversionResult {
   height: number;
 }
 
-// Interfaces para autenticación y seguridad
-export interface JwtPayload {
-  userId: string;
-  email: string;
-  role: UserRole;
-  iat?: number;
-  exp?: number;
-}
-
-export type UserRole = 'user' | 'admin';
-
-export interface ApiKey {
-  key: string;
-  name: string;
-  permissions: string[];
-  createdAt: Date;
-  expiresAt?: Date;
-}
-
 // Interfaces para manejo de errores avanzado
 export interface ApiError extends Error {
   statusCode: number;

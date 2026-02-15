@@ -42,34 +42,6 @@ export const errorHandler: ErrorRequestHandler = (
     return;
   }
 
-  // Authentication errors
-  if (
-    err.message.includes('jwt') ||
-    err.message.includes('token') ||
-    err.message.includes('unauthorized')
-  ) {
-    res.status(401).json({
-      success: false,
-      error: {
-        message: 'Authentication error',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined,
-      },
-    });
-    return;
-  }
-
-  // Authorization errors
-  if (err.message.includes('permission') || err.message.includes('forbidden')) {
-    res.status(403).json({
-      success: false,
-      error: {
-        message: 'You do not have permission to perform this action',
-        details: process.env.NODE_ENV === 'development' ? err.message : undefined,
-      },
-    });
-    return;
-  }
-
   // Multer errors (file upload)
   if (err.message.includes('Only images are allowed') || err.name === 'MulterError') {
     res.status(400).json({
