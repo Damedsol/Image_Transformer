@@ -99,7 +99,7 @@ app.use(
   cors({
     origin: corsOrigins,
     methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'X-API-Key'],
+    allowedHeaders: ['Content-Type'],
     credentials: true,
     maxAge: 600, // 10 minutos
   })

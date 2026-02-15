@@ -28,20 +28,6 @@ export class AppError extends Error implements ApiError {
   }
 
   /**
-   * Crea un error de autenticación (401 Unauthorized)
-   */
-  static unauthorized(message = 'No autenticado'): AppError {
-    return new AppError(message, 401, { code: 'UNAUTHORIZED' });
-  }
-
-  /**
-   * Crea un error de autorización (403 Forbidden)
-   */
-  static forbidden(message = 'No autorizado'): AppError {
-    return new AppError(message, 403, { code: 'FORBIDDEN' });
-  }
-
-  /**
    * Crea un error de recurso no encontrado (404 Not Found)
    */
   static notFound(message = 'Recurso no encontrado'): AppError {
