@@ -70,7 +70,6 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
   // List of ALL temporary files generated in this request
   const allTempFiles: string[] = [];
   let zipPath: string | undefined;
-  let processedImages: ConversionResult[] = [];
 
   try {
     if (!req.files || !Array.isArray(req.files)) {
@@ -133,7 +132,7 @@ export const convertImages = async (req: Request, res: Response): Promise<void> 
 
     // Process each uploaded image
     logger.info({ numFiles: req.files.length }, 'Starting image processing');
-    processedImages = await Promise.all(
+    const processedImages: ConversionResult[] = await Promise.all(
       req.files.map((file: Express.Multer.File) =>
         processImage(
           {
