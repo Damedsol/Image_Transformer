@@ -1,41 +1,43 @@
-FROM node:22.14.0-alpine AS base
+FROM node:24-alpine AS base
 
 WORKDIR /app
 
-# Archivos necesarios para instalación
-COPY package.json pnpm-lock.yaml ./
-
-# Instalar pnpm
+# Install pnpm
 RUN npm install -g pnpm
 
-# Etapa de desarrollo
+# Copy workspace dependency configuration files
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY backend/package.json ./backend/
+
+# Development stage
 FROM base AS development
 ENV NODE_ENV=development
-# Instalar tsx globalmente para hot-reloading
+# Install tsx globally for development hot-reloading
 RUN npm install -g tsx
-RUN pnpm install
-# No copiar los archivos al inicio, los montaremos como volumen
+RUN pnpm install --ignore-scripts
+# Set working directory to the backend workspace package
+WORKDIR /app/backend
 EXPOSE 3001
-# Configurar tsx para mejor hot-reloading
 ENV CHOKIDAR_USEPOLLING=true
 ENV WATCHPACK_POLLING=true
 ENV TSX_DISABLE_CACHE=false
 ENV DEBUG=tsx:*
-# Usar tsx para ejecutar la aplicación
 CMD ["tsx", "watch", "--clear-screen=false", "src/index.ts"]
 
-# Etapa de compilación para producción
+# Compilation/build stage for production
 FROM base AS builder
 ENV NODE_ENV=production
-RUN pnpm install --prod=false
+RUN pnpm install --prod=false --ignore-scripts
 COPY . .
+WORKDIR /app/backend
 RUN pnpm run build
 
-# Etapa de producción
+# Production runtime stage
 FROM base AS production
 ENV NODE_ENV=production
-RUN pnpm install --prod
-COPY --from=builder /app/dist ./dist
-COPY .env.example ./.env
+RUN pnpm install --prod --ignore-scripts
+COPY --from=builder /app/backend/dist ./backend/dist
+COPY backend/.env.example ./backend/.env
+WORKDIR /app/backend
 EXPOSE 3001
-CMD ["sh", "-c", "node dist/index.js"] 
+CMD ["sh", "-c", "node dist/index.js"]
