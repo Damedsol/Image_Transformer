@@ -45,31 +45,35 @@ NODE_ENV=production
 LOG_LEVEL=silent
 ```
 
-### 2. Docker Compose Profile Declarations
+### 2. Docker Compose Environment Settings
 
-Within `docker-compose.yml`, profiles enforce conditional structures at the system kernel level:
+Within `docker-compose.yml` (development) and `docker-compose.prod.yml` (production), environment variables and container options enforce conditional structures:
 
-#### Development (`development` Profile)
+#### Development (`docker-compose.yml`)
 
 ```yaml
-profiles: [development]
 environment:
   - NODE_ENV=development
+  - PORT=3001
   - LOG_LEVEL=debug
 volumes:
+  - ./backend:/app:delegated
   - backend-logs:/app/logs
 ```
 
-#### Production (`production` Profile)
+#### Production (`docker-compose.prod.yml`)
 
 ```yaml
-profiles: [production]
 environment:
   - NODE_ENV=production
+  - PORT=3001
   - LOG_LEVEL=silent
-# Completely disable Docker log drivers to bypass OS disk writes
+# Enforce a strict log rotation policy for standard output errors
 logging:
-  driver: "none"
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
 ```
 
 ---
@@ -105,20 +109,20 @@ pnpm --filter image-transformer-backend dev
 
 #### Development Mode (Verbose Logs)
 ```bash
-# Start development profile
-docker compose --profile development up -d
+# Start development containers in detached mode
+docker compose up -d
 
 # Stream development container logs in real time
-docker compose logs -f backend-dev
+docker compose logs -f backend
 ```
 
 #### Production Mode (Silent & High Speed)
 ```bash
-# Start production profile
-docker compose --profile production up -d
+# Start production containers in detached mode
+docker compose -f docker-compose.prod.yml up -d
 
-# Verify no logging activity (stdout streams should be completely empty)
-docker compose logs backend-prod
+# Verify no custom logging activity (stdout stream should have no Pino logs)
+docker compose -f docker-compose.prod.yml logs backend
 ```
 
 ---

@@ -9,7 +9,7 @@ This index provides a comprehensive map of all available technical documentation
 | Resource / Guide | Scope & Purpose | Document Reference | Status |
 | :--- | :--- | :--- | :--- |
 | **General Overview** | High-level system descriptions, tech stack details, and project features. | [docs/README.md](README.md) | ✅ Complete |
-| **Docker Orchestration** | Setup guidelines, deployment commands, environment configurations, and Compose profiles. | [docs/DOCKER.md](DOCKER.md) | ✅ Complete |
+| **Docker Orchestration** | Setup guidelines, deployment commands, environment configurations, and individual Compose files. | [docs/DOCKER.md](DOCKER.md) | ✅ Complete |
 | **Logging Subsystem** | Conditional logging logic, performance optimization strategy, and environment configuration. | [docs/LOGGING.md](LOGGING.md) | ✅ Complete |
 
 ---
@@ -58,17 +58,17 @@ NODE_ENV=production
 LOG_LEVEL=silent
 ```
 
-### Docker Compose Profiles Setup
+### Docker Compose Environments Setup
 
 #### Development Configuration
-- **Profile:** `development`
+- **File:** `docker-compose.yml` (default)
 - **Exposed Ports:** Frontend (`http://localhost:5173`), Backend (`http://localhost:3001`).
-- **Volumes:** Dev code binding mapped locally for real-time compilation.
+- **Volumes:** Dev code binding mapped locally for real-time compilation and hot-reloading.
 
 #### Production Configuration
-- **Profile:** `production`
-- **Exposed Ports:** Nginx reverse proxy serving frontend (`http://localhost:80`), Backend (`http://localhost:3001`).
-- **Volumes:** Read-only data bindings; logging driver set to `none`.
+- **File:** `docker-compose.prod.yml`
+- **Exposed Ports:** Nginx reverse proxy serving frontend (`http://localhost:8080`), Backend (`http://localhost:3001`).
+- **Volumes:** Safe volume mount for temporary active image transformations; logging driver set to `json-file` with strict rotation limits.
 
 ---
 
@@ -78,14 +78,14 @@ LOG_LEVEL=silent
 
 #### Development Deploy
 ```bash
-# Compile and boot up containers with live log streaming
-docker compose --profile development up --build
+# Compile and boot up development containers with live log streaming
+docker compose up --build
 ```
 
 #### Production Detached Deploy
 ```bash
 # Boot up production microservices in background-detached mode
-docker compose --profile production up --build -d
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 #### Complete Cleanup
@@ -100,7 +100,7 @@ docker compose down --volumes --remove-orphans
 
 1. **Log Output Appears in Production Container:**
    - Double-check that `NODE_ENV` is set to `production` and `LOG_LEVEL` is set to `silent`.
-   - Ensure the docker profile matches production.
+   - Ensure you deployed using the production compose file.
 
 2. **File Casing Fails on Git Commits:**
    - Pre-commit hook blocks casing errors via `ls-lint`. Review filenames to make sure directories use kebab-case and components use PascalCase.

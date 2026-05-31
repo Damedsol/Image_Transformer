@@ -1,7 +1,7 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-1.2.3-blue.svg)](https://github.com/Damedsol/Image_Transformer)
+[![Version](https://img.shields.io/badge/version-1.3.0-blue.svg)](https://github.com/Damedsol/Image_Transformer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Sharp](https://img.shields.io/badge/Sharp-0.34.5-green?logo=sharp)](https://sharp.pixelplumbing.com/)
@@ -59,8 +59,8 @@ Ensure you have installed:
 4. **Spin Up Optional Services (Docker Compose)**
    To run containerized services using Docker:
    ```bash
-   # Development profile (with volumes and hot-reloading)
-   docker compose --profile development up --build
+   # Start development containers with active volumes and hot-reloading
+   docker compose up --build
    ```
 
 ---
