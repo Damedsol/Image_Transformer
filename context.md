@@ -47,10 +47,10 @@ This document dynamically records technical learnings, solved errors, architectu
 
 ## 📈 Relevant Changelog
 
-- **2026-05-31: Fix Production Docker Network, Relative API Proxy Routing and Security Hardening**
-  - **Details:** Resolved backend connection error (`ERR_CONNECTION_REFUSED` to `localhost:3001` from client's browser) in production. Updated `src/utils/api.ts` to support dynamic fallback to `/api` (relative path) in non-localhost environments. Enabled build-time variable injection by adding `ARG VITE_API_URL` to `Dockerfile` and passing it via `docker-compose.prod.yml`. Configured Nginx (`docker/nginx.conf`) with `^~ /api/` and `^~ /temp/` reverse proxy blocks, adding strict HTTP method restrictions (`limit_except`), payload limits (`client_max_body_size 50M`), and version concealment (`server_tokens off`). Restructured `docker-compose.prod.yml` to remove the backend container's public port mapping, replacing it with `expose: - "3001"` to enforce complete containment within the Docker internal network.
-  - **QA Verification:** Inspected api configuration, Nginx rules specificity, and verified compose layout.
-  - **Associated Branch:** `develop` (direct fix)
+- **2026-05-31: Bump Version to 1.3.2 & Production Docker Proxy & Hardening**
+  - **Details:** Released stable version `1.3.2` across workspace scopes (root and backend package.json files, docker-compose.prod.yml image fallbacks, and documentation references). Resolved backend connection error (`ERR_CONNECTION_REFUSED` to `localhost:3001` from client's browser) in production. Updated `src/utils/api.ts` to support dynamic fallback to `/api` (relative path) in non-localhost environments. Enabled build-time variable injection by adding `ARG VITE_API_URL` to `Dockerfile` and passing it via `docker-compose.prod.yml`. Configured Nginx (`docker/nginx.conf`) with `^~ /api/` and `^~ /temp/` reverse proxy blocks, adding strict HTTP method restrictions (`limit_except`), payload limits (`client_max_body_size 50M`), and version concealment (`server_tokens off`). Restructured `docker-compose.prod.yml` to remove the backend container's public port mapping, replacing it with `expose: - "3001"` to enforce complete containment within the Docker internal network.
+  - **QA Verification:** Inspected api configuration, Nginx rules specificity, verified compose layout, and bumped version to 1.3.2.
+  - **Associated Branch:** `release/1.3.2`
 
 - **2026-05-31: Bump Version to 1.3.1 & Minor Maintenance**
   - **Details:** Released stable version `1.3.1` across workspace scopes (root and backend package.json files, docker-compose.prod.yml image fallbacks, and documentation references).
