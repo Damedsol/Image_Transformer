@@ -10,8 +10,8 @@ services:
     init: true
     security_opt:
       - no-new-privileges:true
-    ports:
-      - "${BACKEND_PORT:-3001}:3001"
+    expose:
+      - "3001"
     environment:
       - NODE_ENV=production
       - PORT=3001
@@ -42,6 +42,8 @@ services:
     build:
       context: .
       target: production
+      args:
+        - VITE_API_URL=${VITE_API_URL:-}
     container_name: image-transformer-frontend
     restart: unless-stopped
     init: true

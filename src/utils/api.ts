@@ -1,10 +1,14 @@
 import { ConversionOptions, ImageInfo } from "../types/image";
 import { logger, logApiError, logSuccess } from "./logger";
 
-// Usar variable de entorno o fallback a localhost para desarrollo
+// Usar variable de entorno o fallback dinámico según el hostname
 const API_URL: string =
 	(import.meta.env.VITE_API_URL as string | undefined) ||
-	"http://localhost:3001/api";
+	(typeof window !== "undefined" &&
+	(window.location.hostname === "localhost" ||
+		window.location.hostname === "127.0.0.1")
+		? "http://localhost:3001/api"
+		: "/api");
 
 /**
  * Interfaz para la respuesta de la API al convertir imágenes

@@ -34,6 +34,11 @@ This document dynamically records technical learnings, solved errors, architectu
   - Implemented strict location blocks in `docker/nginx.conf` to automatically drop malicious scanner traffic with `403 Forbidden` for dotfiles (like `.env`, `.git`) and sensitive development assets (like `package.json`, `Dockerfile`, compose files), excluding Let's Encrypt's `.well-known`.
   - Added strict matching rules to drop unused service scanner routes (Elasticsearch, Kibana, Swagger, etc.) with `403 Forbidden`.
   - Enforced a standard SPA routing exception (`location ~* \.[a-z0-9]+$ { try_files $uri =404; }`) to guarantee that missing static files with extensions yield true `404 Not Found` responses, preventing Nginx from incorrectly serving SPA HTML with misleading `200 OK` statuses.
+- **Production Nginx Proxy Routing and Security Hardening:**
+  - Configured frontend's Nginx proxy in `docker/nginx.conf` with explicit blocks (`location ^~ /api/` and `location ^~ /temp/`) targeting `http://image-transformer-backend:3001` within the Docker internal network. The use of `^~` ensures Nginx skips regular expression static file rules, correctly handling large zip downloads without returning standard 404s.
+  - Set `API_URL` fallback in `src/utils/api.ts` to dynamically use the relative `/api` path when running on a domain other than `localhost` or `127.0.0.1`, guaranteeing a zero-CORS configuration out-of-the-box and full container image portability across hosts.
+  - **Docker Port Exposure Reduction:** Removed the public port mapping `3001:3001` from the `backend` service in `docker-compose.prod.yml`, replacing it with `expose: - "3001"`. This isolates the backend service exclusively within the internal `proxy-net` Docker network, preventing any public bypass to backend endpoints.
+  - **Nginx Security Rules:** Added `server_tokens off;` to hide Nginx's version signature. Configured `client_max_body_size 50M;` to block oversized uploads before reaching Node, and applied `limit_except` rules to enforce method restrictions (`GET`, `POST`, `OPTIONS` for API, and read-only `GET`, `OPTIONS` for the temporary downloads path).
 
 ## 🧠 Strategic Decisions
 
@@ -41,6 +46,11 @@ This document dynamically records technical learnings, solved errors, architectu
 - **Strict File Naming Alignment:** Implemented `ls-lint` to automate file and directory naming standards across frontend and backend directories, catching invalid structures before commit.
 
 ## 📈 Relevant Changelog
+
+- **2026-05-31: Fix Production Docker Network, Relative API Proxy Routing and Security Hardening**
+  - **Details:** Resolved backend connection error (`ERR_CONNECTION_REFUSED` to `localhost:3001` from client's browser) in production. Updated `src/utils/api.ts` to support dynamic fallback to `/api` (relative path) in non-localhost environments. Enabled build-time variable injection by adding `ARG VITE_API_URL` to `Dockerfile` and passing it via `docker-compose.prod.yml`. Configured Nginx (`docker/nginx.conf`) with `^~ /api/` and `^~ /temp/` reverse proxy blocks, adding strict HTTP method restrictions (`limit_except`), payload limits (`client_max_body_size 50M`), and version concealment (`server_tokens off`). Restructured `docker-compose.prod.yml` to remove the backend container's public port mapping, replacing it with `expose: - "3001"` to enforce complete containment within the Docker internal network.
+  - **QA Verification:** Inspected api configuration, Nginx rules specificity, and verified compose layout.
+  - **Associated Branch:** `develop` (direct fix)
 
 - **2026-05-31: Bump Version to 1.3.1 & Minor Maintenance**
   - **Details:** Released stable version `1.3.1` across workspace scopes (root and backend package.json files, docker-compose.prod.yml image fallbacks, and documentation references).
