@@ -1,143 +1,151 @@
-import { ConversionOptions as Options, ImageFormat } from '../types/image';
+import { ConversionOptions as Options, ImageFormat } from "../types/image";
 
 /**
  * Component for image conversion options
  */
 export class ConversionOptions extends HTMLElement {
-  private options: Options;
-  private onChange: (options: Options) => void;
+	private options: Options;
+	private onChange: (options: Options) => void;
 
-  constructor() {
-    super();
-    this.onChange = () => {};
-    this.options = {
-      format: 'png',
-      quality: 90,
-      maintainAspectRatio: true,
-    };
-  }
+	constructor() {
+		super();
+		this.onChange = () => {};
+		this.options = {
+			format: "png",
+			quality: 90,
+			maintainAspectRatio: true,
+		};
+	}
 
-  /**
-   * Callback that executes when the component connects to the DOM
-   */
-  connectedCallback() {
-    this.render();
-    this.setupEventListeners();
-    this.ensureAccessibility();
-  }
+	/**
+	 * Callback that executes when the component connects to the DOM
+	 */
+	connectedCallback() {
+		this.render();
+		this.setupEventListeners();
+		this.ensureAccessibility();
+	}
 
-  /**
-   * Setter for conversion options
-   */
-  set conversionOptions(options: Options) {
-    this.options = { ...this.options, ...options };
-    this.updateFormValues();
-  }
+	/**
+	 * Setter for conversion options
+	 */
+	set conversionOptions(options: Options) {
+		this.options = { ...this.options, ...options };
+		this.updateFormValues();
+	}
 
-  /**
-   * Getter for conversion options
-   */
-  get conversionOptions(): Options {
-    return this.options;
-  }
+	/**
+	 * Getter for conversion options
+	 */
+	get conversionOptions(): Options {
+		return this.options;
+	}
 
-  /**
-   * Registers the callback for when options change
-   */
-  public setOnChangeCallback(callback: (options: Options) => void) {
-    this.onChange = callback;
-  }
+	/**
+	 * Registers the callback for when options change
+	 */
+	public setOnChangeCallback(callback: (options: Options) => void) {
+		this.onChange = callback;
+	}
 
-  /**
-   * Updates form values according to current options
-   */
-  private updateFormValues() {
-    const formatSelect = this.querySelector('#format') as HTMLSelectElement;
-    const qualityInput = this.querySelector('#quality') as HTMLInputElement;
-    const qualityValue = this.querySelector('#quality-value') as HTMLElement;
-    const maintainAspectRatio = this.querySelector('#maintain-aspect-ratio') as HTMLInputElement;
-    const widthInput = this.querySelector('#width') as HTMLInputElement;
-    const heightInput = this.querySelector('#height') as HTMLInputElement;
+	/**
+	 * Updates form values according to current options
+	 */
+	private updateFormValues() {
+		const formatSelect = this.querySelector("#format") as HTMLSelectElement;
+		const qualityInput = this.querySelector("#quality") as HTMLInputElement;
+		const qualityValue = this.querySelector("#quality-value") as HTMLElement;
+		const maintainAspectRatio = this.querySelector(
+			"#maintain-aspect-ratio",
+		) as HTMLInputElement;
+		const widthInput = this.querySelector("#width") as HTMLInputElement;
+		const heightInput = this.querySelector("#height") as HTMLInputElement;
 
-    if (formatSelect) {
-      formatSelect.value = this.options.format;
-    }
+		if (formatSelect) {
+			formatSelect.value = this.options.format;
+		}
 
-    if (qualityInput && qualityValue) {
-      qualityInput.value = String(this.options.quality || 90);
-      qualityValue.textContent = String(this.options.quality || 90);
-    }
+		if (qualityInput && qualityValue) {
+			qualityInput.value = String(this.options.quality || 90);
+			qualityValue.textContent = String(this.options.quality || 90);
+		}
 
-    if (maintainAspectRatio) {
-      maintainAspectRatio.checked = this.options.maintainAspectRatio ?? true;
-    }
+		if (maintainAspectRatio) {
+			maintainAspectRatio.checked = this.options.maintainAspectRatio ?? true;
+		}
 
-    if (widthInput && this.options.width) {
-      widthInput.value = String(this.options.width);
-    }
+		if (widthInput && this.options.width) {
+			widthInput.value = String(this.options.width);
+		}
 
-    if (heightInput && this.options.height) {
-      heightInput.value = String(this.options.height);
-    }
-  }
+		if (heightInput && this.options.height) {
+			heightInput.value = String(this.options.height);
+		}
+	}
 
-  /**
-   * Sets up event listeners for option changes
-   */
-  private setupEventListeners() {
-    // Format select
-    const formatSelect = this.querySelector('#format') as HTMLSelectElement;
-    if (formatSelect) {
-      formatSelect.addEventListener('change', () => {
-        this.options.format = formatSelect.value as ImageFormat;
-        this.onChange(this.options);
-      });
-    }
+	/**
+	 * Sets up event listeners for option changes
+	 */
+	private setupEventListeners() {
+		// Format select
+		const formatSelect = this.querySelector("#format") as HTMLSelectElement;
+		if (formatSelect) {
+			formatSelect.addEventListener("change", () => {
+				this.options.format = formatSelect.value as ImageFormat;
+				this.onChange(this.options);
+			});
+		}
 
-    // Quality slider
-    const qualityInput = this.querySelector('#quality') as HTMLInputElement;
-    const qualityValue = this.querySelector('#quality-value') as HTMLElement;
-    if (qualityInput && qualityValue) {
-      qualityInput.addEventListener('input', () => {
-        this.options.quality = parseInt(qualityInput.value, 10);
-        qualityValue.textContent = qualityInput.value;
-        this.onChange(this.options);
-      });
-    }
+		// Quality slider
+		const qualityInput = this.querySelector("#quality") as HTMLInputElement;
+		const qualityValue = this.querySelector("#quality-value") as HTMLElement;
+		if (qualityInput && qualityValue) {
+			qualityInput.addEventListener("input", () => {
+				this.options.quality = parseInt(qualityInput.value, 10);
+				qualityValue.textContent = qualityInput.value;
+				this.onChange(this.options);
+			});
+		}
 
-    // Maintain aspect ratio
-    const maintainAspectRatio = this.querySelector('#maintain-aspect-ratio') as HTMLInputElement;
-    if (maintainAspectRatio) {
-      maintainAspectRatio.addEventListener('change', () => {
-        this.options.maintainAspectRatio = maintainAspectRatio.checked;
-        this.onChange(this.options);
-      });
-    }
+		// Maintain aspect ratio
+		const maintainAspectRatio = this.querySelector(
+			"#maintain-aspect-ratio",
+		) as HTMLInputElement;
+		if (maintainAspectRatio) {
+			maintainAspectRatio.addEventListener("change", () => {
+				this.options.maintainAspectRatio = maintainAspectRatio.checked;
+				this.onChange(this.options);
+			});
+		}
 
-    // Width input
-    const widthInput = this.querySelector('#width') as HTMLInputElement;
-    if (widthInput) {
-      widthInput.addEventListener('input', () => {
-        this.options.width = widthInput.value ? parseInt(widthInput.value, 10) : undefined;
-        this.onChange(this.options);
-      });
-    }
+		// Width input
+		const widthInput = this.querySelector("#width") as HTMLInputElement;
+		if (widthInput) {
+			widthInput.addEventListener("input", () => {
+				this.options.width = widthInput.value
+					? parseInt(widthInput.value, 10)
+					: undefined;
+				this.onChange(this.options);
+			});
+		}
 
-    // Height input
-    const heightInput = this.querySelector('#height') as HTMLInputElement;
-    if (heightInput) {
-      heightInput.addEventListener('input', () => {
-        this.options.height = heightInput.value ? parseInt(heightInput.value, 10) : undefined;
-        this.onChange(this.options);
-      });
-    }
-  }
+		// Height input
+		const heightInput = this.querySelector("#height") as HTMLInputElement;
+		if (heightInput) {
+			heightInput.addEventListener("input", () => {
+				this.options.height = heightInput.value
+					? parseInt(heightInput.value, 10)
+					: undefined;
+				this.onChange(this.options);
+			});
+		}
+	}
 
-  /**
-   * Renders the component
-   */
-  private render() {
-    this.innerHTML = `
+	/**
+	 * Renders the component
+	 */
+	private render() {
+		this.innerHTML = `
       <div class="options-container" role="region" aria-label="Conversion options">
         <h2 id="options-heading">Conversion options</h2>
         
@@ -217,32 +225,35 @@ export class ConversionOptions extends HTMLElement {
         </div>
       </div>
     `;
-  }
+	}
 
-  /**
-   * Verifies and corrects accessibility issues
-   */
-  private ensureAccessibility() {
-    // Ensure the label has the correct ID for aria-labelledby
-    const qualityLabel = this.querySelector('label[for="quality"]');
-    if (qualityLabel && !qualityLabel.id) {
-      qualityLabel.id = 'quality-label';
-    }
+	/**
+	 * Verifies and corrects accessibility issues
+	 */
+	private ensureAccessibility() {
+		// Ensure the label has the correct ID for aria-labelledby
+		const qualityLabel = this.querySelector('label[for="quality"]');
+		if (qualityLabel && !qualityLabel.id) {
+			qualityLabel.id = "quality-label";
+		}
 
-    // Ensure the input has correct references
-    const qualityInput = this.querySelector('#quality') as HTMLInputElement;
-    if (qualityInput) {
-      if (qualityLabel && qualityLabel.id) {
-        qualityInput.setAttribute('aria-labelledby', qualityLabel.id);
-      }
+		// Ensure the input has correct references
+		const qualityInput = this.querySelector("#quality") as HTMLInputElement;
+		if (qualityInput) {
+			if (qualityLabel && qualityLabel.id) {
+				qualityInput.setAttribute("aria-labelledby", qualityLabel.id);
+			}
 
-      // Add aria-label as backup
-      if (!qualityInput.hasAttribute('aria-label')) {
-        qualityInput.setAttribute('aria-label', 'Image quality, adjustable from 10 to 100 percent');
-      }
-    }
-  }
+			// Add aria-label as backup
+			if (!qualityInput.hasAttribute("aria-label")) {
+				qualityInput.setAttribute(
+					"aria-label",
+					"Image quality, adjustable from 10 to 100 percent",
+				);
+			}
+		}
+	}
 }
 
 // Register the component
-customElements.define('conversion-options', ConversionOptions);
+customElements.define("conversion-options", ConversionOptions);

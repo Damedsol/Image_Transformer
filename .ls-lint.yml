@@ -1,0 +1,50 @@
+ls:
+  .dir: kebab-case
+
+  # Frontend Components (PascalCase)
+  src/components:
+    .ts: PascalCase
+    .tsx: PascalCase
+
+  # Frontend Utils (camelCase)
+  src/utils:
+    .ts: camelCase
+    .tsx: camelCase
+
+  # Backend Controllers (camelCase)
+  backend/src/controllers:
+    .ts: camelCase
+
+  # Backend Middlewares (camelCase)
+  backend/src/middlewares:
+    .ts: camelCase
+
+  # Backend Routes (camelCase)
+  backend/src/routes:
+    .ts: camelCase
+
+  # Backend Utils (camelCase)
+  backend/src/utils:
+    .ts: camelCase
+
+  # Reglas generales
+  .js: kebab-case | camelCase
+  .jsx: kebab-case | camelCase
+  .ts: kebab-case | camelCase
+  .tsx: kebab-case | camelCase
+  .json: kebab-case
+  .css: kebab-case
+  .md: kebab-case | screamingsnakecase
+
+ignore:
+  - node_modules
+  - dist
+  - build
+  - .git
+  - .github
+  - .husky
+  - .husky/_
+  - backend/node_modules
+  - backend/dist
+  - backend/logs
+  - backend/temp
