@@ -1,9 +1,9 @@
-FROM node:22.14.0-alpine AS base
+FROM node:24-alpine AS base
 
 WORKDIR /app
 
 # Archivos necesarios para instalación
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Instalar pnpm
 RUN npm install -g pnpm
@@ -11,7 +11,7 @@ RUN npm install -g pnpm
 # Etapa de desarrollo
 FROM base AS development
 ENV NODE_ENV=development
-RUN pnpm install
+RUN pnpm install --ignore-scripts
 # No copiar los archivos al inicio, los montaremos como volumen
 EXPOSE 5173
 # Configurar Vite para observar cambios y habilitar HMR
@@ -24,7 +24,7 @@ CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0", "--watch"]
 # Etapa de compilación para producción
 FROM base AS builder
 ENV NODE_ENV=production
-RUN pnpm install --prod=false
+RUN pnpm install --prod=false --ignore-scripts
 COPY . .
 RUN pnpm run build
 

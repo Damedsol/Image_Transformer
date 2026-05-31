@@ -1,16 +1,18 @@
 services:
   backend:
     build:
-      context: ./backend
+      context: .
+      dockerfile: backend/Dockerfile
       target: development
     container_name: image-transformer-backend
     ports:
       - '3001:3001'
     volumes:
-      - ./backend:/app:delegated
+      - .:/app:delegated
       - /app/node_modules
-      - backend-temp:/app/temp
-      - backend-logs:/app/logs
+      - /app/backend/node_modules
+      - backend-temp:/app/backend/temp
+      - backend-logs:/app/backend/logs
     environment:
       - NODE_ENV=development
       - PORT=3001

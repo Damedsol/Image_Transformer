@@ -25,6 +25,11 @@ This document dynamically records technical learnings, solved errors, architectu
 - **Docker Orchestration (Separated & Parameterized):**
   - **Local Development:** Simplified root `docker-compose.yml` strictly focused on `development` targets with direct volume mounts for instant hot-reloading. Removed complex `profiles`.
   - **Production/VPS Deployment:** Created `docker-compose.prod.yml` with secure container execution (`security_opt: ["no-new-privileges:true"]`, `init: true`), RAM memory limits (backend: `512M`, frontend: `256M`), strict JSON log rotation, and dynamic reverse-proxy external network configuration mapping via variables (like `DOCKER_PROXY_NETWORK` defaulting to `proxy-tier`).
+- **Docker Monorepo Build Alignment:**
+  - Resolved build context misalignment where backend container builds failed due to missing `pnpm-lock.yaml` and catalogs. Changed the build context of the backend service to the monorepo root (`.`) and targeted the Dockerfile via `dockerfile: backend/Dockerfile` in both `docker-compose.yml` and `docker-compose.prod.yml`.
+  - Adapted both `backend/Dockerfile` and root `Dockerfile` to copy workspace configuration files (`package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`) in their base stages, allowing pnpm to resolve catalogs correctly (preventing `ERR_PNPM_CATALOG_ENTRY_NOT_FOUND_FOR_SPEC` errors) and correctly position working directories, while ensuring predictable local volume mounting in development (`.:/app`) and clean distributions in production.
+  - Upgraded base Node images from `node:22.14.0-alpine` to `node:24-alpine` in both `backend/Dockerfile` and root `Dockerfile` to satisfy the strict workspace engine requirement (`>=24.0.0`) enforced by `pnpm install`, preventing incompatibilities in both packages during docker builds.
+  - Added `--ignore-scripts` to all `pnpm install` commands in both Dockerfiles to prevent container build failures caused by missing local development lifecycle tools (e.g. `husky` in `prepare` scripts) in production environments.
 
 ## 🧠 Strategic Decisions
 
@@ -32,6 +37,11 @@ This document dynamically records technical learnings, solved errors, architectu
 - **Strict File Naming Alignment:** Implemented `ls-lint` to automate file and directory naming standards across frontend and backend directories, catching invalid structures before commit.
 
 ## 📈 Relevant Changelog
+
+- **2026-05-31: Hotfix: Align Docker Monorepo Build Context & Dockerfiles**
+  - **Details:** Fixed backend Docker build error where workspace dependencies and `pnpm-lock.yaml` were unreachable. Modified `docker-compose.yml` and `docker-compose.prod.yml` to use the root context (`.`) for the backend service, pointing to `backend/Dockerfile`. Adapted `backend/Dockerfile` and root `Dockerfile` to copy workspace configs and set up correct relative working directories. Resolved `ERR_PNPM_UNSUPPORTED_ENGINE` on `pnpm install` by upgrading base Node images to `node:24-alpine`. Fixed `prepare: husky not found` lifecycle errors during production builds by appending `--ignore-scripts` to all `pnpm install` commands in both Dockerfiles.
+  - **QA Verification:** Validated Dockerfile layers alignment, updated volume configurations, checked compose configurations, and ensured engines and scripts execution compliance.
+  - **Associated Branch:** `develop` (direct fix)
 
 - **2026-05-31: Bump Version to 1.3.0 & Align Workspace Documentation**
   - **Details:** Released stable version `1.3.0` across workspace scopes (root and backend package.json files). Conducted a full documentation audit to align all setup manuals and structural logs. Completely removed obsolete `--profile` flags from Docker Compose sections, transitioning configurations to clean, separate environment files (`docker-compose.yml` for development, `docker-compose.prod.yml` for production). Updated `docs/LOGGING.md` to match the actual production log rotation policies (`json-file` driver with strict sizes).
