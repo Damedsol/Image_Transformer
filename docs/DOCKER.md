@@ -1,154 +1,78 @@
-# 🐳 Docker Configuration - Image Transformer
+# 🐳 Docker Infrastructure - Image Transformer
 
-This project uses a Docker Compose profiles system to handle both development and production environments with a single `docker-compose.yml` file.
+This project utilizes a clean separation of concerns for containerized environments, dividing local development workflows and secure production VPS-aligned orchestration into two separate configurations.
 
-## 📋 Available Profiles
+---
 
-### 🔧 Development (`development`)
+## 🔧 Local Development Workflow
 
-- **Backend**: Port 3001 with hot-reload
-- **Frontend**: Port 5173 with Vite dev server
-- **Volumes**: Mounted for real-time development
-- **Variables**: Configured for development
+The default configuration is optimized for rapid feedback loops, real-time file synchronization, and hot-reloading.
 
-### 🚀 Production (`production`)
+### Service Architecture
+- **Backend (`backend`)**: Express server running on port `3001` via `tsx watch` for hot-reloading.
+- **Frontend (`frontend`)**: Vite dev server hosting files on port `5173` with network access.
+- **Shared Volumes**: Source directories are mounted directly to allow instant workspace hot-reloads.
 
-- **Backend**: Port 3001 optimized
-- **Frontend**: Port 80 with Nginx
-- **Volumes**: Only for persistent data
-- **Variables**: Configured for production
-
-## 🚀 Available Commands
-
-### Development
-
+### Commands
 ```bash
-# Start in development mode
-npm run docker:dev
+# Build and start development environment in the foreground
+docker compose up --build
 
-# Stop development services
-npm run docker:dev:down
+# Run development containers in the background (detached mode)
+docker compose up -d
 
-# View development logs
-npm run docker:dev:logs
+# View live console logs
+docker compose logs -f
+
+# Shut down and clean up services
+docker compose down
 ```
 
-### Production
+---
 
+## 🚀 Production VPS Deployment Workflow
+
+The production environment is structured to align with professional, secure, and resource-constrained infrastructures (such as private cloud VPS architectures).
+
+### Architectural Guardrails
+1. **Perimeter Security**: Services utilize strict process isolation with `security_opt: ["no-new-privileges:true"]` and running with init process integration (`init: true`).
+2. **Resource Constraints**: Strict RAM limit ceilings are enforced to preserve host environment stability:
+   - **Frontend**: Max memory `256M` (Nginx static content server).
+   - **Backend**: Max memory `512M` (Express/Sharp image processor).
+3. **Log Rotation**: Disk safety is guaranteed by imposing strict log rotations (`max-size: "10m"`, `max-file: "3"`).
+4. **Proxy Network Integration**: Services are integrated into an external network (`proxy-net`) dynamically named through environment variables. This allows the application to attach directly to existing reverse proxies (e.g., Nginx Proxy Manager) without hardcoded references.
+
+### Production Environment Variables
+
+You can configure the deployment settings by exposing these variables in the environment or specifying them in a root `.env` file:
+
+| Environment Variable | Description | Default Value |
+| :--- | :--- | :--- |
+| `BACKEND_PORT` | Port to map the Express backend API on the host. | `3001` |
+| `FRONTEND_PORT` | Port to map the Nginx frontend static server on the host. | `8080` |
+| `DOCKER_PROXY_NETWORK` | The external Docker network of your reverse proxy. | `proxy-tier` |
+
+### Commands
 ```bash
-# Start in production mode (background)
-npm run docker:prod
+# Before launching, ensure your proxy network is created on the host (if not already existing)
+# Example: docker network create proxy-tier
 
-# Stop production services
-npm run docker:prod:down
+# Build and deploy the production stack in detached mode
+docker compose -f docker-compose.prod.yml up -d --build
 
-# View production logs
-npm run docker:prod:logs
+# Inspect running production containers
+docker compose -f docker-compose.prod.yml ps
+
+# View production logging streams (optimized and rotated)
+docker compose -f docker-compose.prod.yml logs -f
+
+# Tear down the production stack safely
+docker compose -f docker-compose.prod.yml down
 ```
 
-### General Commands
+---
 
-```bash
-# View status of all containers
-npm run docker:status
+## 📦 Shared Data Persistence
 
-# View frontend logs
-npm run docker:frontend:logs
-
-# View backend logs
-npm run docker:backend:logs
-
-# Clean Docker system
-npm run docker:prune
-```
-
-## 🔧 Direct Docker Compose Commands
-
-### Development
-
-```bash
-# Start development profile
-docker compose --profile development up --build
-
-# Stop development profile
-docker compose --profile development down
-
-# View logs
-docker compose --profile development logs -f
-```
-
-### Production
-
-```bash
-# Start production profile
-docker compose --profile production up --build -d
-
-# Stop production profile
-docker compose --profile production down
-
-# View logs
-docker compose --profile production logs -f
-```
-
-## 📁 Service Structure
-
-### Development
-
-- `backend-dev`: Backend with hot-reload
-- `frontend-dev`: Frontend with Vite dev server
-
-### Production
-
-- `backend-prod`: Optimized backend
-- `frontend-prod`: Frontend with Nginx
-
-## 🌐 Ports
-
-### Development
-
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:3001
-
-### Production
-
-- **Frontend**: http://localhost:80
-- **Backend**: http://localhost:3001
-
-## 📦 Volumes
-
-- `backend-temp`: Temporary storage for processed files
-- Development volumes: Mounted for hot-reload
-
-## 🔄 Migration from Previous Configuration
-
-If you had `docker-compose.prod.yml`, it's no longer needed. Now everything is handled with profiles:
-
-```bash
-# Before
-docker compose -f docker-compose.prod.yml up -d
-
-# Now
-docker compose --profile production up --build -d
-```
-
-## 🛠️ Troubleshooting
-
-### Clean everything and start fresh
-
-```bash
-npm run docker:prune
-docker compose down --volumes --remove-orphans
-```
-
-### View all services
-
-```bash
-docker compose ps
-```
-
-### Rebuild images
-
-```bash
-docker compose --profile development build --no-cache
-docker compose --profile production build --no-cache
-```
+The stack defines a persistent local volume:
+- **`backend-temp`**: Mounted inside the backend Express container to handle safe storage and automatic cleanup of transient image operations.

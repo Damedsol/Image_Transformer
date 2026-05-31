@@ -22,6 +22,9 @@ This document dynamically records technical learnings, solved errors, architectu
     - **Exclusions:** `.husky`, `.git`, `node_modules`, and `backend/node_modules`.
 - **Pre-commit Hooks (lint-staged):**
   - Configured in `.lintstagedrc` to execute `oxlint --fix` and `biome format --write --no-errors-on-unmatched` on staged files. The `--no-errors-on-unmatched` flag is critical to prevent CLI errors when lint-staged feeds it files that do not match configured glob patterns.
+- **Docker Orchestration (Separated & Parameterized):**
+  - **Local Development:** Simplified root `docker-compose.yml` strictly focused on `development` targets with direct volume mounts for instant hot-reloading. Removed complex `profiles`.
+  - **Production/VPS Deployment:** Created `docker-compose.prod.yml` with secure container execution (`security_opt: ["no-new-privileges:true"]`, `init: true`), RAM memory limits (backend: `512M`, frontend: `256M`), strict JSON log rotation, and dynamic reverse-proxy external network configuration mapping via variables (like `DOCKER_PROXY_NETWORK` defaulting to `proxy-tier`).
 
 ## 🧠 Strategic Decisions
 
@@ -34,3 +37,15 @@ This document dynamically records technical learnings, solved errors, architectu
   - **Details:** Centralized overrides, package config, Oxlint settings, unified Biome config, and ls-lint directory structure. Configured pre-commit hooks via Husky and lint-staged using fast tools (Oxlint, Biome).
   - **QA Verification:** Ran linting, formatting, and verified workspace build successfully.
   - **Associated Branch:** `feature/linter-and-dependencies` (now merging to `develop` / transitioned to `feature/agentic-system`).
+- **2026-05-31: Reconstruct Repository Documentation using readme-generator Workflow**
+  - **Details:** Completely updated the main README.md. Standardized formatting using Biome/Oxlint, removed legacy references to ESLint and Prettier, aligned scripts with the pnpm monorepo setup, and integrated UI Style Guides/Badges structure. Synchronized engine requirements (Node.js >=24.0.0 and pnpm >=11.0.0) in both root and backend workspace scopes.
+  - **QA Verification:** Verified document links, markdown formatting, and engines compliance.
+  - **Associated Branch:** `feature/docker-system` (current active feature).
+- **2026-05-31: Documentation Folder Quality Audit & Global Updates**
+  - **Details:** Fully audited and rewritten the `/docs` manual folders (`docs/README.md`, `docs/DOCKER.md`, `docs/LOGGING.md`, `docs/INDEX.md`). Removed all obsolete `npm run docker:*` scripts, migrated commands to modern `docker compose` syntax, documented Biome/Oxlint/ls-lint quality checks, and aligned internal versions with Node.js >=24.0.0 and pnpm >=11.0.0 engines.
+  - **QA Verification:** Validated cross-references, paths, and markdown rendering inside `/docs`.
+  - **Associated Branch:** `feature/docker-system` (current active feature).
+- **2026-05-31: Refactor and Simplify Docker Container Infrastructure**
+  - **Details:** Separated dev and prod setups into clean individual compose files (`docker-compose.yml` and `docker-compose.prod.yml`). Standardized security configurations, log-rotation caps, and process initializations. Integrated dynamic external network support for VPS proxy compatibility without exposing private environment assets.
+  - **QA Verification:** Inspected schema definitions, local build configs, and documentation structure.
+  - **Associated Branch:** `feature/docker-system` (current active feature).
