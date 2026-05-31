@@ -42,10 +42,10 @@ This document dynamically records technical learnings, solved errors, architectu
 
 ## 📈 Relevant Changelog
 
-- **2026-05-31: Hotfix: Harden Nginx Configuration & Mitigate SPA Misleading 200 OK Scans**
-  - **Details:** Addressed malicious scanner activity attempting to access hidden configuration files (such as `.env` variants, SFTP configurations, Swagger UI routes, and kibana endpoints). Modified `docker/nginx.conf` by adding robust location blocks to return `403 Forbidden` for dotfiles and sensitive config properties, dropping Kibana/Swagger routing attempts, and introducing a standard SPA extension fallback (`location ~* \.[a-z0-9]+$ { try_files $uri =404; }`) to guarantee true `404 Not Found` responses for missing static files instead of serving SPA HTML with `200 OK`.
-  - **QA Verification:** Inspected Nginx configuration rules, validated SPA fallback routes, and checked security policies.
-  - **Associated Branch:** `develop` (direct fix)
+- **2026-05-31: Bump Version to 1.3.1 & Minor Maintenance**
+  - **Details:** Released stable version `1.3.1` across workspace scopes (root and backend package.json files, docker-compose.prod.yml image fallbacks, and documentation references).
+  - **QA Verification:** Validated package.json files consistency.
+  - **Associated Branch:** `release/1.3.1`
 
 - **2026-05-31: Hotfix: Align Docker Monorepo Build Context & Dockerfiles**
   - **Details:** Fixed backend Docker build error where workspace dependencies and `pnpm-lock.yaml` were unreachable. Modified `docker-compose.yml` and `docker-compose.prod.yml` to use the root context (`.`) for the backend service, pointing to `backend/Dockerfile`. Adapted `backend/Dockerfile` and root `Dockerfile` to copy workspace configs and set up correct relative working directories. Resolved `ERR_PNPM_UNSUPPORTED_ENGINE` on `pnpm install` by upgrading base Node images to `node:24-alpine`. Fixed `prepare: husky not found` lifecycle errors during production builds by appending `--ignore-scripts` to all `pnpm install` commands in both Dockerfiles.
