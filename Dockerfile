@@ -23,6 +23,8 @@ CMD ["pnpm", "run", "dev", "--", "--host", "0.0.0.0", "--watch"]
 
 # Etapa de compilación para producción
 FROM base AS builder
+ARG VITE_API_URL
+ENV VITE_API_URL=$VITE_API_URL
 ENV NODE_ENV=production
 RUN pnpm install --prod=false --ignore-scripts
 COPY . .
