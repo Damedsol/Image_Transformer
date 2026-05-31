@@ -33,6 +33,11 @@ This document dynamically records technical learnings, solved errors, architectu
 
 ## 📈 Relevant Changelog
 
+- **2026-05-31: Bump Version to 1.3.0 & Align Workspace Documentation**
+  - **Details:** Released stable version `1.3.0` across workspace scopes (root and backend package.json files). Conducted a full documentation audit to align all setup manuals and structural logs. Completely removed obsolete `--profile` flags from Docker Compose sections, transitioning configurations to clean, separate environment files (`docker-compose.yml` for development, `docker-compose.prod.yml` for production). Updated `docs/LOGGING.md` to match the actual production log rotation policies (`json-file` driver with strict sizes).
+  - **QA Verification:** Inspected packages versions, checked markdown integrity across the `/docs` folder, and verified linter/formatter compliance.
+  - **Associated Branch:** `release/1.3.0`
+
 - **2026-05-31: Centralize Linters and pnpm Workspace Configuration**
   - **Details:** Centralized overrides, package config, Oxlint settings, unified Biome config, and ls-lint directory structure. Configured pre-commit hooks via Husky and lint-staged using fast tools (Oxlint, Biome).
   - **QA Verification:** Ran linting, formatting, and verified workspace build successfully.

@@ -10,7 +10,7 @@
 - **Backend**: Node.js (v24.0.0+) + Express (v5.2.1) + Sharp (v0.34.5)
 - **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + ls-lint (strict file/directory naming check)
 - **Git Hook Automation**: Husky + lint-staged + commitlint
-- **Containers**: Docker + Docker Compose with environment-based profiles
+- **Containers**: Docker + Docker Compose with individual environment-specific configurations
 - **Logging**: Conditional, zero-overhead high-performance system (using Pino)
 
 ## 📖 Available Documentation
@@ -41,15 +41,15 @@ pnpm dev
 #### Development (Docker containerized)
 
 ```bash
-# Start with detailed logs and active volumes for hot-reloading
-docker compose --profile development up --build
+# Start development containers with active volumes and hot-reloading
+docker compose up --build
 ```
 
 #### Production (Docker containerized)
 
 ```bash
-# Start optimized and background-detached without logs
-docker compose --profile production up --build -d
+# Start production containers with optimized configurations in detached mode
+docker compose -f docker-compose.prod.yml up -d --build
 ```
 
 ---
@@ -142,20 +142,21 @@ imageTransformer/
 ## 🚀 Useful Docker Commands
 
 ```bash
-# Start development profile
-docker compose --profile development up --build
+# Start development containers with active volumes and hot-reloading
+docker compose up --build
 
-# Stop development services
-docker compose --profile development down
+# Stop development containers
+docker compose down
 
-# Start production profile (background-detached)
-docker compose --profile production up --build -d
+# Start production containers in background-detached mode
+docker compose -f docker-compose.prod.yml up -d --build
 
-# Stop production profile
-docker compose --profile production down
+# Stop production containers
+docker compose -f docker-compose.prod.yml down
 
 # Clean up local containers, volumes, and dangling resources
 docker compose down --volumes --remove-orphans
+docker compose -f docker-compose.prod.yml down --volumes --remove-orphans
 docker system prune -f
 ```
 

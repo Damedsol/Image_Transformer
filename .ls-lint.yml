@@ -48,3 +48,5 @@ ignore:
   - backend/dist
   - backend/logs
   - backend/temp
+  - .agents
+  - .gemini
