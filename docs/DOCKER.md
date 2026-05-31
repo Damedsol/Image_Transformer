@@ -1,100 +1,78 @@
-# 🐳 Docker Configuration - Image Transformer
+# 🐳 Docker Infrastructure - Image Transformer
 
-This project utilizes the **Docker Compose profiles** system to orchestrate both development and production microservices configurations under a single, unified `docker-compose.yml` environment.
-
----
-
-## 📋 Available Profiles & Services
-
-### 🔧 Development Profile (`development`)
-
-Standardized for real-time development workflows with hot-reloading:
-- **Backend Service (`backend-dev`)**: Express server running on port `3001` via `tsx watch` for automatic hot-reloading.
-- **Frontend Service (`frontend-dev`)**: Vite dev server hosting files on port `5173` with network exposure.
-- **Shared Volumes**: Code directory mapped into containers for real-time synch and instant updates.
-- **Development Environment**: Local environment variables tuned for debugging and verbose logging levels.
-
-### 🚀 Production Profile (`production`)
-
-Highly optimized for peak performance and minimal resource overhead:
-- **Backend Service (`backend-prod`)**: Optimized Express compilation on port `3001` with background temporary file garbage collection.
-- **Frontend Service (`frontend-prod`)**: Bundled static resources served directly via an optimized **Nginx** reverse proxy on port `80`.
-- **Zero Logging overhead**: Logging level silent (stdout disabled, no files generated, container-level logging driver explicitly muted).
-- **Persistent Volumes**: Restricted only to core shared data folders for temporary processing.
+This project utilizes a clean separation of concerns for containerized environments, dividing local development workflows and secure production VPS-aligned orchestration into two separate configurations.
 
 ---
 
-## 🚀 Orchestration Commands (Docker Compose)
+## 🔧 Local Development Workflow
 
-All container orchestration must be run through standard `docker compose` CLI commands.
+The default configuration is optimized for rapid feedback loops, real-time file synchronization, and hot-reloading.
 
-### 1. Development Lifecycle
+### Service Architecture
+- **Backend (`backend`)**: Express server running on port `3001` via `tsx watch` for hot-reloading.
+- **Frontend (`frontend`)**: Vite dev server hosting files on port `5173` with network access.
+- **Shared Volumes**: Source directories are mounted directly to allow instant workspace hot-reloads.
 
-Start the development profile, capturing live logs and mounting workspaces:
+### Commands
 ```bash
-# Start and compile development containers
-docker compose --profile development up --build
+# Build and start development environment in the foreground
+docker compose up --build
 
 # Run development containers in the background (detached mode)
-docker compose --profile development up -d
+docker compose up -d
 
-# View live stream logs for development containers
-docker compose --profile development logs -f
+# View live console logs
+docker compose logs -f
 
-# Terminate and cleanup development services
-docker compose --profile development down
-```
-
-### 2. Production Lifecycle
-
-Deploy optimized builds into production configuration:
-```bash
-# Compile and start production services (detached mode)
-docker compose --profile production up --build -d
-
-# View production logging streams (silent by design)
-docker compose --profile production logs -f
-
-# Terminate and clean up production containers
-docker compose --profile production down
-```
-
-### 3. Maintenance & Troubleshooting
-
-```bash
-# Check running containers state across all profiles
-docker compose ps
-
-# Inspect raw logs for a specific service
-docker compose logs -f backend-dev
-docker compose logs -f frontend-prod
-
-# Completely wipe containers, persistent volumes, and orphaned networks
-docker compose down --volumes --remove-orphans
-
-# Prune system cache and dangling images
-docker system prune -a --volumes -f
-
-# Force-rebuild image caches without reusing layer histories
-docker compose --profile development build --no-cache
-docker compose --profile production build --no-cache
+# Shut down and clean up services
+docker compose down
 ```
 
 ---
 
-## 🌐 Service Connectivity & Ports
+## 🚀 Production VPS Deployment Workflow
 
-| Environment | Service | Exposed URL / Port | Internal Port | Description |
-| :--- | :--- | :--- | :--- | :--- |
-| **Development** | Frontend | [http://localhost:5173](http://localhost:5173) | 5173 | Hot-reloading Vite web interface. |
-| **Development** | Backend | [http://localhost:3001](http://localhost:3001) | 3001 | Express API in debug mode. |
-| **Production** | Frontend | [http://localhost:80](http://localhost:80) | 80 | Premium Nginx static files server. |
-| **Production** | Backend | [http://localhost:3001](http://localhost:3001) | 3001 | Express API in silent performance mode. |
+The production environment is structured to align with professional, secure, and resource-constrained infrastructures (such as private cloud VPS architectures).
+
+### Architectural Guardrails
+1. **Perimeter Security**: Services utilize strict process isolation with `security_opt: ["no-new-privileges:true"]` and running with init process integration (`init: true`).
+2. **Resource Constraints**: Strict RAM limit ceilings are enforced to preserve host environment stability:
+   - **Frontend**: Max memory `256M` (Nginx static content server).
+   - **Backend**: Max memory `512M` (Express/Sharp image processor).
+3. **Log Rotation**: Disk safety is guaranteed by imposing strict log rotations (`max-size: "10m"`, `max-file: "3"`).
+4. **Proxy Network Integration**: Services are integrated into an external network (`proxy-net`) dynamically named through environment variables. This allows the application to attach directly to existing reverse proxies (e.g., Nginx Proxy Manager) without hardcoded references.
+
+### Production Environment Variables
+
+You can configure the deployment settings by exposing these variables in the environment or specifying them in a root `.env` file:
+
+| Environment Variable | Description | Default Value |
+| :--- | :--- | :--- |
+| `BACKEND_PORT` | Port to map the Express backend API on the host. | `3001` |
+| `FRONTEND_PORT` | Port to map the Nginx frontend static server on the host. | `8080` |
+| `DOCKER_PROXY_NETWORK` | The external Docker network of your reverse proxy. | `proxy-tier` |
+
+### Commands
+```bash
+# Before launching, ensure your proxy network is created on the host (if not already existing)
+# Example: docker network create proxy-tier
+
+# Build and deploy the production stack in detached mode
+docker compose -f docker-compose.prod.yml up -d --build
+
+# Inspect running production containers
+docker compose -f docker-compose.prod.yml ps
+
+# View production logging streams (optimized and rotated)
+docker compose -f docker-compose.prod.yml logs -f
+
+# Tear down the production stack safely
+docker compose -f docker-compose.prod.yml down
+```
 
 ---
 
-## 📦 Volume Mounts Mapping
+## 📦 Shared Data Persistence
 
-The container network provisions persistent directories to isolate files:
-- **`backend-temp`**: Volatile directory mounted inside the Express instances to temporarily cache processed image artifacts.
-- **Development Workspaces**: Direct code mounts enabling real-time compiler triggers inside the virtual containers without manual rebuild steps.
+The stack defines a persistent local volume:
+- **`backend-temp`**: Mounted inside the backend Express container to handle safe storage and automatic cleanup of transient image operations.

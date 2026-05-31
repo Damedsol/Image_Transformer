@@ -1,10 +1,9 @@
 services:
-  # Backend para desarrollo
-  backend-dev:
+  backend:
     build:
       context: ./backend
       target: development
-    container_name: image-transformer-backend-dev
+    container_name: image-transformer-backend
     ports:
       - '3001:3001'
     volumes:
@@ -20,59 +19,20 @@ services:
       - CHOKIDAR_USEPOLLING=true
       - WATCHPACK_POLLING=true
       - LOG_LEVEL=debug
-      # En desarrollo, localhost se permite automáticamente
-      # CORS_ORIGIN es opcional en desarrollo
     env_file:
       - ./backend/.env
     restart: unless-stopped
-    networks:
-      - image-transformer-network
     healthcheck:
       test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001']
       interval: 10s
       timeout: 5s
       retries: 5
-    profiles:
-      - development
 
-  # Backend para producción
-  backend-prod:
-    build:
-      context: ./backend
-      target: production
-    container_name: image-transformer-backend-prod
-    ports:
-      - '3001:3001'
-    environment:
-      - NODE_ENV=production
-      - PORT=3001
-      - LOG_LEVEL=silent
-      # CORS_ORIGIN debe estar configurado en .env o aquí
-      # Ejemplo: - CORS_ORIGIN=http://localhost:5173 (para desarrollo local con Docker)
-      # O usar ALLOW_LOCALHOST=true si necesitas localhost en producción
-    env_file:
-      - ./backend/.env
-    restart: unless-stopped
-    networks:
-      - image-transformer-network
-    healthcheck:
-      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://localhost:3001']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    volumes:
-      - backend-temp:/app/temp
-    logging:
-      driver: "none"
-    profiles:
-      - production
-
-  # Frontend para desarrollo
-  frontend-dev:
+  frontend:
     build:
       context: .
       target: development
-    container_name: image-transformer-frontend-dev
+    container_name: image-transformer-frontend
     ports:
       - '5173:5173'
     volumes:
@@ -88,37 +48,9 @@ services:
       - VITE_HMR=true
       - VITE_DEBUG=true
     depends_on:
-      - backend-dev
+      - backend
     restart: unless-stopped
-    networks:
-      - image-transformer-network
     command: pnpm run dev -- --host 0.0.0.0
-    profiles:
-      - development
-
-  # Frontend para producción
-  frontend-prod:
-    build:
-      context: .
-      target: production
-    container_name: image-transformer-frontend-prod
-    ports:
-      - '80:80'
-    environment:
-      - NODE_ENV=production
-    depends_on:
-      - backend-prod
-    restart: unless-stopped
-    networks:
-      - image-transformer-network
-    logging:
-      driver: "none"
-    profiles:
-      - production
-
-networks:
-  image-transformer-network:
-    driver: bridge
 
 volumes:
   backend-temp:
