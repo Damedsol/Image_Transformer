@@ -1,154 +1,100 @@
 # 🐳 Docker Configuration - Image Transformer
 
-This project uses a Docker Compose profiles system to handle both development and production environments with a single `docker-compose.yml` file.
+This project utilizes the **Docker Compose profiles** system to orchestrate both development and production microservices configurations under a single, unified `docker-compose.yml` environment.
 
-## 📋 Available Profiles
+---
 
-### 🔧 Development (`development`)
+## 📋 Available Profiles & Services
 
-- **Backend**: Port 3001 with hot-reload
-- **Frontend**: Port 5173 with Vite dev server
-- **Volumes**: Mounted for real-time development
-- **Variables**: Configured for development
+### 🔧 Development Profile (`development`)
 
-### 🚀 Production (`production`)
+Standardized for real-time development workflows with hot-reloading:
+- **Backend Service (`backend-dev`)**: Express server running on port `3001` via `tsx watch` for automatic hot-reloading.
+- **Frontend Service (`frontend-dev`)**: Vite dev server hosting files on port `5173` with network exposure.
+- **Shared Volumes**: Code directory mapped into containers for real-time synch and instant updates.
+- **Development Environment**: Local environment variables tuned for debugging and verbose logging levels.
 
-- **Backend**: Port 3001 optimized
-- **Frontend**: Port 80 with Nginx
-- **Volumes**: Only for persistent data
-- **Variables**: Configured for production
+### 🚀 Production Profile (`production`)
 
-## 🚀 Available Commands
+Highly optimized for peak performance and minimal resource overhead:
+- **Backend Service (`backend-prod`)**: Optimized Express compilation on port `3001` with background temporary file garbage collection.
+- **Frontend Service (`frontend-prod`)**: Bundled static resources served directly via an optimized **Nginx** reverse proxy on port `80`.
+- **Zero Logging overhead**: Logging level silent (stdout disabled, no files generated, container-level logging driver explicitly muted).
+- **Persistent Volumes**: Restricted only to core shared data folders for temporary processing.
 
-### Development
+---
 
+## 🚀 Orchestration Commands (Docker Compose)
+
+All container orchestration must be run through standard `docker compose` CLI commands.
+
+### 1. Development Lifecycle
+
+Start the development profile, capturing live logs and mounting workspaces:
 ```bash
-# Start in development mode
-npm run docker:dev
-
-# Stop development services
-npm run docker:dev:down
-
-# View development logs
-npm run docker:dev:logs
-```
-
-### Production
-
-```bash
-# Start in production mode (background)
-npm run docker:prod
-
-# Stop production services
-npm run docker:prod:down
-
-# View production logs
-npm run docker:prod:logs
-```
-
-### General Commands
-
-```bash
-# View status of all containers
-npm run docker:status
-
-# View frontend logs
-npm run docker:frontend:logs
-
-# View backend logs
-npm run docker:backend:logs
-
-# Clean Docker system
-npm run docker:prune
-```
-
-## 🔧 Direct Docker Compose Commands
-
-### Development
-
-```bash
-# Start development profile
+# Start and compile development containers
 docker compose --profile development up --build
 
-# Stop development profile
-docker compose --profile development down
+# Run development containers in the background (detached mode)
+docker compose --profile development up -d
 
-# View logs
+# View live stream logs for development containers
 docker compose --profile development logs -f
+
+# Terminate and cleanup development services
+docker compose --profile development down
 ```
 
-### Production
+### 2. Production Lifecycle
 
+Deploy optimized builds into production configuration:
 ```bash
-# Start production profile
+# Compile and start production services (detached mode)
 docker compose --profile production up --build -d
 
-# Stop production profile
-docker compose --profile production down
-
-# View logs
+# View production logging streams (silent by design)
 docker compose --profile production logs -f
+
+# Terminate and clean up production containers
+docker compose --profile production down
 ```
 
-## 📁 Service Structure
-
-### Development
-
-- `backend-dev`: Backend with hot-reload
-- `frontend-dev`: Frontend with Vite dev server
-
-### Production
-
-- `backend-prod`: Optimized backend
-- `frontend-prod`: Frontend with Nginx
-
-## 🌐 Ports
-
-### Development
-
-- **Frontend**: http://localhost:5173
-- **Backend**: http://localhost:3001
-
-### Production
-
-- **Frontend**: http://localhost:80
-- **Backend**: http://localhost:3001
-
-## 📦 Volumes
-
-- `backend-temp`: Temporary storage for processed files
-- Development volumes: Mounted for hot-reload
-
-## 🔄 Migration from Previous Configuration
-
-If you had `docker-compose.prod.yml`, it's no longer needed. Now everything is handled with profiles:
+### 3. Maintenance & Troubleshooting
 
 ```bash
-# Before
-docker compose -f docker-compose.prod.yml up -d
-
-# Now
-docker compose --profile production up --build -d
-```
-
-## 🛠️ Troubleshooting
-
-### Clean everything and start fresh
-
-```bash
-npm run docker:prune
-docker compose down --volumes --remove-orphans
-```
-
-### View all services
-
-```bash
+# Check running containers state across all profiles
 docker compose ps
-```
 
-### Rebuild images
+# Inspect raw logs for a specific service
+docker compose logs -f backend-dev
+docker compose logs -f frontend-prod
 
-```bash
+# Completely wipe containers, persistent volumes, and orphaned networks
+docker compose down --volumes --remove-orphans
+
+# Prune system cache and dangling images
+docker system prune -a --volumes -f
+
+# Force-rebuild image caches without reusing layer histories
 docker compose --profile development build --no-cache
 docker compose --profile production build --no-cache
 ```
+
+---
+
+## 🌐 Service Connectivity & Ports
+
+| Environment | Service | Exposed URL / Port | Internal Port | Description |
+| :--- | :--- | :--- | :--- | :--- |
+| **Development** | Frontend | [http://localhost:5173](http://localhost:5173) | 5173 | Hot-reloading Vite web interface. |
+| **Development** | Backend | [http://localhost:3001](http://localhost:3001) | 3001 | Express API in debug mode. |
+| **Production** | Frontend | [http://localhost:80](http://localhost:80) | 80 | Premium Nginx static files server. |
+| **Production** | Backend | [http://localhost:3001](http://localhost:3001) | 3001 | Express API in silent performance mode. |
+
+---
+
+## 📦 Volume Mounts Mapping
+
+The container network provisions persistent directories to isolate files:
+- **`backend-temp`**: Volatile directory mounted inside the Express instances to temporarily cache processed image artifacts.
+- **Development Workspaces**: Direct code mounts enabling real-time compiler triggers inside the virtual containers without manual rebuild steps.

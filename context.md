@@ -34,3 +34,11 @@ This document dynamically records technical learnings, solved errors, architectu
   - **Details:** Centralized overrides, package config, Oxlint settings, unified Biome config, and ls-lint directory structure. Configured pre-commit hooks via Husky and lint-staged using fast tools (Oxlint, Biome).
   - **QA Verification:** Ran linting, formatting, and verified workspace build successfully.
   - **Associated Branch:** `feature/linter-and-dependencies` (now merging to `develop` / transitioned to `feature/agentic-system`).
+- **2026-05-31: Reconstruct Repository Documentation using readme-generator Workflow**
+  - **Details:** Completely updated the main README.md. Standardized formatting using Biome/Oxlint, removed legacy references to ESLint and Prettier, aligned scripts with the pnpm monorepo setup, and integrated UI Style Guides/Badges structure. Synchronized engine requirements (Node.js >=24.0.0 and pnpm >=11.0.0) in both root and backend workspace scopes.
+  - **QA Verification:** Verified document links, markdown formatting, and engines compliance.
+  - **Associated Branch:** `feature/docker-system` (current active feature).
+- **2026-05-31: Documentation Folder Quality Audit & Global Updates**
+  - **Details:** Fully audited and rewritten the `/docs` manual folders (`docs/README.md`, `docs/DOCKER.md`, `docs/LOGGING.md`, `docs/INDEX.md`). Removed all obsolete `npm run docker:*` scripts, migrated commands to modern `docker compose` syntax, documented Biome/Oxlint/ls-lint quality checks, and aligned internal versions with Node.js >=24.0.0 and pnpm >=11.0.0 engines.
+  - **QA Verification:** Validated cross-references, paths, and markdown rendering inside `/docs`.
+  - **Associated Branch:** `feature/docker-system` (current active feature).

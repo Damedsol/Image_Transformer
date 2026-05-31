@@ -2,140 +2,166 @@
 
 ## 🎯 Project Description
 
-**ImageTransformer** is a web application for converting images between different formats (JPEG, PNG, WebP, AVIF, GIF) with resizing and compression options.
+**ImageTransformer** is a high-performance web application for converting images between different formats (JPEG, PNG, WebP, AVIF, GIF) with resizing and compression options. Built as a pnpm monorepo workspace.
 
 ## 🏗️ Architecture
 
-- **Frontend**: TypeScript + Vite + Web Components
-- **Backend**: Node.js + Express + Sharp
-- **Containers**: Docker + Docker Compose
-- **Logging**: Conditional system (development/production)
+- **Frontend**: TypeScript (v6.0+) + Vite (v8.0+) + Native Web Components
+- **Backend**: Node.js (v24.0.0+) + Express (v5.2.1) + Sharp (v0.34.5)
+- **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + ls-lint (strict file/directory naming check)
+- **Git Hook Automation**: Husky + lint-staged + commitlint
+- **Containers**: Docker + Docker Compose with environment-based profiles
+- **Logging**: Conditional, zero-overhead high-performance system (using Pino)
 
 ## 📖 Available Documentation
 
 ### 🔧 Configuration and Deployment
 
-- [🐳 Docker Setup](DOCKER.md) - Container configuration and profiles
-- [📝 Logging System](LOGGING.md) - Conditional logging for development/production
+- [🐳 Docker Setup](DOCKER.md) — Container configuration and profiles
+- [📝 Logging System](LOGGING.md) — Conditional logging for development/production
+- [📋 Complete Index](INDEX.md) — Main index mapping all documentation
 
 ### 🚀 Quick Start
 
-#### Development
+Ensure you have **Node.js >=24.0.0** and **pnpm >=11.0.0** installed.
+
+#### Development (Local workspace)
 
 ```bash
-# Start with detailed logs
-docker-compose --profile development up
+# Install workspace dependencies
+pnpm install
+
+# Start frontend and backend concurrently
+pnpm dev
+# Or filter individually:
+# Frontend dev: pnpm dev
+# Backend dev:  pnpm --filter image-transformer-backend dev
 ```
 
-#### Production
+#### Development (Docker containerized)
 
 ```bash
-# Start without logs (optimized)
-docker-compose --profile production up
+# Start with detailed logs and active volumes for hot-reloading
+docker compose --profile development up --build
 ```
+
+#### Production (Docker containerized)
+
+```bash
+# Start optimized and background-detached without logs
+docker compose --profile production up --build -d
+```
+
+---
 
 ## 🎯 Main Features
 
 ### ✅ **Functionality**
-
-- Image conversion between formats
-- Resizing with aspect ratio maintenance
-- Compression with quality control
-- ZIP file download
-- Accessible and responsive interface
+- High-fidelity image conversion between multiple industry formats.
+- Precision resizing with automatic aspect ratio maintenance.
+- Compression and quality management per format.
+- Batch processing and download of results in ZIP archives.
+- Responsive, premium styling with accessibility (A11y) considerations.
 
 ### 🔒 **Security**
+- Strict rate limiting per client IP.
+- Rigid input mime-type and payload size validation via Zod.
+- Secure request headers optimized using Helmet.
+- Fully restricted CORS configurations.
 
-- IP rate limiting
-- File type validation
-- Size and quantity limits
-- Security headers (Helmet)
-- CORS configured
+### 📊 **Performance & Quality**
+- Lightning-fast asynchronous queue processing.
+- Automatic background cleanup of temporary uploads/results.
+- Code quality secured via Biome formatters, Oxlint linters, and Husky hooks.
+- Conditional logging causing zero overhead in production.
 
-### 📊 **Performance**
+---
 
-- Asynchronous processing
-- Automatic cleanup of temporary files
-- Conditional logging (zero overhead in production)
-- Gzip compression
-
-## 🛠️ Technologies
+## 🛠️ Tech Stack & Tooling
 
 ### Frontend
-
-- **TypeScript** - Static typing
-- **Vite** - Modern build tool
-- **Web Components** - Reusable components
-- **CSS Grid/Flexbox** - Responsive layout
+- **TypeScript** — High-precision static type checking.
+- **Vite** — High-performance bundler and dev server.
+- **Web Components** — Framework-less reusable UI structures.
+- **CSS Grid/Flexbox** — Modern, fluid responsive layout.
 
 ### Backend
+- **Node.js & Express** — Optimized backend server structure.
+- **Sharp** — Fast image resizing, compression, and conversion engine.
+- **Pino** — Low-overhead structured JSON logger.
+- **Zod** — Rigid schemas validation.
 
-- **Node.js** - JavaScript runtime
-- **Express** - Web framework
-- **Sharp** - Image processing
-- **Pino** - High-performance logger
-- **Zod** - Schema validation
+### Quality Control & DevOps
+- **Oxlint** — Extremely fast code linting replacing legacy ESLint.
+- **Biome** — Consolidated workspace-wide formatter replacing Prettier.
+- **ls-lint** — Enforces strict kebab-case directory/file structures.
+- **Docker & Compose** — Standardized microservices orchestration.
 
-### DevOps
-
-- **Docker** - Containers
-- **Docker Compose** - Orchestration
-- **Nginx** - Web server (production)
-- **Multi-stage builds** - Image optimization
+---
 
 ## 📁 Project Structure
 
 ```
 imageTransformer/
-├── backend/                 # Node.js API
-│   ├── src/
-│   │   ├── controllers/     # Route controllers
-│   │   ├── middlewares/    # Security middlewares
-│   │   ├── routes/         # Route definitions
-│   │   └── utils/          # Utilities (logger, processing)
-│   ├── logs/               # Development logs
-│   └── temp/               # Temporary files
-├── src/                    # TypeScript Frontend
-│   ├── components/         # Web Components
-│   ├── utils/             # Frontend utilities
-│   └── types/             # TypeScript definitions
-├── docs/                  # Documentation
-├── docker/                # Docker configuration
-└── scripts/               # Utility scripts
+├── .agents/                 # System agent configuration files and tools
+├── .gemini/                 # Local templates and configs
+├── .husky/                  # Automated Git hooks
+├── backend/                 # Backend Workspace (pnpm workspace)
+│   ├── src/                 # API controllers, routers, and processing layers
+│   │   ├── controllers/     # Route endpoints controllers
+│   │   ├── middlewares/     # Rate limiters & security hooks
+│   │   ├── routes/          # Express route definitions
+│   │   └── utils/           # Utilities (Pino logger, image engines)
+│   ├── logs/                # Local development log files
+│   └── temp/                # Target folder for active processing
+├── src/                     # Frontend Application Source Code
+│   ├── components/          # Reusable PascalCase Custom Web Components
+│   ├── utils/               # Frontend camelCase utilities
+│   ├── types/               # TypeScript specifications and contracts
+│   └── main.ts              # Frontend main entry point
+├── docs/                    # Architectural manuals and guides
+├── docker/                  # Dockerfiles and environment recipes
+├── biome.json               # Global Biome ruleset
+└── pnpm-workspace.yaml      # Monorepo catalogs & hoisting configuration
 ```
+
+---
 
 ## 🔍 Monitoring and Logs
 
 ### Development
-
-- Detailed logs in `backend/logs/`
-- Console logs in frontend
-- Docker logs visible
+- Comprehensive structured JSON logs captured in `backend/logs/`.
+- Full stdout Docker console logs enabled.
 
 ### Production
+- Logging engine silent (no log writes or CLI pollution).
+- Container logging driver completely disabled (`driver: "none"`) to maximize performance.
 
-- No logs (optimized performance)
-- No log files
-- Docker logging disabled
+---
 
-## 🚀 Useful Commands
+## 🚀 Useful Docker Commands
 
 ```bash
-# Development
-docker-compose --profile development up
-docker-compose --profile development down
+# Start development profile
+docker compose --profile development up --build
 
-# Production
-docker-compose --profile production up
-docker-compose --profile production down
+# Stop development services
+docker compose --profile development down
 
-# View logs (development only)
-docker-compose logs -f backend-dev
+# Start production profile (background-detached)
+docker compose --profile production up --build -d
 
-# Clean containers
-docker-compose down --volumes --remove-orphans
+# Stop production profile
+docker compose --profile production down
+
+# Clean up local containers, volumes, and dangling resources
+docker compose down --volumes --remove-orphans
+docker system prune -f
 ```
 
-## 📞 Support
+---
 
-For more information, check the specific documentation in each file in the `docs/` folder.
+## 📄 License & Contact
+
+This project is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)**.  
+👉 Developed by **Damedsol**.

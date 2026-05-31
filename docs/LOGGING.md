@@ -1,169 +1,149 @@
 # 📝 Logging System - ImageTransformer
 
-## 🎯 Objective
+## 🎯 Architecture Objective
 
-This project implements a **conditional** logging system that:
+This project enforces a strict, **conditional** high-performance logging subsystem designed to maximize utility during development and completely eliminate overhead in production:
 
-- ✅ **Development**: Generates detailed logs for debugging
-- ❌ **Production**: Completely silent, no logs
+- ✅ **Development**: Verbose, detailed JSON and colored stdout logging for active debugging.
+- ❌ **Production**: Completely silent. Generates zero log files, zero standard outputs (stdout/stderr), and disables Docker container-level logging engines to achieve peak request-throughput.
 
-## 🏗️ Architecture
+---
 
-### Backend (Node.js + Pino)
+## 🏗️ Technical Implementation
 
-- **Development**: JSON logs in `backend/logs/`
-- **Production**: Silent logger (no files or output generated)
+### 1. Backend (Node.js + Pino)
 
-### Frontend (TypeScript + Vite)
+We utilize **Pino**, an extremely fast, low-overhead JSON logging framework:
+- **Development**: Writes structured JSON logs into `backend/logs/` categorized in daily `.log` files (e.g., `DD-MM-YY.log`). Developers can format these logs into human-readable colored stdout console lines using `pino-pretty` (via script).
+- **Production**: Configured with `LOG_LEVEL=silent`. The logger converts its inner execution pipelines into no-op functions, completely bypassing CPU overhead and avoiding raw file write operations.
 
-- **Development**: Console logs with colors and context
-- **Production**: Silent logger (no console output)
+### 2. Frontend (TypeScript + Vite)
 
-## 🔧 Configuration
+A custom frontend logging wrapper filters output using environment variables:
+- **Development**: Outputs colored, context-specific logs within the browser console to track network requests, active conversions, and Web Component states.
+- **Production**: Wraps the logger into empty declarations. Console outputs (`console.log`, `console.debug`) are fully blocked or stripped during build optimization.
 
-### Environment Variables
+---
+
+## 🔧 Environment Variables & Configuration
+
+The logging system is automatically configured based on runtime environment variables:
+
+### 1. Local Configuration (`.env`)
+
+#### Development
 
 ```bash
-# Development
 NODE_ENV=development
 LOG_LEVEL=debug
+```
 
-# Production
+#### Production
+
+```bash
 NODE_ENV=production
 LOG_LEVEL=silent
 ```
 
-### Docker Profiles
+### 2. Docker Compose Profile Declarations
+
+Within `docker-compose.yml`, profiles enforce conditional structures at the system kernel level:
+
+#### Development (`development` Profile)
 
 ```yaml
-# Development
 profiles: [development]
 environment:
   - NODE_ENV=development
   - LOG_LEVEL=debug
+volumes:
+  - backend-logs:/app/logs
+```
 
-# Production
+#### Production (`production` Profile)
+
+```yaml
 profiles: [production]
 environment:
   - NODE_ENV=production
   - LOG_LEVEL=silent
+# Completely disable Docker log drivers to bypass OS disk writes
 logging:
   driver: "none"
 ```
 
-## 📁 Log Structure
+---
+
+## 📁 Logging Directory Structure
 
 ```
 backend/
-├── logs/                    # Only in development
-│   ├── 25-12-24.log        # Daily files
-│   └── 26-12-24.log
-└── src/utils/
-    └── logger.ts           # Conditional logger
+├── logs/                      # Active folder in development only
+│   ├── 31-05-26.log           # Daily-rotated structured logs
+│   └── 01-06-26.log
+└── src/
+    └── utils/
+        └── logger.ts          # Core conditional logger engine
 ```
 
-## 🚀 Usage
+---
 
-### Development
+## 🚀 Execution & Verification Commands
 
+### 1. Local Workspace Development
+
+Run development servers with active terminal console outputs:
 ```bash
-# Start with logs
-docker-compose --profile development up
+# Start frontend
+pnpm dev
 
-# View logs in real time
-docker-compose logs -f backend-dev
+# Start backend (outputs development logs)
+pnpm --filter image-transformer-backend dev
 ```
 
-### Production
+### 2. Verified Detached Containers
 
+#### Development Mode (Verbose Logs)
 ```bash
-# Start without logs
-docker-compose --profile production up
+# Start development profile
+docker compose --profile development up -d
 
-# Verify no logs
-docker-compose logs backend-prod  # Should be empty
+# Stream development container logs in real time
+docker compose logs -f backend-dev
 ```
 
-## 🧹 Log Cleanup
-
-### Automatic
-
-The conditional logging system **does not require manual cleanup**:
-
-- **Development**: Logs are generated only when needed
-- **Production**: No logs are generated at all
-- **Docker**: Volumes are managed automatically
-
-### Manual (only if necessary)
-
+#### Production Mode (Silent & High Speed)
 ```bash
-# Clean backend logs (development)
-rm -rf backend/logs/*
+# Start production profile
+docker compose --profile production up -d
 
-# Clean Docker logs
-rm -rf logs/*
+# Verify no logging activity (stdout streams should be completely empty)
+docker compose logs backend-prod
 ```
 
-## 🔍 Verification
+---
 
-### Development
+## 🧹 Maintenance & Log Cleanup
 
-- ✅ Logs appear in `backend/logs/`
-- ✅ Console logs in frontend
-- ✅ Docker logs visible
+### Automatic Cleanup
+Due to the conditional architecture, **no manual log rotating or scheduling is required in production**:
+- Production services write exactly `0 bytes` of logs.
+- Temporary development files are automatically isolated in local ignored dirs.
 
-### Production
+### Manual Reset (Development environments)
+If developers need to purge local debug caches manually:
+```bash
+# Remove all backend development daily logs
+rm -rf backend/logs/*.log
+```
 
-- ❌ No files in `backend/logs/`
-- ❌ No console logs
-- ❌ Docker logging disabled
+---
 
-## 📊 Log Types
+## 🔍 Quality Verification Checklist
 
-### Backend
-
-- `logger.info()` - General information
-- `logger.error()` - Errors
-- `logger.warn()` - Warnings
-- `logger.debug()` - Detailed debug
-
-### Frontend
-
-- `logApiError()` - API errors
-- `logSuccess()` - Successful operations
-- `logger.debug()` - General debug
-
-## ⚡ Performance
-
-### Development
-
-- Detailed logs for debugging
-- Log files for analysis
-- Console output for development
-
-### Production
-
-- **Zero overhead** from logging
-- **Zero log files**
-- **Zero console output**
-- Maximum performance
-
-## 🛡️ Security
-
-- **Development**: Logs may contain sensitive information
-- **Production**: Completely silent, no data exposure
-- **Docker**: Logging driver disabled in production
-
-## 🔧 Troubleshooting
-
-### If logs appear in production:
-
-1. Check `NODE_ENV=production`
-2. Check `LOG_LEVEL=silent`
-3. Check Docker logging driver
-
-### If logs don't appear in development:
-
-1. Check `NODE_ENV=development`
-2. Check `LOG_LEVEL=debug`
-3. Check write permissions in `backend/logs/`
+| Check Area | Development Expectation | Production Expectation |
+| :--- | :--- | :--- |
+| **Backend Logs Directory** | Active daily `.log` files written. | Directory remains empty or not created. |
+| **Browser Console** | Contextual conversion actions printed. | Zero custom console logs visible. |
+| **Docker Compose Output** | Container standard output printed. | `docker compose logs` outputs nothing. |
+| **Performance Impact** | Trace/Debug logs active. | **Zero CPU/IO overhead** from logger. |
