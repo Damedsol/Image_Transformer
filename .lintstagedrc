@@ -1,7 +1,12 @@
 {
-  "*.{ts,tsx}": ["prettier --write", "eslint --fix"],
-  "*.{js,jsx,mjs}": ["prettier --write", "eslint --fix"],
-  "*.{css,scss,json,html}": ["prettier --write"],
-  "*.md": ["prettier --write"],
-  "backend/src/**/*.ts": ["prettier --write", "eslint --fix"]
+  "*.{js,jsx,ts,tsx,mjs}": [
+    "oxlint --fix",
+    "biome format --write --no-errors-on-unmatched"
+  ],
+  "*.{css,json,html}": [
+    "biome format --write --no-errors-on-unmatched"
+  ],
+  "*.md": [
+    "biome format --write --no-errors-on-unmatched"
+  ]
 }
