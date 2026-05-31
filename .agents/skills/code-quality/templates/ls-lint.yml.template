@@ -1,0 +1,23 @@
+ls:
+  .dir: kebab-case
+  .js: camelCase
+  .ts: camelCase
+  .tsx: PascalCase
+
+  src/components:
+    .dir: PascalCase
+    .tsx: PascalCase
+
+  backend/src:
+    .dir: kebab-case
+    .ts: camelCase
+
+  .md: kebab-case | screamingsnakecase
+
+ignore:
+  - .git
+  - .husky
+  - node_modules
+  - backend/node_modules
+  - dist
+  - build

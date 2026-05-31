@@ -1,260 +1,271 @@
-import { ImageInfo, ConversionOptions, ConversionStatus } from '../types/image';
-import { DropZoneElement, ConversionOptionsElement } from '../types/components';
-import { prepareImageFile } from '../utils/fileUtils';
-import { convertImagesAPI } from '../utils/api';
-import { logApiError } from '../utils/logger';
+import { ImageInfo, ConversionOptions, ConversionStatus } from "../types/image";
+import { DropZoneElement, ConversionOptionsElement } from "../types/components";
+import { prepareImageFile } from "../utils/fileUtils";
+import { convertImagesAPI } from "../utils/api";
+import { logApiError } from "../utils/logger";
 
 /**
  * Main component for the image converter
  */
 export class ImageConverter extends HTMLElement {
-  private images: ImageInfo[] = [];
-  private options: ConversionOptions;
-  private status: ConversionStatus = 'idle';
-  private statusAnnouncer: HTMLElement | null = null;
+	private images: ImageInfo[] = [];
+	private options: ConversionOptions;
+	private status: ConversionStatus = "idle";
+	private statusAnnouncer: HTMLElement | null = null;
 
-  constructor() {
-    super();
-    this.options = {
-      format: 'png',
-      quality: 90,
-      maintainAspectRatio: true,
-    };
-  }
+	constructor() {
+		super();
+		this.options = {
+			format: "png",
+			quality: 90,
+			maintainAspectRatio: true,
+		};
+	}
 
-  /**
-   * Callback that executes when the component connects to the DOM
-   */
-  connectedCallback() {
-    this.render();
-    this.setupComponents();
-    this.statusAnnouncer = document.getElementById('status-announcer');
-    // Add accessibility roles
-    this.setAttribute('role', 'region');
-    this.setAttribute('aria-label', 'Image converter');
-  }
+	/**
+	 * Callback that executes when the component connects to the DOM
+	 */
+	connectedCallback() {
+		this.render();
+		this.setupComponents();
+		this.statusAnnouncer = document.getElementById("status-announcer");
+		// Add accessibility roles
+		this.setAttribute("role", "region");
+		this.setAttribute("aria-label", "Image converter");
+	}
 
-  /**
-   * Sets up child components and their event listeners
-   */
-  private setupComponents() {
-    // DropZone component
-    const dropZone = this.querySelector('drop-zone') as DropZoneElement;
-    if (dropZone) {
-      dropZone.setOnFilesSelectedCallback(this.handleFilesSelected.bind(this));
-    }
+	/**
+	 * Sets up child components and their event listeners
+	 */
+	private setupComponents() {
+		// DropZone component
+		const dropZone = this.querySelector("drop-zone") as DropZoneElement;
+		if (dropZone) {
+			dropZone.setOnFilesSelectedCallback(this.handleFilesSelected.bind(this));
+		}
 
-    // ConversionOptions component
-    const conversionOptions = this.querySelector('conversion-options') as ConversionOptionsElement;
-    if (conversionOptions) {
-      conversionOptions.setOnChangeCallback(this.handleOptionsChange.bind(this));
-    }
+		// ConversionOptions component
+		const conversionOptions = this.querySelector(
+			"conversion-options",
+		) as ConversionOptionsElement;
+		if (conversionOptions) {
+			conversionOptions.setOnChangeCallback(
+				this.handleOptionsChange.bind(this),
+			);
+		}
 
-    // Convert button
-    const convertButton = this.querySelector('#convert-button');
-    if (convertButton) {
-      convertButton.addEventListener('click', this.handleConvertClick.bind(this));
-      // Accessibility improvement: add roles and ARIA attributes
-      convertButton.setAttribute('aria-live', 'polite');
-    }
+		// Convert button
+		const convertButton = this.querySelector("#convert-button");
+		if (convertButton) {
+			convertButton.addEventListener(
+				"click",
+				this.handleConvertClick.bind(this),
+			);
+			// Accessibility improvement: add roles and ARIA attributes
+			convertButton.setAttribute("aria-live", "polite");
+		}
 
-    // Handle keyboard navigation for the preview area
-    this.handleKeyboardNavigation();
-  }
+		// Handle keyboard navigation for the preview area
+		this.handleKeyboardNavigation();
+	}
 
-  /**
-   * Sets up keyboard navigation to improve accessibility
-   */
-  private handleKeyboardNavigation() {
-    // Allow user to navigate between previews with keyboard
-    this.addEventListener('keydown', e => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        const target = e.target as HTMLElement;
-        if (target.classList.contains('preview-item')) {
-          e.preventDefault();
-          // Emulate a click on the remove button if present
-          const removeBtn = target.querySelector('.remove-image-btn');
-          if (removeBtn) {
-            (removeBtn as HTMLElement).click();
-          }
-        }
-      }
-    });
-  }
+	/**
+	 * Sets up keyboard navigation to improve accessibility
+	 */
+	private handleKeyboardNavigation() {
+		// Allow user to navigate between previews with keyboard
+		this.addEventListener("keydown", (e) => {
+			if (e.key === "Enter" || e.key === " ") {
+				const target = e.target as HTMLElement;
+				if (target.classList.contains("preview-item")) {
+					e.preventDefault();
+					// Emulate a click on the remove button if present
+					const removeBtn = target.querySelector(".remove-image-btn");
+					if (removeBtn) {
+						(removeBtn as HTMLElement).click();
+					}
+				}
+			}
+		});
+	}
 
-  /**
-   * Announces messages for screen readers
-   */
-  private announceStatus(message: string) {
-    if (this.statusAnnouncer) {
-      this.statusAnnouncer.textContent = message;
-    }
-  }
+	/**
+	 * Announces messages for screen readers
+	 */
+	private announceStatus(message: string) {
+		if (this.statusAnnouncer) {
+			this.statusAnnouncer.textContent = message;
+		}
+	}
 
-  /**
-   * Handles file selection from the DropZone
-   */
-  private async handleFilesSelected(files: FileList) {
-    try {
-      // Announce status for screen readers
-      this.announceStatus('Processing images, please wait...');
+	/**
+	 * Handles file selection from the DropZone
+	 */
+	private async handleFilesSelected(files: FileList) {
+		try {
+			// Announce status for screen readers
+			this.announceStatus("Processing images, please wait...");
 
-      // Change status to processing
-      this.updateStatus('processing');
+			// Change status to processing
+			this.updateStatus("processing");
 
-      // Prepare each file
-      const promises = Array.from(files).map(async file => {
-        try {
-          const imageInfo = await prepareImageFile(file);
-          this.images.push(imageInfo);
-          return imageInfo;
-        } catch (error) {
-          logApiError('processFile', error);
-          this.showMessage(`Error processing file ${file.name}`, 'error');
-          return null;
-        }
-      });
+			// Prepare each file
+			const promises = Array.from(files).map(async (file) => {
+				try {
+					const imageInfo = await prepareImageFile(file);
+					this.images.push(imageInfo);
+					return imageInfo;
+				} catch (error) {
+					logApiError("processFile", error);
+					this.showMessage(`Error processing file ${file.name}`, "error");
+					return null;
+				}
+			});
 
-      // Wait for all files to be processed
-      const results = await Promise.all(promises);
-      const validImages = results.filter(Boolean) as ImageInfo[];
+			// Wait for all files to be processed
+			const results = await Promise.all(promises);
+			const validImages = results.filter(Boolean) as ImageInfo[];
 
-      // Update previews
-      this.updatePreviews();
+			// Update previews
+			this.updatePreviews();
 
-      // Announce for screen readers
-      if (validImages.length > 0) {
-        this.announceStatus(
-          `${validImages.length} image${validImages.length > 1 ? 's' : ''} loaded successfully. You can now convert them.`
-        );
-      }
+			// Announce for screen readers
+			if (validImages.length > 0) {
+				this.announceStatus(
+					`${validImages.length} image${validImages.length > 1 ? "s" : ""} loaded successfully. You can now convert them.`,
+				);
+			}
 
-      // Show success message
-      if (validImages.length > 0) {
-        this.showMessage(
-          `${validImages.length} image${validImages.length > 1 ? 's' : ''} loaded successfully`,
-          'success'
-        );
-      }
+			// Show success message
+			if (validImages.length > 0) {
+				this.showMessage(
+					`${validImages.length} image${validImages.length > 1 ? "s" : ""} loaded successfully`,
+					"success",
+				);
+			}
 
-      // Update status
-      this.updateStatus('idle');
-    } catch (error) {
-      logApiError('selectFiles', error);
-      this.showMessage('Error selecting files', 'error');
-      this.updateStatus('error');
-      this.announceStatus('Error loading images. Please try again.');
-    }
-  }
+			// Update status
+			this.updateStatus("idle");
+		} catch (error) {
+			logApiError("selectFiles", error);
+			this.showMessage("Error selecting files", "error");
+			this.updateStatus("error");
+			this.announceStatus("Error loading images. Please try again.");
+		}
+	}
 
-  /**
-   * Handles changes in conversion options
-   */
-  private handleOptionsChange(options: ConversionOptions) {
-    this.options = options;
+	/**
+	 * Handles changes in conversion options
+	 */
+	private handleOptionsChange(options: ConversionOptions) {
+		this.options = options;
 
-    // Update conversion options for all images
-    this.images = this.images.map(img => ({
-      ...img,
-      conversionOptions: {
-        ...img.conversionOptions,
-        ...options,
-      },
-    }));
+		// Update conversion options for all images
+		this.images = this.images.map((img) => ({
+			...img,
+			conversionOptions: {
+				...img.conversionOptions,
+				...options,
+			},
+		}));
 
-    // Announce changes for screen readers
-    this.announceStatus(
-      `Conversion options updated: format ${options.format}, quality ${options.quality}%`
-    );
-  }
+		// Announce changes for screen readers
+		this.announceStatus(
+			`Conversion options updated: format ${options.format}, quality ${options.quality}%`,
+		);
+	}
 
-  /**
-   * Handles the convert button click
-   */
-  private async handleConvertClick() {
-    if (this.images.length === 0) {
-      this.showMessage('Please select at least one image to convert', 'error');
-      this.announceStatus('Error: No images selected for conversion');
-      return;
-    }
+	/**
+	 * Handles the convert button click
+	 */
+	private async handleConvertClick() {
+		if (this.images.length === 0) {
+			this.showMessage("Please select at least one image to convert", "error");
+			this.announceStatus("Error: No images selected for conversion");
+			return;
+		}
 
-    if (this.status === 'processing') {
-      return;
-    }
+		if (this.status === "processing") {
+			return;
+		}
 
-    try {
-      // Announce status for screen readers
-      this.announceStatus('Starting image conversion, please wait...');
+		try {
+			// Announce status for screen readers
+			this.announceStatus("Starting image conversion, please wait...");
 
-      // Change status to processing
-      this.updateStatus('processing');
+			// Change status to processing
+			this.updateStatus("processing");
 
-      // Update UI to show we're processing
-      const convertButton = this.querySelector('#convert-button') as HTMLButtonElement;
-      if (convertButton) {
-        convertButton.disabled = true;
-        convertButton.setAttribute('aria-busy', 'true');
-        convertButton.innerHTML = `
+			// Update UI to show we're processing
+			const convertButton = this.querySelector(
+				"#convert-button",
+			) as HTMLButtonElement;
+			if (convertButton) {
+				convertButton.disabled = true;
+				convertButton.setAttribute("aria-busy", "true");
+				convertButton.innerHTML = `
           <svg class="spinner" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">
             <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" stroke-width="2" />
           </svg>
           Converting...
         `;
-      }
+			}
 
-      // Call API to convert images
-      const zipUrl = await convertImagesAPI(this.images, this.options);
+			// Call API to convert images
+			const zipUrl = await convertImagesAPI(this.images, this.options);
 
-      // Update status
-      this.updateStatus('success');
+			// Update status
+			this.updateStatus("success");
 
-      // Announce for screen readers
-      this.announceStatus(
-        `${this.images.length} image${this.images.length > 1 ? 's' : ''} converted successfully. ZIP file is available for download.`
-      );
+			// Announce for screen readers
+			this.announceStatus(
+				`${this.images.length} image${this.images.length > 1 ? "s" : ""} converted successfully. ZIP file is available for download.`,
+			);
 
-      // Show success message
-      this.showMessage(
-        `${this.images.length} image${this.images.length > 1 ? 's' : ''} converted successfully`,
-        'success'
-      );
+			// Show success message
+			this.showMessage(
+				`${this.images.length} image${this.images.length > 1 ? "s" : ""} converted successfully`,
+				"success",
+			);
 
-      // Show ZIP download link
-      this.createDownloadLink(zipUrl);
+			// Show ZIP download link
+			this.createDownloadLink(zipUrl);
 
-      // Restore button
-      if (convertButton) {
-        convertButton.disabled = false;
-        convertButton.setAttribute('aria-busy', 'false');
-        convertButton.innerHTML = 'Convert images';
-      }
-    } catch (error) {
-      logApiError('convertImages', error);
-      this.showMessage('Error converting images', 'error');
-      this.announceStatus('Error during image conversion.');
-      this.updateStatus('error');
+			// Restore button
+			if (convertButton) {
+				convertButton.disabled = false;
+				convertButton.setAttribute("aria-busy", "false");
+				convertButton.innerHTML = "Convert images";
+			}
+		} catch (error) {
+			logApiError("convertImages", error);
+			this.showMessage("Error converting images", "error");
+			this.announceStatus("Error during image conversion.");
+			this.updateStatus("error");
 
-      // Restore button
-      const convertButton = this.querySelector('#convert-button') as HTMLButtonElement;
-      if (convertButton) {
-        convertButton.disabled = false;
-        convertButton.setAttribute('aria-busy', 'false');
-        convertButton.innerHTML = 'Convert images';
-      }
-    }
-  }
+			// Restore button
+			const convertButton = this.querySelector(
+				"#convert-button",
+			) as HTMLButtonElement;
+			if (convertButton) {
+				convertButton.disabled = false;
+				convertButton.setAttribute("aria-busy", "false");
+				convertButton.innerHTML = "Convert images";
+			}
+		}
+	}
 
-  /**
-   * Creates a link to download the ZIP file
-   */
-  private createDownloadLink(zipUrl: string) {
-    // Create a container for the download link
-    const downloadsContainer = document.createElement('div');
-    downloadsContainer.className = 'downloads-container';
-    downloadsContainer.setAttribute('role', 'region');
-    downloadsContainer.setAttribute('aria-label', 'Download links');
+	/**
+	 * Creates a link to download the ZIP file
+	 */
+	private createDownloadLink(zipUrl: string) {
+		// Create a container for the download link
+		const downloadsContainer = document.createElement("div");
+		downloadsContainer.className = "downloads-container";
+		downloadsContainer.setAttribute("role", "region");
+		downloadsContainer.setAttribute("aria-label", "Download links");
 
-    downloadsContainer.innerHTML = `
+		downloadsContainer.innerHTML = `
         <h3 id="download-heading">Available downloads</h3>
         <ul class="downloads-list" aria-labelledby="download-heading">
             <li>
@@ -270,39 +281,42 @@ export class ImageConverter extends HTMLElement {
         </ul>
     `;
 
-    // Check if a downloads container already exists
-    const existingContainer = this.querySelector('.downloads-container');
-    if (existingContainer) {
-      existingContainer.replaceWith(downloadsContainer);
-    } else {
-      // Insert the container in the content-actions
-      const actionsContainer = this.querySelector('.action-container');
-      if (actionsContainer) {
-        actionsContainer.insertBefore(downloadsContainer, actionsContainer.firstChild);
-      }
-    }
-  }
+		// Check if a downloads container already exists
+		const existingContainer = this.querySelector(".downloads-container");
+		if (existingContainer) {
+			existingContainer.replaceWith(downloadsContainer);
+		} else {
+			// Insert the container in the content-actions
+			const actionsContainer = this.querySelector(".action-container");
+			if (actionsContainer) {
+				actionsContainer.insertBefore(
+					downloadsContainer,
+					actionsContainer.firstChild,
+				);
+			}
+		}
+	}
 
-  /**
-   * Updates image previews
-   */
-  private updatePreviews() {
-    const previewArea = this.querySelector('.preview-area');
-    if (!previewArea) return;
+	/**
+	 * Updates image previews
+	 */
+	private updatePreviews() {
+		const previewArea = this.querySelector(".preview-area");
+		if (!previewArea) return;
 
-    // Add accessibility attributes to the preview area
-    previewArea.setAttribute('role', 'list');
-    previewArea.setAttribute('aria-label', 'Image previews');
+		// Add accessibility attributes to the preview area
+		previewArea.setAttribute("role", "list");
+		previewArea.setAttribute("aria-label", "Image previews");
 
-    // Clear the preview area
-    previewArea.innerHTML = '';
+		// Clear the preview area
+		previewArea.innerHTML = "";
 
-    // If no images, show a message
-    if (this.images.length === 0) {
-      const noImagesElement = document.createElement('div');
-      noImagesElement.className = 'no-images';
-      noImagesElement.setAttribute('role', 'status');
-      noImagesElement.innerHTML = `
+		// If no images, show a message
+		if (this.images.length === 0) {
+			const noImagesElement = document.createElement("div");
+			noImagesElement.className = "no-images";
+			noImagesElement.setAttribute("role", "status");
+			noImagesElement.innerHTML = `
         <svg aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
           <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -310,20 +324,23 @@ export class ImageConverter extends HTMLElement {
         </svg>
         <p>No images selected</p>
       `;
-      previewArea.appendChild(noImagesElement);
-      return;
-    }
+			previewArea.appendChild(noImagesElement);
+			return;
+		}
 
-    // Add previews for each image
-    this.images.forEach((image, index) => {
-      const previewItem = document.createElement('div');
-      previewItem.className = 'preview-item';
-      previewItem.setAttribute('role', 'listitem');
-      previewItem.setAttribute('tabindex', '0');
-      previewItem.setAttribute('aria-label', `Image ${index + 1}: ${image.name}`);
+		// Add previews for each image
+		this.images.forEach((image, index) => {
+			const previewItem = document.createElement("div");
+			previewItem.className = "preview-item";
+			previewItem.setAttribute("role", "listitem");
+			previewItem.setAttribute("tabindex", "0");
+			previewItem.setAttribute(
+				"aria-label",
+				`Image ${index + 1}: ${image.name}`,
+			);
 
-      // Create preview content
-      previewItem.innerHTML = `
+			// Create preview content
+			previewItem.innerHTML = `
         <img src="${image.preview}" alt="${image.name}" loading="lazy" />
         <div class="preview-info">
           <div class="preview-name">${image.name}</div>
@@ -337,96 +354,101 @@ export class ImageConverter extends HTMLElement {
         </button>
       `;
 
-      // Add event listener to remove image
-      const removeBtn = previewItem.querySelector('.remove-image-btn');
-      if (removeBtn) {
-        removeBtn.addEventListener('click', e => {
-          e.stopPropagation();
-          this.handleRemoveImage(image.id);
-        });
-      }
+			// Add event listener to remove image
+			const removeBtn = previewItem.querySelector(".remove-image-btn");
+			if (removeBtn) {
+				removeBtn.addEventListener("click", (e) => {
+					e.stopPropagation();
+					this.handleRemoveImage(image.id);
+				});
+			}
 
-      previewArea.appendChild(previewItem);
-    });
-  }
+			previewArea.appendChild(previewItem);
+		});
+	}
 
-  /**
-   * Handles image removal
-   */
-  private handleRemoveImage(id: string) {
-    // Find the image to remove
-    const imageToRemove = this.images.find(img => img.id === id);
-    const imageName = imageToRemove?.name || 'Image';
+	/**
+	 * Handles image removal
+	 */
+	private handleRemoveImage(id: string) {
+		// Find the image to remove
+		const imageToRemove = this.images.find((img) => img.id === id);
+		const imageName = imageToRemove?.name || "Image";
 
-    // Filter images to remove the selected one
-    this.images = this.images.filter(img => img.id !== id);
+		// Filter images to remove the selected one
+		this.images = this.images.filter((img) => img.id !== id);
 
-    // Update previews
-    this.updatePreviews();
+		// Update previews
+		this.updatePreviews();
 
-    // Show message
-    this.showMessage(`Image ${imageName} removed`, 'success');
+		// Show message
+		this.showMessage(`Image ${imageName} removed`, "success");
 
-    // Announce for screen readers
-    this.announceStatus(`Image ${imageName} removed. ${this.images.length} images remaining.`);
-  }
+		// Announce for screen readers
+		this.announceStatus(
+			`Image ${imageName} removed. ${this.images.length} images remaining.`,
+		);
+	}
 
-  /**
-   * Updates the converter status
-   */
-  private updateStatus(status: ConversionStatus) {
-    this.status = status;
-    const convertContainer = this.querySelector('.converter-container');
+	/**
+	 * Updates the converter status
+	 */
+	private updateStatus(status: ConversionStatus) {
+		this.status = status;
+		const convertContainer = this.querySelector(".converter-container");
 
-    if (convertContainer) {
-      // Remove previous status classes
-      convertContainer.classList.remove(
-        'status-idle',
-        'status-processing',
-        'status-success',
-        'status-error'
-      );
+		if (convertContainer) {
+			// Remove previous status classes
+			convertContainer.classList.remove(
+				"status-idle",
+				"status-processing",
+				"status-success",
+				"status-error",
+			);
 
-      // Add new status class
-      convertContainer.classList.add(`status-${status}`);
+			// Add new status class
+			convertContainer.classList.add(`status-${status}`);
 
-      // Update ARIA attribute to announce status
-      convertContainer.setAttribute('aria-busy', status === 'processing' ? 'true' : 'false');
-    }
-  }
+			// Update ARIA attribute to announce status
+			convertContainer.setAttribute(
+				"aria-busy",
+				status === "processing" ? "true" : "false",
+			);
+		}
+	}
 
-  /**
-   * Shows an informative message
-   */
-  private showMessage(text: string, type: 'error' | 'success') {
-    // Check if a message already exists
-    let messageElement = this.querySelector('.message');
+	/**
+	 * Shows an informative message
+	 */
+	private showMessage(text: string, type: "error" | "success") {
+		// Check if a message already exists
+		let messageElement = this.querySelector(".message");
 
-    if (!messageElement) {
-      messageElement = document.createElement('div');
-      messageElement.className = 'message';
-      messageElement.setAttribute('role', 'alert');
-      messageElement.setAttribute('aria-live', 'assertive');
-      this.appendChild(messageElement);
-    }
+		if (!messageElement) {
+			messageElement = document.createElement("div");
+			messageElement.className = "message";
+			messageElement.setAttribute("role", "alert");
+			messageElement.setAttribute("aria-live", "assertive");
+			this.appendChild(messageElement);
+		}
 
-    // Update message class and content
-    messageElement.className = `message message-${type}`;
-    messageElement.textContent = text;
+		// Update message class and content
+		messageElement.className = `message message-${type}`;
+		messageElement.textContent = text;
 
-    // Remove message after some time
-    setTimeout(() => {
-      if (messageElement && messageElement.parentNode) {
-        messageElement.parentNode.removeChild(messageElement);
-      }
-    }, 5000);
-  }
+		// Remove message after some time
+		setTimeout(() => {
+			if (messageElement && messageElement.parentNode) {
+				messageElement.parentNode.removeChild(messageElement);
+			}
+		}, 5000);
+	}
 
-  /**
-   * Renders the component
-   */
-  private render() {
-    this.innerHTML = `
+	/**
+	 * Renders the component
+	 */
+	private render() {
+		this.innerHTML = `
       <div class="app-container">
         <header class="header">
           <h1>Image Converter</h1>
@@ -459,8 +481,8 @@ export class ImageConverter extends HTMLElement {
         </div>
       </div>
     `;
-  }
+	}
 }
 
 // Register the component
-customElements.define('image-converter', ImageConverter);
+customElements.define("image-converter", ImageConverter);
