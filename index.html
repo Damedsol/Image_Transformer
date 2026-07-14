@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -12,17 +11,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="Online image converter - Convert image formats easily and quickly"
+      content="Online image converter — Convert image formats easily and quickly"
     />
     <meta name="format-detection" content="telephone=no" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preload" href="/fonts/Figtree/woff2/Figtree-VariableFont_wght.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/IBM_Plex_Mono/IBMPlexMono-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/src/style.css" as="style" />
     <link rel="preload" href="/src/main.ts" as="script" />
     <title>Image Converter</title>
   </head>
 
   <body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <a href="#main-content" class="skip-link">SKIP_TO_CONTENT</a>
+
     <header class="app-header">
       <button
         id="open-a11y-dialog"
@@ -30,24 +31,7 @@
         aria-label="Open accessibility options"
         aria-haspopup="dialog"
       >
-        <svg
-          aria-hidden="true"
-          focusable="false"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 8v4"></path>
-          <path d="M12 16h.01"></path>
-          <path d="M4.93 7.5a8 8 0 0 1 14.14 0"></path>
-          <path d="M4.93 16.5a8 8 0 0 0 14.14 0"></path>
-        </svg>
+        <tn-icon name="settings" size="20"></tn-icon>
       </button>
     </header>
 
@@ -63,12 +47,13 @@
         aria-live="assertive"
         role="status"
       >
-        No connection - Some features may not be available
+        [!] NO_CONNECTION
       </div>
     </footer>
 
     <div id="status-announcer" class="sr-only" aria-live="polite" role="status"></div>
 
+    <!-- Accessibility Dialog (SNA-06 Modal) -->
     <div
       id="a11y-dialog"
       class="a11y-dialog"
@@ -79,92 +64,71 @@
       aria-modal="true"
     >
       <div class="a11y-dialog-content">
-        <h2 id="a11y-dialog-title">Accessibility options</h2>
-        <button id="close-a11y-dialog" aria-label="Close accessibility dialog">
-          <svg
-            aria-hidden="true"
-            focusable="false"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-        <div class="a11y-options">
-          <div class="a11y-option">
-            <label for="high-contrast">
-              <input type="checkbox" id="high-contrast" aria-describedby="high-contrast-desc" />
-              <span>High contrast</span>
-            </label>
-            <span id="high-contrast-desc" class="option-description"
-              >Increases color contrast for better readability</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="font-size">Text size</label>
-            <select id="font-size" aria-describedby="font-size-desc">
-              <option value="default">Default</option>
-              <option value="large">Large</option>
-              <option value="larger">Extra large</option>
-            </select>
-            <span id="font-size-desc" class="option-description"
-              >Changes text size throughout the application</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="dyslexic-font">
-              <input type="checkbox" id="dyslexic-font" aria-describedby="dyslexic-font-desc" />
-              <span>Dyslexic font</span>
-            </label>
-            <span id="dyslexic-font-desc" class="option-description"
-              >Uses a font designed to facilitate reading for people with dyslexia</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="reduce-motion">
-              <input type="checkbox" id="reduce-motion" aria-describedby="reduce-motion-desc" />
-              <span>Reduce animations</span>
-            </label>
-            <span id="reduce-motion-desc" class="option-description"
-              >Minimizes or eliminates animations and motion effects</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="text-spacing">Text spacing</label>
-            <select id="text-spacing" aria-describedby="text-spacing-desc">
-              <option value="default">Default</option>
-              <option value="medium">Medium</option>
-              <option value="large">Wide</option>
-            </select>
-            <span id="text-spacing-desc" class="option-description"
-              >Adjusts spacing between letters, words and text lines</span
-            >
-          </div>
+        <div class="modal-header">
+          <h2 id="a11y-dialog-title" class="modal-title">ACCESSIBILITY_OPTIONS</h2>
+          <button id="close-a11y-dialog" class="modal-close" aria-label="Close">
+            <tn-icon name="x" size="20"></tn-icon>
+          </button>
         </div>
-        <div class="keyboard-shortcuts">
-          <h3 id="keyboard-shortcuts-title">Keyboard shortcuts</h3>
-          <ul aria-labelledby="keyboard-shortcuts-title">
-            <li>
-              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd>: Open/close accessibility options
-            </li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>: Toggle high contrast mode</li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>: Load an image from the device</li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd>: Start image conversion</li>
-          </ul>
-          <p class="shortcut-note">Note: On Mac, use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd></p>
+        <div class="modal-body">
+          <div class="a11y-options">
+            <div class="a11y-option">
+              <label for="high-contrast">
+                <input type="checkbox" id="high-contrast" class="form-check-input" aria-describedby="high-contrast-desc" />
+                <span>HIGH_CONTRAST</span>
+              </label>
+              <span id="high-contrast-desc" class="option-description">Increases color contrast for better readability</span>
+            </div>
+            <div class="a11y-option">
+              <label for="font-size">TEXT_SIZE</label>
+              <select id="font-size" class="form-select" aria-describedby="font-size-desc" style="width:auto">
+                <option value="default">DEFAULT</option>
+                <option value="large">LARGE</option>
+                <option value="larger">EXTRA_LARGE</option>
+              </select>
+              <span id="font-size-desc" class="option-description">Changes text size throughout the application</span>
+            </div>
+            <div class="a11y-option">
+              <label for="dyslexic-font">
+                <input type="checkbox" id="dyslexic-font" class="form-check-input" aria-describedby="dyslexic-font-desc" />
+                <span>DYSLEXIC_FONT</span>
+              </label>
+              <span id="dyslexic-font-desc" class="option-description">Uses a font designed for dyslexia</span>
+            </div>
+            <div class="a11y-option">
+              <label for="reduce-motion">
+                <input type="checkbox" id="reduce-motion" class="form-check-input" aria-describedby="reduce-motion-desc" />
+                <span>REDUCE_MOTION</span>
+              </label>
+              <span id="reduce-motion-desc" class="option-description">Minimizes animations and motion effects</span>
+            </div>
+            <div class="a11y-option">
+              <label for="text-spacing">TEXT_SPACING</label>
+              <select id="text-spacing" class="form-select" aria-describedby="text-spacing-desc" style="width:auto">
+                <option value="default">DEFAULT</option>
+                <option value="medium">MEDIUM</option>
+                <option value="large">WIDE</option>
+              </select>
+              <span id="text-spacing-desc" class="option-description">Adjusts spacing between letters and words</span>
+            </div>
+          </div>
+          <div class="keyboard-shortcuts">
+            <h3>KEYBOARD_SHORTCUTS</h3>
+            <ul>
+              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>A</kbd>: Open/close accessibility options</li>
+              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>C</kbd>: Toggle high contrast mode</li>
+              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>D</kbd>: Load an image from the device</li>
+              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>S</kbd>: Start image conversion</li>
+            </ul>
+            <p class="shortcut-note">On Mac, use <kbd>CMD</kbd> instead of <kbd>CTRL</kbd></p>
+          </div>
         </div>
       </div>
     </div>
+
     <script type="module" src="/src/main.ts"></script>
     <script>
-      if (!('IntersectionObserver' in window)) {
+      if (!("IntersectionObserver" in window)) {
         document.write(
           '<script src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver"><\/script>'
         );

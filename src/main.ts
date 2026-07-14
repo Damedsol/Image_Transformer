@@ -1,4 +1,5 @@
 import "./style.css";
+import "./components/TnIcon";
 import "./components/DropZone";
 import "./components/ImagePreview";
 import "./components/ConversionOptions";
@@ -124,19 +125,6 @@ function setupAccessibilityDialog() {
 			e.preventDefault();
 			openAccessibilityDialog();
 		});
-
-		// Add accessible content to button
-		a11yButton.innerHTML = `
-      <svg aria-hidden="true" focusable="false" width="24" height="24" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="10"></circle>
-        <path d="M12 8v4"></path>
-        <path d="M12 16h.01"></path>
-        <path d="M4.93 7.5a8 8 0 0 1 14.14 0"></path>
-        <path d="M4.93 16.5a8 8 0 0 0 14.14 0"></path>
-      </svg>
-      <span class="sr-only">Accessibility options</span>
-    `;
 	}
 
 	// Configure dialog close
@@ -340,7 +328,7 @@ function setupKeyboardShortcuts() {
 					// Start conversion
 					event.preventDefault();
 					convertButton = document.querySelector(
-						'button[data-action="convert"]',
+						"#convert-button",
 					) as HTMLButtonElement;
 					if (convertButton) {
 						convertButton.click();
