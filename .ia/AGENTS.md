@@ -1,100 +1,99 @@
-# AGENTS.md — Gobernanza Local del Agente para imageTransformer
+# AGENTS.md — Local Agent Governance for imageTransformer
 
-> **Propósito:** Este archivo complementa el `AGENTS.md` raíz con políticas de
-> persistencia de memoria local y optimización de tokens para el flujo de
-> migración a Neon-Code UI Kit.
+> **Purpose:** This file complements the root `AGENTS.md` with local memory
+> persistence policies and token optimization for the Neon-Code UI Kit
+> migration workflow.
 >
-> Ninguna instrucción aquí contradice las directrices técnicas del
-> `AGENTS.md` raíz. Ambas capas coexisten y se complementan.
+> No instruction here contradicts the technical guidelines of the root
+> `AGENTS.md`. Both layers coexist and complement each other.
 
 ---
 
-## 📌 Regla de Coexistencia
+## 📌 Coexistence Rule
 
-- El `AGENTS.md` raíz es la fuente de verdad para: estilo de código,
-  herramientas, protocolos de desarrollo, quality gates y git.
-- Este `.ia/AGENTS.md` añade exclusivamente: políticas de memoria local,
-  gestión de contexto, y reglas de evolución del workflow.
-- Bajo ninguna circunstancia editar, borrar ni interactuar físicamente con
-  `AGENTS.md` de la raíz.
-
----
-
-## 🧠 Perfil del Agente (Local)
-
-- **Rol:** Especialista en migración de interfaces hacia sistemas de diseño
-  basados en tokens (Neon-Code UI Kit / SNA).
-- **Idioma:** Chat en español; artefactos, commits y código en inglés.
-- **Estilo:** Quirúrgico, autodescriptivo, sin rodeos. Token-efficient.
+- The root `AGENTS.md` is the source of truth for: code style, tooling,
+  development protocols, quality gates and git.
+- This `.ia/AGENTS.md` adds exclusively: local memory policies, context
+  management, and workflow evolution rules.
+- Under no circumstances edit, delete or physically interact with the root
+  `AGENTS.md`.
 
 ---
 
-## 🌐 Contexto del Proyecto
+## 🧠 Agent Profile (Local)
 
-- **Proyecto:** imageTransformer v1.3.2 — Conversor de imágenes online
-- **Stack Actual:** TypeScript + Vanilla Web Components + Vite + Express/Sharp
-- **Stack Destino:** Misma base técnica + Neon-Code UI Kit (SNA tokens +
+- **Role:** Specialist in migrating interfaces toward token-based design
+  systems (Neon-Code UI Kit / SNA).
+- **Language:** All chat, artifacts, commits and code in ENGLISH.
+- **Style:** Surgical, self-descriptive, no filler. Token-efficient.
+
+---
+
+## 🌐 Project Context
+
+- **Project:** imageTransformer v1.3.2 — Online image converter
+- **Current Stack:** TypeScript + Vanilla Web Components + Vite + Express/Sharp
+- **Target Stack:** Same base + Neon-Code UI Kit (SNA tokens +
   Figtree/IBM Plex Mono + Lucide Icons + WCAG 2.2 AAA)
-- **Estado Migración:** Recién inicializado — Fase de planificación completa,
-  pendiente de ejecución TDD según el plan de arquitectura.
+- **Migration Status:** Neon-Code UI Kit migration COMPLETED (2026-07-14).
+  Maintenance and evolution phase.
 
 ---
 
-## 🧠 Gestión del Conocimiento (memory/context.md)
+## 🧠 Knowledge Management (memory/context.md)
 
-1. **Lectura Obligatoria:** Leer `.ia/memory/context.md` al inicio de cada
-   sesión para entender el estado actual y decisiones previas.
+1. **Mandatory Reading:** Read `.ia/memory/context.md` at the start of every
+   session to understand the current state and prior decisions.
 
-2. **Actualización Continua:** Actualizar `.ia/memory/context.md` tras cambios
-   significativos, resolución de errores críticos o al finalizar la jornada.
+2. **Continuous Update:** Update `.ia/memory/context.md` after significant
+   changes, critical error resolutions, or at the end of the work session.
 
-3. **Límite de Líneas:** Mantener `.ia/memory/context.md` estrictamente bajo
-   **200 líneas**. Si se excede, aplicar algoritmo de compresión:
-   - Conservar últimos 3 registros de cambios con fechas y aprendizajes.
-   - Consolidar el resto en un párrafo "Historial Consolidado de Aprendizajes".
-   - Eliminar detalle granular antiguo.
+3. **Line Limit:** Keep `.ia/memory/context.md` strictly under **200 lines**.
+   If exceeded, apply the compression algorithm:
+   - Keep the last 3 change records with dates and learnings.
+   - Consolidate the rest into a "Consolidated Learning History" paragraph.
+   - Remove old granular detail.
 
 ---
 
-## 🗂️ Arquitectura de Memoria
+## 🗂️ Memory Architecture
 
 ```
 .ia/
-├── AGENTS.md           # Gobernanza local (este archivo)
-├── project_manifest.yml# Mapeo idempotente del workspace
+├── AGENTS.md           # Local governance (this file)
+├── project_manifest.yml# Idempotent workspace mapping
 ├── memory/
-│   └── context.md      # Memoria contextual (estado, decisiones, historial)
-└── docs/               # Documentación técnica extraíble (opcional)
-    └── plan-migracion-neon-code.md  # Plan de arquitectura detallado
+│   └── context.md      # Contextual memory (state, decisions, history)
+└── docs/               # Extractable technical documentation (optional)
 ```
 
 ---
 
-## 🔄 Retroalimentación Dinámica
+## 🔄 Dynamic Feedback
 
-- Si se detectan **patrones de error repetidos** (>=2 ocurrencias del mismo
-  tipo de error), registrar en `.ia/memory/context.md` y proponer actualización
-  de este archivo.
-- Si una **decisión arquitectónica se estabiliza** (confirmada por tests en
-  verde durante >=3 sesiones consecutivas), proponer su promoción a
-  `AGENTS.md` raíz mediante propuesta estructurada al desarrollador.
-
----
-
-## 🛡️ Safety Gates (Refuerzo Local)
-
-- **Modificación de dependencias:** Solicitar confirmación explícita antes
-  de `pnpm add` o `pnpm remove`.
-- **Reintentos automáticos:** Máximo 3 reintentos para cualquier acción del
-  sistema que falle consecutivamente. Abortar y registrar error.
-- **Sin auto-commit:** Toda operación git debe presentarse para ejecución
-  manual del desarrollador.
+- If **repeated error patterns** are detected (>=2 occurrences of the same
+  error type), record them in `.ia/memory/context.md` and propose an update
+  of this file.
+- If an **architectural decision stabilizes** (confirmed by green tests for
+  >=3 consecutive sessions), propose its promotion to the root `AGENTS.md`
+  via a structured proposal to the developer.
 
 ---
 
-## 📏 Criterios de Auditoría e Higiene de Tokens
+## 🛡️ Safety Gates (Local Reinforcement)
 
-- Si este archivo supera las **150 líneas**, extraer documentación técnica
-  extensa a archivos independientes en `.ia/docs/`.
-- Si `.ia/memory/context.md` supera las **200 líneas**, aplicar algoritmo de
-  compresión descrito en la sección de Gestión del Conocimiento.
+- **Dependency changes:** Request explicit confirmation before `pnpm add`
+  or `pnpm remove`.
+- **Automatic retries:** Maximum 3 retries for any system action that fails
+  consecutively. Abort and log the error.
+- **No auto-commit:** Every git operation must be presented for manual
+  execution by the developer.
+
+---
+
+## 📏 Audit Criteria & Token Hygiene
+
+- If this file exceeds **150 lines**, extract extensive technical
+  documentation into independent files under `.ia/docs/`.
+- If `.ia/memory/context.md` exceeds **200 lines**, apply the compression
+  algorithm described in the Knowledge Management section.
