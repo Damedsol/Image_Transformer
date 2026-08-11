@@ -52,10 +52,16 @@ entrypoints:
 
 commands:
   dev: "pnpm dev"
+  dev:frontend: "pnpm dev:frontend"
+  dev:backend: "pnpm dev:backend"
   build: "pnpm build"
+  build:frontend: "pnpm build:frontend"
+  build:backend: "pnpm build:backend"
+  qa: "pnpm qa"
   test: "pnpm test"
   lint: "pnpm lint"
   format: "pnpm format"
+  format:check: "pnpm format:check"
   type-check: "pnpm type-check"
 
 env_keys:

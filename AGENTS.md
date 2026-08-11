@@ -22,19 +22,30 @@ backend/                  → package "image-transformer-backend" (Express/Sharp
 
 ## Dev commands (from root)
 
+All commands are centralized in the root `package.json`. Frontend (Vite :5173) and backend (tsx watch :3001) run concurrently via `concurrently`.
+
 | Action | Command |
 |--------|---------|
 | Install | `pnpm install` |
-| Frontend dev | `pnpm dev` (Vite on :5173) |
-| Backend dev | `pnpm --filter image-transformer-backend dev` (tsx watch on :3001) |
-| Build all | `pnpm build` (tsc + vite build) |
-| Type-check | `pnpm type-check` (tsc --noEmit, root tsconfig only) |
-| Lint | `pnpm lint` (oxlint --fix + ls-lint) |
-| Format | `pnpm format` (biome format --write) |
+| Dev (FE + BE) | `pnpm dev` |
+| Dev frontend only | `pnpm dev:frontend` (Vite on :5173) |
+| Dev backend only | `pnpm dev:backend` (tsx watch on :3001) |
+| Build all | `pnpm build` (backend tsc → frontend tsc + vite build) |
+| Build frontend | `pnpm build:frontend` |
+| Build backend | `pnpm build:backend` |
+| QA (type → lint → fmt → test) | `pnpm qa` |
+| Type-check (FE + BE) | `pnpm type-check` |
+| Type-check frontend | `pnpm type-check:frontend` |
+| Type-check backend | `pnpm type-check:backend` |
+| Lint (FE + BE + ls-lint) | `pnpm lint` |
+| Lint frontend | `pnpm lint:frontend` |
+| Lint backend | `pnpm lint:backend` |
+| Format (write) | `pnpm format` (biome format --write) |
+| Format check | `pnpm format:check` |
 | Tests | `pnpm test` (vitest run) |
 | Tests watch | `pnpm test:watch` |
 
-**Backend build:** `pnpm --filter image-transformer-backend build` (tsc; backend has its own tsconfig). Start: `pnpm --filter image-transformer-backend start`.
+**Backend start (compiled):** `pnpm --filter image-transformer-backend start`.
 
 ## File naming (enforced by ls-lint in pre-commit)
 
