@@ -25,6 +25,10 @@
 - **Required test imports:** Tests must import components explicitly to trigger `customElements.define()`. Without import, `document.createElement` produces HTMLUnknownElement.
 
 ## Change History
+- **2026-08-10:** Centralized scripts in root package.json (dev:/qa:/build: namespaces)
+  - Detail: `pnpm dev` now boots frontend (Vite :5173) + backend (tsx watch :3001) in parallel via `concurrently -k` (^10.0.4, added to catalog + root devDeps). `pnpm qa` chains canonical scripts directly: `pnpm type-check && pnpm lint && pnpm format:check && pnpm test` (no redundant qa:* aliases — removed after reviewer feedback). `pnpm build` compiles backend → frontend. Granular scoped with full names: dev:frontend, dev:backend, build:frontend, build:backend, type-check:frontend/backend, lint:frontend/backend (no fe/be abbreviations). backend/package.json untouched (workspace-internal entrypoints preserved). AGENTS.md + project_manifest.yml + plan synced.
+  - QA: `pnpm qa` green (type-check FE+BE, lint FE+BE+ls-lint, format, 46/46 tests), `pnpm build` OK (backend dist/ + frontend dist/), `pnpm dev` boots both with [frontend]/[backend] prefixed output, SIGTERM kills both via -k.
+  - Test command: `pnpm qa && pnpm build`
 - **2026-08-10:** .ia/ harness updated — English only, no global skill names
   - Detail: Rewrote `.ia/AGENTS.md`, `project_manifest.yml` and `memory/context.md` in English. Unified agent directives to English-only (root AGENTS.md chat policy is English). Kept the no-global-skill-name rule: only the project-local skill `code-quality` (`.agents/skills/`) is named; global skills are referenced generically. Registered `.agents/skills/` in relevant_folders and updated the manifest date.
   - QA: YAML valid, line limits respected (root AGENTS.md 114, .ia/AGENTS.md 100, context.md <200).
