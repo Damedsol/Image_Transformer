@@ -10,10 +10,6 @@ import { ConversionOptions, ConversionResult } from "../utils/types.js";
 import { AppError } from "../utils/apiError.js";
 import { safelyDeleteFile } from "../middlewares/uploadMiddleware.js";
 import logger from "../utils/logger.js";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
 
 // Configuration limits
 const MAX_FILES_PER_REQUEST = parseInt(
@@ -85,6 +81,13 @@ export const convertImages = async (
 			throw new AppError("No images uploaded", 400);
 		}
 
+		// Register ALL uploaded files for guaranteed cleanup immediately, so
+		// any validation error below (max files, quota, options schema) still
+		// removes every temp file — 0 files left on the server.
+		req.files.forEach((file) => {
+			allTempFiles.push(file.path);
+		});
+
 		// Check maximum number of files
 		if (req.files.length > MAX_FILES_PER_REQUEST) {
 			throw new AppError(
@@ -134,29 +137,25 @@ export const convertImages = async (
 		};
 		logger.info({ options }, "Conversion options validated");
 
-		// Add original files to global cleanup list
-		req.files.forEach((file) => {
-			allTempFiles.push(file.path);
-		});
-
-		// Process each uploaded image
+		// Process each uploaded image sequentially, registering every produced
+		// file in the cleanup list IMMEDIATELY. Parallel processing (Promise.all)
+		// races with the error cleanup: when one image fails, the catch deletes
+		// the inputs while others are still processing — leaving their outputs
+		// orphaned in temp/output or failing with "Input file is missing".
+		// Sequential + early registration guarantees 0 files left on any error.
 		logger.info({ numFiles: req.files.length }, "Starting image processing");
-		const processedImages: ConversionResult[] = await Promise.all(
-			req.files.map((file: Express.Multer.File) =>
-				processImage(
-					{
-						path: file.path,
-						originalname: file.originalname,
-					},
-					options,
-				),
-			),
-		);
-
-		// Add processed images to global cleanup list
-		processedImages.forEach((img) => {
-			allTempFiles.push(img.path);
-		});
+		const processedImages: ConversionResult[] = [];
+		for (const file of req.files as Express.Multer.File[]) {
+			const processed = await processImage(
+				{
+					path: file.path,
+					originalname: file.originalname,
+				},
+				options,
+			);
+			processedImages.push(processed);
+			allTempFiles.push(processed.path);
+		}
 
 		logger.info(
 			{ numProcessed: processedImages.length },

@@ -1,8 +1,8 @@
+import "./utils/loadEnv.js";
 import express from "express";
 import cors from "cors";
 import path, { dirname } from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
 import { imageRoutes } from "./routes/imageRoutes.js";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
 import {
@@ -13,16 +13,29 @@ import {
 	validateContentType,
 } from "./middlewares/securityMiddleware.js";
 import logger from "./utils/logger.js";
+import {
+	cleanupStartup,
+	schedulePeriodicCleanup,
+} from "./utils/tempCleanup.js";
 
 // Calcular __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Cargar variables de entorno
-dotenv.config();
-
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+// Temp file lifecycle: sweep orphaned files (lost TTL timers from crashes or
+// restarts) at startup, then periodically remove any file older than the max
+// age. The per-file TTL cleanup (cleanTempFiles) still handles the fast path.
+const TEMP_CLEANUP_INTERVAL_MS = parseInt(
+	process.env.TEMP_CLEANUP_INTERVAL_MS || "300000",
+);
+const TEMP_FILE_MAX_AGE_MS = parseInt(
+	process.env.TEMP_FILE_MAX_AGE_MS || "1800000",
+);
+cleanupStartup();
+schedulePeriodicCleanup(TEMP_CLEANUP_INTERVAL_MS, TEMP_FILE_MAX_AGE_MS);
 
 // Configuración de CORS (DEBE ir antes de Helmet)
 /**
@@ -61,7 +74,7 @@ const getCorsOrigins = (): string[] => {
 			} else {
 				logger.warn(
 					{ corsOrigin: process.env.CORS_ORIGIN },
-					"CORS_ORIGIN inválido, será ignorado",
+					"CORS_ORIGIN invalid, will be ignored",
 				);
 			}
 		}
@@ -134,7 +147,7 @@ app.use("/temp", (req, res, next): void => {
 		express.static(path.join(__dirname, "../temp"))(req, res, next);
 		return; // Asegurarse de que no se ejecute el res.status(403) después
 	}
-	res.status(403).send("Acceso denegado");
+	res.status(403).send("Access denied");
 });
 
 // Rutas API (aplicar límite de tasa específico si es necesario)
@@ -152,15 +165,15 @@ app.use(errorHandler);
 app.listen(PORT, () => {
 	logger.info(
 		{ port: PORT, env: process.env.NODE_ENV },
-		`Servidor iniciado en puerto ${PORT}`,
+		`Server started on port ${PORT}`,
 	);
 });
 
-// Manejar errores no capturados
+// Handle uncaught errors
 process.on("uncaughtException", (error) => {
 	logger.fatal(
 		{ err: error },
-		"Error no capturado (uncaughtException). Saliendo...",
+		"Uncaught exception (uncaughtException). Exiting...",
 	);
 	process.exit(1);
 });
@@ -168,6 +181,6 @@ process.on("uncaughtException", (error) => {
 process.on("unhandledRejection", (reason, promise) => {
 	logger.error(
 		{ reason, promise },
-		"Promesa rechazada no manejada (unhandledRejection)",
+		"Unhandled promise rejection (unhandledRejection)",
 	);
 });
