@@ -99,6 +99,22 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
 
 ---
 
+## 🗂️ Temporary File Lifecycle
+
+Uploaded images and generated ZIPs live under `backend/temp/` (`uploads/` + `output/`) and are removed automatically so nothing accumulates on the server:
+
+- **Per-request cleanup:** on any success or error, all uploaded originals and processed files are deleted immediately (`TEMP_FILES_CLEANUP_MS` only delays ZIP deletion to allow the download, default 5 min).
+- **Startup sweep:** on boot, everything left in `temp/` from a previous session is removed (timers from a crashed/restarted process cannot run).
+- **Periodic sweep:** a background interval deletes any file older than the max age, covering edge cases where the per-file timer was lost.
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `TEMP_FILES_CLEANUP_MS` | `300000` | Delay before a generated ZIP is deleted (download window). |
+| `TEMP_CLEANUP_INTERVAL_MS` | `300000` | Interval of the periodic temp directory sweep. |
+| `TEMP_FILE_MAX_AGE_MS` | `1800000` | Max age for a temp file before the periodic sweep removes it. |
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -177,4 +193,4 @@ This project is licensed under the **Creative Commons Attribution 4.0 Internatio
 
 Developed with ❤️ by **Damedsol**:
 - **GitHub:** [@Damedsol](https://github.com/Damedsol)
-- **LinkedIn:** [Your Profile](https://www.linkedin.com/)
+- **LinkedIn:** [David Medina Soloza](https://www.linkedin.com/in/david-medina-soloza/)
