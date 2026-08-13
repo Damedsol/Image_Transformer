@@ -90,7 +90,7 @@ export class DropZone extends HTMLElement {
 				this.onFilesSelected(files);
 			} else {
 				this.updateStatus("No valid images loaded");
-				this.showError("[!] Only image files are allowed");
+				this.showError("Only image files are allowed");
 			}
 		}
 	}
@@ -106,7 +106,7 @@ export class DropZone extends HTMLElement {
 				this.onFilesSelected(files);
 			} else {
 				this.updateStatus("No valid images loaded");
-				this.showError("[!] Only image files are allowed");
+				this.showError("Only image files are allowed");
 			}
 		}
 		input.value = "";
@@ -162,11 +162,11 @@ export class DropZone extends HTMLElement {
           <div class="empty-state-icon" aria-hidden="true">
             <tn-icon name="upload" size="64" color="var(--card-border)"></tn-icon>
           </div>
-          <h3 class="empty-state-title">NO_IMAGE_SELECTED</h3>
+          <h3 class="empty-state-title">Upload images</h3>
           <p id="dropzone-instructions" class="empty-state-message">
             Drag and drop your images here, or click to select files
           </p>
-          <p class="dropzone-formats">PNG | JPEG | WEBP | GIF | BMP | TIFF | AVIF</p>
+          <p class="dropzone-formats">PNG | JPEG | WEBP | GIF | AVIF</p>
           <div class="dropzone-status sr-only" aria-live="polite"></div>
         </div>
       </div>

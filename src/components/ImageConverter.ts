@@ -79,6 +79,23 @@ export class ImageConverter extends HTMLElement {
 		}
 	}
 
+	private getErrorMessage(error: unknown, fallback: string): string {
+		return error instanceof Error && error.message ? error.message : fallback;
+	}
+
+	private escapeHtml(value: string): string {
+		return value.replace(/[&<>"']/g, (char) => {
+			const entities: Record<string, string> = {
+				"&": "&amp;",
+				"<": "&lt;",
+				">": "&gt;",
+				'"': "&quot;",
+				"'": "&#39;",
+			};
+			return entities[char];
+		});
+	}
+
 	private async handleFilesSelected(files: FileList) {
 		try {
 			this.announceStatus("Processing images, please wait...");
@@ -91,7 +108,10 @@ export class ImageConverter extends HTMLElement {
 					return imageInfo;
 				} catch (error) {
 					logApiError("processFile", error);
-					this.showMessage("[!] Error processing file", "error");
+					this.showMessage(
+						this.getErrorMessage(error, "Error processing file"),
+						"error",
+					);
 					return null;
 				}
 			});
@@ -102,19 +122,18 @@ export class ImageConverter extends HTMLElement {
 			this.updatePreviews();
 
 			if (validImages.length > 0) {
-				this.announceStatus(
-					`${validImages.length} image${validImages.length > 1 ? "s" : ""} loaded successfully`,
-				);
-				this.showMessage(
-					`[OK] ${validImages.length} image${validImages.length > 1 ? "s" : ""} loaded`,
-					"success",
-				);
+				const summary = `${validImages.length} image${validImages.length > 1 ? "s" : ""} loaded`;
+				this.announceStatus(summary);
+				this.showMessage(summary, "success");
 			}
 
 			this.updateStatus("idle");
 		} catch (error) {
 			logApiError("selectFiles", error);
-			this.showMessage("[!] Error selecting files", "error");
+			this.showMessage(
+				this.getErrorMessage(error, "Error selecting files"),
+				"error",
+			);
 			this.updateStatus("error");
 			this.announceStatus("Error loading images.");
 		}
@@ -133,7 +152,7 @@ export class ImageConverter extends HTMLElement {
 
 	private async handleConvertClick() {
 		if (this.images.length === 0) {
-			this.showMessage("[!] No images selected for conversion", "error");
+			this.showMessage("No images selected for conversion", "error");
 			this.announceStatus("Error: No images selected");
 			return;
 		}
@@ -152,7 +171,7 @@ export class ImageConverter extends HTMLElement {
 				convertButton.setAttribute("aria-busy", "true");
 				convertButton.innerHTML = `
             <span class="loader-spinner"></span>
-            CONVERTING...
+            Converting...
           `;
 			}
 
@@ -161,7 +180,7 @@ export class ImageConverter extends HTMLElement {
 			this.updateStatus("success");
 			this.announceStatus(`${this.images.length} images converted. ZIP ready.`);
 			this.showMessage(
-				`[OK] ${this.images.length} images converted successfully`,
+				`${this.images.length} images converted successfully`,
 				"success",
 			);
 			this.createDownloadLink(zipUrl);
@@ -169,11 +188,14 @@ export class ImageConverter extends HTMLElement {
 			if (convertButton) {
 				convertButton.disabled = false;
 				convertButton.setAttribute("aria-busy", "false");
-				convertButton.innerHTML = "CONVERT_IMAGES";
+				convertButton.innerHTML = "Convert Images";
 			}
 		} catch (error) {
 			logApiError("convertImages", error);
-			this.showMessage("[!] Error converting images", "error");
+			this.showMessage(
+				this.getErrorMessage(error, "Error converting images"),
+				"error",
+			);
 			this.announceStatus("Error during conversion.");
 			this.updateStatus("error");
 
@@ -183,7 +205,7 @@ export class ImageConverter extends HTMLElement {
 			if (convertButton) {
 				convertButton.disabled = false;
 				convertButton.setAttribute("aria-busy", "false");
-				convertButton.innerHTML = "CONVERT_IMAGES";
+				convertButton.innerHTML = "Convert Images";
 			}
 		}
 	}
@@ -194,17 +216,31 @@ export class ImageConverter extends HTMLElement {
 		downloadsContainer.setAttribute("role", "region");
 		downloadsContainer.setAttribute("aria-label", "Download links");
 
-		downloadsContainer.innerHTML = `
-        <h3>AVAILABLE_DOWNLOADS</h3>
-        <ul class="downloads-list" aria-labelledby="download-heading">
-          <li>
-            <a href="${zipUrl}" class="download-link" target="_blank" aria-label="Download ZIP">
-              <tn-icon name="download" size="16"></tn-icon>
-              DOWNLOAD_ALL_ZIP
-            </a>
-          </li>
-        </ul>
-      `;
+		const heading = document.createElement("h3");
+		heading.textContent = "Available downloads";
+
+		const list = document.createElement("ul");
+		list.className = "downloads-list";
+		list.setAttribute("aria-label", "Download links");
+
+		const item = document.createElement("li");
+		const link = document.createElement("a");
+		link.className = "download-link";
+		link.href = zipUrl;
+		link.target = "_blank";
+		link.rel = "noopener noreferrer";
+		link.setAttribute("aria-label", "Download ZIP");
+
+		const icon = document.createElement("tn-icon");
+		icon.setAttribute("name", "download");
+		icon.setAttribute("size", "16");
+		link.appendChild(icon);
+		link.appendChild(document.createTextNode("Download all (ZIP)"));
+
+		item.appendChild(link);
+		list.appendChild(item);
+		downloadsContainer.appendChild(heading);
+		downloadsContainer.appendChild(list);
 
 		const existingContainer = this.querySelector(".downloads-container");
 		if (existingContainer) {
@@ -234,7 +270,7 @@ export class ImageConverter extends HTMLElement {
 			noImagesElement.setAttribute("role", "status");
 			noImagesElement.innerHTML = `
           <tn-icon name="image" size="48" color="var(--text-muted)"></tn-icon>
-          <p>NO_IMAGES_SELECTED</p>
+          <p>No images selected yet</p>
         `;
 			previewArea.appendChild(noImagesElement);
 			return;
@@ -259,7 +295,7 @@ export class ImageConverter extends HTMLElement {
             <div class="preview-actions">
               <button class="btn-outline preview-remove" data-id="${image.id}" aria-label="Remove image ${image.name}">
                 <tn-icon name="trash" size="14"></tn-icon>
-                REMOVE
+                Remove
               </button>
             </div>
           `;
@@ -281,7 +317,7 @@ export class ImageConverter extends HTMLElement {
 		const imageName = imageToRemove?.name || "Image";
 		this.images = this.images.filter((img) => img.id !== id);
 		this.updatePreviews();
-		this.showMessage(`[OK] Image ${imageName} removed`, "success");
+		this.showMessage(`Image ${imageName} removed`, "success");
 		this.announceStatus(
 			`Image ${imageName} removed. ${this.images.length} remaining.`,
 		);
@@ -315,7 +351,11 @@ export class ImageConverter extends HTMLElement {
 			this.appendChild(messageElement);
 		}
 		messageElement.className = `message message-${type}`;
-		messageElement.textContent = text;
+		const iconName = type === "error" ? "alert" : "check";
+		messageElement.innerHTML = `
+        <tn-icon name="${iconName}" size="16"></tn-icon>
+        <span>${this.escapeHtml(text)}</span>
+      `;
 		setTimeout(() => {
 			if (messageElement && messageElement.parentNode) {
 				messageElement.parentNode.removeChild(messageElement);
@@ -327,18 +367,18 @@ export class ImageConverter extends HTMLElement {
 		this.innerHTML = `
       <div class="app-container">
         <header class="header">
-          <h1>IMAGE_CONVERTER</h1>
+          <h1>Image Converter</h1>
           <p>Convert your images to different formats in seconds</p>
         </header>
 
-        <div class="converter-container" role="application">
+        <div class="converter-container">
           <section class="upload-section">
             <h2 id="upload-heading" class="sr-only">Upload images</h2>
             <drop-zone aria-labelledby="upload-heading"></drop-zone>
           </section>
 
           <section class="preview-section">
-            <h2>SELECTED_IMAGES</h2>
+            <h2>Selected images</h2>
             <div class="preview-area" aria-labelledby="preview-heading"></div>
           </section>
 
@@ -348,7 +388,7 @@ export class ImageConverter extends HTMLElement {
 
           <div class="action-container">
             <button id="convert-button" class="btn-primary" aria-describedby="convert-description">
-              CONVERT_IMAGES
+              Convert Images
             </button>
             <span id="convert-description" class="sr-only">
               Convert all selected images to the chosen format

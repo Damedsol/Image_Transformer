@@ -28,6 +28,15 @@ describe("ConversionOptions (SNA-02 + SNA-20 + SNA-27 + SNA-18)", () => {
 		expect(formats).toContain("avif");
 	});
 
+	it("does not offer bmp or tiff formats (aligned with backend)", () => {
+		const el = mount("conversion-options");
+		const select = el.querySelector("#format") as HTMLSelectElement;
+
+		const formats = Array.from(select.options).map((o) => o.value);
+		expect(formats).not.toContain("bmp");
+		expect(formats).not.toContain("tiff");
+	});
+
 	it("renders quality slider with SNA-27 custom styling", () => {
 		const el = mount("conversion-options");
 		const slider = el.querySelector("#quality") as HTMLInputElement;
@@ -37,6 +46,15 @@ describe("ConversionOptions (SNA-02 + SNA-20 + SNA-27 + SNA-18)", () => {
 		expect(Number(slider.min)).toBe(10);
 		expect(Number(slider.max)).toBe(100);
 		expect(Number(slider.step)).toBe(1);
+	});
+
+	it("renders quality slider with ARIA value attributes (SNA-27)", () => {
+		const el = mount("conversion-options");
+		const slider = el.querySelector("#quality") as HTMLInputElement;
+
+		expect(slider.getAttribute("aria-valuemin")).toBe("10");
+		expect(slider.getAttribute("aria-valuemax")).toBe("100");
+		expect(slider.getAttribute("aria-valuenow")).toBe("90");
 	});
 
 	it("displays current quality value next to slider", () => {
@@ -85,6 +103,34 @@ describe("ConversionOptions (SNA-02 + SNA-20 + SNA-27 + SNA-18)", () => {
 		expect(callback).toHaveBeenCalledWith(
 			expect.objectContaining({ quality: 75 }),
 		);
+	});
+
+	it("marks width input as invalid with inline message when below minimum", () => {
+		const el = mount("conversion-options");
+		const width = el.querySelector("#width") as HTMLInputElement;
+
+		width.value = "0";
+		width.dispatchEvent(new Event("input"));
+
+		expect(width.getAttribute("aria-invalid")).toBe("true");
+		const error = el.querySelector("#width-error");
+		expect(error).not.toBeNull();
+		expect(error?.textContent?.trim().length).toBeGreaterThan(0);
+	});
+
+	it("clears width validation when value becomes valid", () => {
+		const el = mount("conversion-options");
+		const width = el.querySelector("#width") as HTMLInputElement;
+
+		width.value = "0";
+		width.dispatchEvent(new Event("input"));
+		expect(width.getAttribute("aria-invalid")).toBe("true");
+
+		width.value = "800";
+		width.dispatchEvent(new Event("input"));
+
+		expect(width.getAttribute("aria-invalid")).toBe("false");
+		expect(el.querySelector("#width-error")).toBeNull();
 	});
 
 	it("has all form labels properly associated with inputs", () => {

@@ -25,12 +25,12 @@ describe("DropZone (SNA-03 + SNA-35)", () => {
 		expect(emptyState?.classList.contains("empty-state")).toBe(true);
 	});
 
-	it("shows NO_IMAGE_SELECTED title in IBM Plex Mono (SNA-35)", () => {
+	it("shows 'Upload images' title in IBM Plex Mono (SNA-35)", () => {
 		const el = mount("drop-zone");
 		const title = el.querySelector(".empty-state-title");
 
 		expect(title).not.toBeNull();
-		expect(title?.textContent).toMatch(/NO_IMAGE/i);
+		expect(title?.textContent).toMatch(/Upload images/i);
 	});
 
 	it("accepts valid image files via setOnFilesSelectedCallback", () => {

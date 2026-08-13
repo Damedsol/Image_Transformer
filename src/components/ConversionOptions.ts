@@ -49,8 +49,10 @@ export class ConversionOptions extends HTMLElement {
 
 		if (formatSelect) formatSelect.value = this.options.format;
 		if (qualityInput && qualityValue) {
-			qualityInput.value = String(this.options.quality || 90);
-			qualityValue.textContent = String(this.options.quality || 90);
+			const quality = String(this.options.quality || 90);
+			qualityInput.value = quality;
+			qualityInput.setAttribute("aria-valuenow", quality);
+			qualityValue.textContent = quality;
 		}
 		if (maintainAspectRatio)
 			maintainAspectRatio.checked = this.options.maintainAspectRatio ?? true;
@@ -74,6 +76,7 @@ export class ConversionOptions extends HTMLElement {
 		if (qualityInput && qualityValue) {
 			qualityInput.addEventListener("input", () => {
 				this.options.quality = parseInt(qualityInput.value, 10);
+				qualityInput.setAttribute("aria-valuenow", qualityInput.value);
 				qualityValue.textContent = qualityInput.value;
 				this.onChange(this.options);
 			});
@@ -92,44 +95,64 @@ export class ConversionOptions extends HTMLElement {
 		const widthInput = this.querySelector("#width") as HTMLInputElement;
 		if (widthInput) {
 			widthInput.addEventListener("input", () => {
-				this.options.width = widthInput.value
-					? parseInt(widthInput.value, 10)
-					: undefined;
-				this.onChange(this.options);
+				this.validateDimension(widthInput, "width", "Width");
 			});
 		}
 
 		const heightInput = this.querySelector("#height") as HTMLInputElement;
 		if (heightInput) {
 			heightInput.addEventListener("input", () => {
-				this.options.height = heightInput.value
-					? parseInt(heightInput.value, 10)
-					: undefined;
-				this.onChange(this.options);
+				this.validateDimension(heightInput, "height", "Height");
 			});
 		}
+	}
+
+	private validateDimension(
+		input: HTMLInputElement,
+		key: "width" | "height",
+		label: string,
+	) {
+		const errorId = `${key}-error`;
+		const rawValue = input.value.trim();
+		const num = rawValue === "" ? undefined : parseInt(rawValue, 10);
+		const isValid =
+			num === undefined || (Number.isInteger(num) && num >= 1 && num <= 10000);
+
+		input.setAttribute("aria-invalid", String(!isValid));
+		this.options[key] = isValid ? num : undefined;
+
+		const existingError = this.querySelector(`#${errorId}`);
+		if (isValid) {
+			existingError?.remove();
+		} else if (!existingError) {
+			const error = document.createElement("span");
+			error.id = errorId;
+			error.className = "input-error";
+			error.setAttribute("role", "alert");
+			error.textContent = `${label} must be a whole number between 1 and 10000`;
+			input.insertAdjacentElement("afterend", error);
+		}
+		this.onChange(this.options);
 	}
 
 	private render() {
 		this.innerHTML = `
       <div class="options-container" role="region" aria-label="Conversion options">
-        <h2>CONVERSION_OPTIONS</h2>
+        <h2>Conversion options</h2>
 
         <div class="form-group">
-          <label for="format" class="form-label">OUTPUT_FORMAT</label>
+          <label for="format" class="form-label">Output format</label>
           <select id="format" class="form-select" aria-label="Select output format">
             <option value="png">PNG</option>
             <option value="jpeg">JPEG</option>
             <option value="webp">WEBP</option>
             <option value="gif">GIF</option>
-            <option value="bmp">BMP</option>
-            <option value="tiff">TIFF</option>
             <option value="avif">AVIF</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label for="quality" class="form-label" id="quality-label">QUALITY: <span id="quality-value">90</span>%</label>
+          <label for="quality" class="form-label" id="quality-label">Quality: <span id="quality-value">90</span>%</label>
           <input
             type="range"
             id="quality"
@@ -138,34 +161,37 @@ export class ConversionOptions extends HTMLElement {
             step="1"
             value="90"
             aria-labelledby="quality-label"
+            aria-valuemin="10"
+            aria-valuemax="100"
+            aria-valuenow="90"
           />
         </div>
 
         <div class="form-group">
           <fieldset>
-            <legend>DIMENSIONS (OPTIONAL)</legend>
+            <legend>Dimensions (optional)</legend>
 
             <div class="dimensions-wrapper">
               <div class="dimensions-container">
                 <div class="form-group">
-                  <label for="width" class="form-label">WIDTH (PX)</label>
+                  <label for="width" class="form-label">Width (px)</label>
                   <input
                     type="number"
                     id="width"
                     class="input-field"
-                    placeholder="AUTO"
+                    placeholder="Auto"
                     min="1"
                     aria-label="Width in pixels"
                   />
                 </div>
 
                 <div class="form-group">
-                  <label for="height" class="form-label">HEIGHT (PX)</label>
+                  <label for="height" class="form-label">Height (px)</label>
                   <input
                     type="number"
                     id="height"
                     class="input-field"
-                    placeholder="AUTO"
+                    placeholder="Auto"
                     min="1"
                     aria-label="Height in pixels"
                   />
@@ -181,7 +207,7 @@ export class ConversionOptions extends HTMLElement {
                   aria-label="Maintain aspect ratio"
                 />
                 <label for="maintain-aspect-ratio" class="form-check-label">
-                  MAINTAIN_ASPECT_RATIO
+                  Maintain aspect ratio
                 </label>
               </div>
             </div>

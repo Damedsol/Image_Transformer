@@ -4,7 +4,23 @@
 import "../../components/DropZone";
 import "../../components/ImageConverter";
 import "../../components/ConversionOptions";
-import { mount } from "../helpers/dom";
+import { convertImagesAPI } from "../../utils/api";
+import { mount, createMockFile } from "../helpers/dom";
+
+vi.mock("../../utils/api", () => ({
+	convertImagesAPI: vi.fn(),
+}));
+
+const mockImage = {
+	id: "img-1",
+	file: createMockFile("test.png", "image/png"),
+	preview: "data:image/png;base64,iVBORw0KGgo=",
+	name: "test.png",
+	size: 1024,
+	type: "image/png",
+	dimensions: { width: 100, height: 100 },
+	conversionOptions: { format: "png", quality: 90, maintainAspectRatio: true },
+};
 
 describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 	beforeEach(() => {
@@ -16,7 +32,7 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 		const title = el.querySelector("h1");
 
 		expect(title).not.toBeNull();
-		expect(title?.textContent).toMatch(/IMAGE_CONVERTER/i);
+		expect(title?.textContent).toMatch(/Image Converter/i);
 	});
 
 	it("renders convert button with btn-primary styling (SNA-01)", () => {
@@ -25,7 +41,7 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 
 		expect(btn).not.toBeNull();
 		expect(btn.classList.contains("btn-primary")).toBe(true);
-		expect(btn.textContent).toMatch(/CONVERT_IMAGES/i);
+		expect(btn.textContent).toMatch(/Convert Images/i);
 	});
 
 	it("disables convert button and sets aria-busy during processing (SNA-15)", () => {
@@ -34,7 +50,7 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 
 		btn.disabled = true;
 		btn.setAttribute("aria-busy", "true");
-		btn.innerHTML = `<span class="loader-spinner"></span> CONVERTING...`;
+		btn.innerHTML = `<span class="loader-spinner"></span> Converting...`;
 
 		expect(btn.disabled).toBe(true);
 		expect(btn.getAttribute("aria-busy")).toBe("true");
@@ -43,32 +59,33 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 		expect(spinner).not.toBeNull();
 	});
 
-	it("shows alert messages with [OK] prefix for success (SNA-07)", () => {
+	it("renders success message without [OK] prefix (SNA-07)", () => {
 		const el = mount("image-converter");
 
 		const msg = document.createElement("div");
 		msg.className = "message message-success";
 		msg.setAttribute("role", "alert");
-		msg.textContent = "[OK] Images converted successfully";
+		msg.textContent = "2 images converted successfully";
 		el.appendChild(msg);
 
 		const message = el.querySelector(".message-success");
 		expect(message).not.toBeNull();
-		expect(message?.textContent).toMatch(/^\[OK\]/);
+		expect(message?.textContent).not.toMatch(/^\[OK\]/);
+		expect(message?.textContent).toMatch(/converted successfully/i);
 	});
 
-	it("shows alert messages with [!] prefix for errors (SNA-07)", () => {
+	it("renders error message without [!] prefix (SNA-07)", () => {
 		const el = mount("image-converter");
 
 		const msg = document.createElement("div");
 		msg.className = "message message-error";
 		msg.setAttribute("role", "alert");
-		msg.textContent = "[!] Conversion failed";
+		msg.textContent = "Conversion failed";
 		el.appendChild(msg);
 
 		const message = el.querySelector(".message-error");
 		expect(message).not.toBeNull();
-		expect(message?.textContent).toMatch(/^\[!\]/);
+		expect(message?.textContent).not.toMatch(/^\[!\]/);
 	});
 
 	it("renders download link as btn-outline after successful conversion", () => {
@@ -77,7 +94,7 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 		const downloadLink = document.createElement("a");
 		downloadLink.className = "download-link btn-outline";
 		downloadLink.href = "/temp/converted.zip";
-		downloadLink.textContent = "DOWNLOAD_ZIP";
+		downloadLink.textContent = "Download all (ZIP)";
 		el.appendChild(downloadLink);
 
 		const link = el.querySelector(".download-link");
@@ -89,5 +106,46 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 		const el = mount("image-converter");
 		expect(el.getAttribute("role")).toBe("region");
 		expect(el.getAttribute("aria-label")).toBe("Image converter");
+	});
+
+	it("does not mark the converter container as role=application", () => {
+		const el = mount("image-converter");
+		const container = el.querySelector(".converter-container");
+		expect(container?.getAttribute("role")).not.toBe("application");
+	});
+
+	it("shows success message and download link after successful conversion", async () => {
+		const el = mount("image-converter");
+		(el as unknown as { images: (typeof mockImage)[] }).images = [mockImage];
+		vi.mocked(convertImagesAPI).mockResolvedValue("/temp/output/conv.zip");
+
+		await (
+			el as unknown as { handleConvertClick: () => Promise<void> }
+		).handleConvertClick();
+
+		const msg = el.querySelector(".message-success");
+		expect(msg).not.toBeNull();
+		expect(msg?.textContent).not.toMatch(/^\[OK\]/);
+		expect(msg?.textContent).toMatch(/converted successfully/i);
+
+		const link = el.querySelector(".download-link");
+		expect(link).not.toBeNull();
+	});
+
+	it("shows the real backend error message when conversion fails", async () => {
+		const el = mount("image-converter");
+		(el as unknown as { images: (typeof mockImage)[] }).images = [mockImage];
+		vi.mocked(convertImagesAPI).mockRejectedValue(
+			new Error("Daily quota exceeded (100 images)"),
+		);
+
+		await (
+			el as unknown as { handleConvertClick: () => Promise<void> }
+		).handleConvertClick();
+
+		const msg = el.querySelector(".message-error");
+		expect(msg).not.toBeNull();
+		expect(msg?.textContent).toContain("Daily quota exceeded");
+		expect(msg?.textContent).not.toMatch(/^\[!\]/);
 	});
 });

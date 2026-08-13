@@ -69,7 +69,7 @@ export class ImagePreview extends HTMLElement {
             aria-label="Remove image ${name}"
           >
             <tn-icon name="trash" size="14"></tn-icon>
-            REMOVE
+            Remove
           </button>
         </div>
       </div>

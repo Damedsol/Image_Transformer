@@ -19,24 +19,45 @@
   </head>
 
   <body>
-    <a href="#main-content" class="skip-link">SKIP_TO_CONTENT</a>
-
-    <header class="app-header">
-      <button
-        id="open-a11y-dialog"
-        class="a11y-button"
-        aria-label="Open accessibility options"
-        aria-haspopup="dialog"
-      >
-        <tn-icon name="settings" size="20"></tn-icon>
-      </button>
-    </header>
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
     <main id="main-content" class="app-main">
-      <div id="app" aria-live="polite"></div>
+      <div id="app"></div>
     </main>
 
     <footer class="app-footer">
+      <div class="footer-content">
+        <p class="footer-copyright">
+          © 2026 Created by
+          <a
+            href="https://github.com/Damedsol/Image_Transformer"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Damedsol</a
+          >
+          · Licensed under
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >CC BY 4.0</a
+          >
+        </p>
+        <nav class="footer-links" aria-label="External links">
+          <a
+            href="https://github.com/Damedsol/Image_Transformer"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub</a
+          >
+          <a
+            href="https://www.linkedin.com/in/david-medina-soloza/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >LinkedIn</a
+          >
+        </nav>
+      </div>
       <div
         id="offline-indicator"
         class="offline-indicator"
@@ -44,92 +65,12 @@
         aria-live="assertive"
         role="status"
       >
-        [!] NO_CONNECTION
+        You are offline
       </div>
     </footer>
 
     <div id="status-announcer" class="sr-only" aria-live="polite" role="status"></div>
 
-    <!-- Accessibility Dialog (SNA-06 Modal) -->
-    <div
-      id="a11y-dialog"
-      class="a11y-dialog"
-      role="dialog"
-      aria-labelledby="a11y-dialog-title"
-      aria-hidden="true"
-      hidden
-      aria-modal="true"
-    >
-      <div class="a11y-dialog-content">
-        <div class="modal-header">
-          <h2 id="a11y-dialog-title" class="modal-title">ACCESSIBILITY_OPTIONS</h2>
-          <button id="close-a11y-dialog" class="modal-close" aria-label="Close">
-            <tn-icon name="x" size="20"></tn-icon>
-          </button>
-        </div>
-        <div class="modal-body">
-          <div class="a11y-options">
-            <div class="a11y-option">
-              <label for="high-contrast">
-                <input type="checkbox" id="high-contrast" class="form-check-input" aria-describedby="high-contrast-desc" />
-                <span>HIGH_CONTRAST</span>
-              </label>
-              <span id="high-contrast-desc" class="option-description">Increases color contrast for better readability</span>
-            </div>
-            <div class="a11y-option">
-              <label for="font-size">TEXT_SIZE</label>
-              <select id="font-size" class="form-select" aria-describedby="font-size-desc" style="width:auto">
-                <option value="default">DEFAULT</option>
-                <option value="large">LARGE</option>
-                <option value="larger">EXTRA_LARGE</option>
-              </select>
-              <span id="font-size-desc" class="option-description">Changes text size throughout the application</span>
-            </div>
-            <div class="a11y-option">
-              <label for="dyslexic-font">
-                <input type="checkbox" id="dyslexic-font" class="form-check-input" aria-describedby="dyslexic-font-desc" />
-                <span>DYSLEXIC_FONT</span>
-              </label>
-              <span id="dyslexic-font-desc" class="option-description">Uses a font designed for dyslexia</span>
-            </div>
-            <div class="a11y-option">
-              <label for="reduce-motion">
-                <input type="checkbox" id="reduce-motion" class="form-check-input" aria-describedby="reduce-motion-desc" />
-                <span>REDUCE_MOTION</span>
-              </label>
-              <span id="reduce-motion-desc" class="option-description">Minimizes animations and motion effects</span>
-            </div>
-            <div class="a11y-option">
-              <label for="text-spacing">TEXT_SPACING</label>
-              <select id="text-spacing" class="form-select" aria-describedby="text-spacing-desc" style="width:auto">
-                <option value="default">DEFAULT</option>
-                <option value="medium">MEDIUM</option>
-                <option value="large">WIDE</option>
-              </select>
-              <span id="text-spacing-desc" class="option-description">Adjusts spacing between letters and words</span>
-            </div>
-          </div>
-          <div class="keyboard-shortcuts">
-            <h3>KEYBOARD_SHORTCUTS</h3>
-            <ul>
-              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>A</kbd>: Open/close accessibility options</li>
-              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>C</kbd>: Toggle high contrast mode</li>
-              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>D</kbd>: Load an image from the device</li>
-              <li><kbd>CTRL</kbd> + <kbd>ALT</kbd> + <kbd>S</kbd>: Start image conversion</li>
-            </ul>
-            <p class="shortcut-note">On Mac, use <kbd>CMD</kbd> instead of <kbd>CTRL</kbd></p>
-          </div>
-        </div>
-      </div>
-    </div>
-
     <script type="module" src="/src/main.ts"></script>
-    <script>
-      if (!("IntersectionObserver" in window)) {
-        document.write(
-          '<script src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver"><\/script>'
-        );
-      }
-    </script>
   </body>
 </html>
