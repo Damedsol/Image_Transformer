@@ -53,3 +53,4 @@ ignore:
   - .ia
   - assets
   - src/__tests__
+  - backend/src/__tests__
