@@ -30,7 +30,7 @@ export function setupOfflineDetection() {
 			}
 			if (statusAnnouncer) {
 				statusAnnouncer.textContent =
-					"Conexión a internet restaurada. Todas las funciones están disponibles.";
+					"Internet connection restored. All features are available.";
 			}
 		} else {
 			// Estamos offline
@@ -43,7 +43,7 @@ export function setupOfflineDetection() {
 			}
 			if (statusAnnouncer) {
 				statusAnnouncer.textContent =
-					"Sin conexión a internet. Algunas funciones pueden no estar disponibles.";
+					"No internet connection. Some features may be unavailable.";
 			}
 		}
 	};

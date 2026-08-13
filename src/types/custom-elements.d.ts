@@ -9,7 +9,7 @@ declare global {
 		"drop-zone": DropZoneElement;
 		"image-preview": ImagePreviewElement;
 		"conversion-options": ConversionOptionsElement;
-		"image-converter": typeof import("../components/ImageConverter").ImageConverter;
-		"tn-icon": typeof import("../components/TnIcon").TnIcon;
+		"image-converter": import("../components/ImageConverter").ImageConverter;
+		"tn-icon": import("../components/TnIcon").TnIcon;
 	}
 }
