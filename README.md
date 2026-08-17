@@ -185,7 +185,22 @@ For in-depth architectural design, software flow charts, and logging behaviors, 
 ## 📄 License
 
 This project is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.  
-👉 **[Read Full LICENSE.md](file:///projects/Github/imageTransformer/LICENSE.md)**
+👉 **[Read Full LICENSE.md](./LICENSE.md)**
+
+---
+
+## 🎨 Fonts & Third-Party Licenses
+
+The bundled fonts and runtime dependencies are redistributed under their own licenses:
+
+- **Figtree** — SIL Open Font License 1.1 (`assets/fonts/Figtree/OFL.txt`)
+- **IBM Plex Mono** — SIL Open Font License 1.1 (`assets/fonts/IBM_Plex_Mono/OFL.txt`)
+- **Lucide** — ISC
+- **Express, Multer, Zod, Pino, Helmet, CORS, Archiver, express-rate-limit** — MIT
+- **Sharp** — Apache-2.0
+- **dotenv** — BSD-2-Clause
+
+See [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md) for the full list.
 
 ---
 

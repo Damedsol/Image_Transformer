@@ -7,7 +7,7 @@
 project_name: "imageTransformer"
 version: "1.3.2"
 type: "monorepo (pnpm workspace v11)"
-license: "CC BY-NC-SA 4.0"
+license: "CC BY 4.0"
 
 tech_stack:
   - "TypeScript 6 (strict, isolatedModules, bundler mode)"

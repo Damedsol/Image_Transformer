@@ -2,6 +2,7 @@
 	"name": "imagetransformer",
 	"private": true,
 	"version": "1.3.2",
+	"license": "CC-BY-4.0",
 	"type": "module",
 	"scripts": {
 		"dev": "concurrently -k -n frontend,backend -c cyan,green \"pnpm dev:frontend\" \"pnpm dev:backend\"",
