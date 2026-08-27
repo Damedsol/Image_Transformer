@@ -26,7 +26,7 @@ const convertRateLimiter = rateLimit({
 	handler: (_req, _res, next) => {
 		next(
 			new AppError(
-				"Demasiadas solicitudes de conversión. Por favor, intente más tarde.",
+				"Too many conversion requests. Please try again later.",
 				429,
 				{
 					code: "RATE_LIMIT_EXCEEDED",

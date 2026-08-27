@@ -34,14 +34,14 @@ export class AppError extends Error implements ApiError {
 	/**
 	 * Crea un error de recurso no encontrado (404 Not Found)
 	 */
-	static notFound(message = "Recurso no encontrado"): AppError {
+	static notFound(message = "Resource not found"): AppError {
 		return new AppError(message, 404, { code: "NOT_FOUND" });
 	}
 
 	/**
 	 * Crea un error de limitación de tasa (429 Too Many Requests)
 	 */
-	static tooManyRequests(message = "Demasiadas solicitudes"): AppError {
+	static tooManyRequests(message = "Too many requests"): AppError {
 		return new AppError(message, 429, { code: "TOO_MANY_REQUESTS" });
 	}
 
@@ -49,7 +49,7 @@ export class AppError extends Error implements ApiError {
 	 * Crea un error interno del servidor (500 Internal Server Error)
 	 */
 	static internal(
-		message = "Error interno del servidor",
+		message = "Internal server error",
 		details?: unknown,
 	): AppError {
 		return new AppError(message, 500, { code: "INTERNAL_ERROR", details });

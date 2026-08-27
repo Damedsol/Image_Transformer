@@ -63,13 +63,13 @@ export const convertImagesAPI = async (
 			);
 		}
 
-		logger.debug("Enviando solicitud al servidor:", {
-			formato: options.format,
-			calidad: options.quality,
-			ancho: options.width,
-			alto: options.height,
-			mantenerAspecto: options.maintainAspectRatio,
-			numArchivos: files.length,
+		logger.debug("Sending request to server:", {
+			format: options.format,
+			quality: options.quality,
+			width: options.width,
+			height: options.height,
+			maintainAspectRatio: options.maintainAspectRatio,
+			fileCount: files.length,
 		});
 
 		// Enviar la solicitud a la API
@@ -79,13 +79,14 @@ export const convertImagesAPI = async (
 		});
 
 		if (!response.ok) {
-			let errorMessage = "Error al convertir las imágenes";
+			let errorMessage = "Failed to convert the images";
 			try {
 				const errorData = (await response.json()) as {
-					error?: string;
+					error?: { message?: string };
 					message?: string;
 				};
-				errorMessage = errorData.error || errorData.message || errorMessage;
+				errorMessage =
+					errorData.error?.message || errorData.message || errorMessage;
 			} catch (parseError) {
 				const error =
 					parseError instanceof Error
@@ -99,7 +100,7 @@ export const convertImagesAPI = async (
 		const data = (await response.json()) as ConversionResponse;
 
 		if (!data.success) {
-			throw new Error(data.message || "Error en la conversión de imágenes");
+			throw new Error(data.message || "Image conversion failed");
 		}
 
 		// Construir la URL completa para descargar el ZIP
@@ -128,7 +129,7 @@ export const getAvailableFormats = async (): Promise<string[]> => {
 		const response = await fetch(`${API_URL}/formats`);
 
 		if (!response.ok) {
-			throw new Error("Error al obtener los formatos disponibles");
+			throw new Error("Failed to fetch the available formats");
 		}
 
 		const data = (await response.json()) as { formats?: string[] };
@@ -136,6 +137,6 @@ export const getAvailableFormats = async (): Promise<string[]> => {
 	} catch (error) {
 		const err = error instanceof Error ? error : new Error(String(error));
 		logApiError("getFormats", err);
-		return ["jpeg", "png", "webp", "avif", "gif"]; // Formatos por defecto
+		return ["jpeg", "png", "webp", "avif", "gif"]; // Default formats
 	}
 };

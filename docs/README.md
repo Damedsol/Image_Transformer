@@ -71,7 +71,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ### 📊 **Performance & Quality**
 - Lightning-fast asynchronous queue processing.
-- Automatic background cleanup of temporary uploads/results.
+- Automatic background cleanup of temporary uploads/results: per-request deletion on success/error, a startup sweep for files orphaned by crashes/restarts, and a periodic sweep for files older than `TEMP_FILE_MAX_AGE_MS` (default 30 min) — see [README → Temp File Lifecycle](../README.md).
 - Code quality secured via Biome formatters, Oxlint linters, and Husky hooks.
 - Conditional logging causing zero overhead in production.
 
@@ -165,4 +165,4 @@ docker system prune -f
 ## 📄 License & Contact
 
 This project is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)**.  
-👉 Developed by **Damedsol**.
+👉 Developed by **Damedsol** · [GitHub](https://github.com/Damedsol/Image_Transformer) · [LinkedIn](https://www.linkedin.com/in/david-medina-soloza/).

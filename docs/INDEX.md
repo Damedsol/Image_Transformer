@@ -58,6 +58,16 @@ NODE_ENV=production
 LOG_LEVEL=silent
 ```
 
+#### Temp File Lifecycle
+```bash
+# ZIP download window before deletion (ms)
+TEMP_FILES_CLEANUP_MS=300000
+# Periodic temp directory sweep interval (ms)
+TEMP_CLEANUP_INTERVAL_MS=300000
+# Max age of a temp file before the periodic sweep removes it (ms)
+TEMP_FILE_MAX_AGE_MS=1800000
+```
+
 ### Docker Compose Environments Setup
 
 #### Development Configuration

@@ -99,6 +99,22 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
 
 ---
 
+## 🗂️ Temporary File Lifecycle
+
+Uploaded images and generated ZIPs live under `backend/temp/` (`uploads/` + `output/`) and are removed automatically so nothing accumulates on the server:
+
+- **Per-request cleanup:** on any success or error, all uploaded originals and processed files are deleted immediately (`TEMP_FILES_CLEANUP_MS` only delays ZIP deletion to allow the download, default 5 min).
+- **Startup sweep:** on boot, everything left in `temp/` from a previous session is removed (timers from a crashed/restarted process cannot run).
+- **Periodic sweep:** a background interval deletes any file older than the max age, covering edge cases where the per-file timer was lost.
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `TEMP_FILES_CLEANUP_MS` | `300000` | Delay before a generated ZIP is deleted (download window). |
+| `TEMP_CLEANUP_INTERVAL_MS` | `300000` | Interval of the periodic temp directory sweep. |
+| `TEMP_FILE_MAX_AGE_MS` | `1800000` | Max age for a temp file before the periodic sweep removes it. |
+
+---
+
 ## 📁 Project Structure
 
 ```
@@ -169,7 +185,22 @@ For in-depth architectural design, software flow charts, and logging behaviors, 
 ## 📄 License
 
 This project is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.  
-👉 **[Read Full LICENSE.md](file:///projects/Github/imageTransformer/LICENSE.md)**
+👉 **[Read Full LICENSE.md](./LICENSE.md)**
+
+---
+
+## 🎨 Fonts & Third-Party Licenses
+
+The bundled fonts and runtime dependencies are redistributed under their own licenses:
+
+- **Figtree** — SIL Open Font License 1.1 (`assets/fonts/Figtree/OFL.txt`)
+- **IBM Plex Mono** — SIL Open Font License 1.1 (`assets/fonts/IBM_Plex_Mono/OFL.txt`)
+- **Iconoir** — MIT (`assets/icons/` — vendored icon SVGs)
+- **Express, Multer, Zod, Pino, Helmet, CORS, Archiver, express-rate-limit** — MIT
+- **Sharp** — Apache-2.0
+- **dotenv** — BSD-2-Clause
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full list.
 
 ---
 
@@ -177,4 +208,4 @@ This project is licensed under the **Creative Commons Attribution 4.0 Internatio
 
 Developed with ❤️ by **Damedsol**:
 - **GitHub:** [@Damedsol](https://github.com/Damedsol)
-- **LinkedIn:** [Your Profile](https://www.linkedin.com/)
+- **LinkedIn:** [David Medina Soloza](https://www.linkedin.com/in/david-medina-soloza/)

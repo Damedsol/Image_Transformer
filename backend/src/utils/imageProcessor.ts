@@ -4,7 +4,6 @@ import fs from "fs";
 import archiver from "archiver";
 import { ConversionOptions, ImageFile, ConversionResult } from "./types.js";
 import { AppError } from "./apiError.js";
-import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import logger from "./logger.js";
@@ -12,9 +11,6 @@ import logger from "./logger.js";
 // Create equivalents to __dirname and __filename for ESM
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-
-// Load environment variables
-dotenv.config();
 
 // Configure Sharp limits based on environment variables
 const sharpConcurrency = parseInt(process.env.SHARP_CONCURRENCY || "1");
@@ -92,6 +88,13 @@ export const processImage = async (
 		logger.error({ err: error, imageFile }, "Error in processImage");
 		console.error("Error processing image:", error);
 
+		// Preserve typed AppError responses (status code + code) instead of
+		// wrapping them into a generic 500 (e.g. 413 DIMENSION_LIMIT_ERROR
+		// thrown by the explicit dimension check).
+		if (error instanceof AppError) {
+			throw error;
+		}
+
 		// Check if it's a memory or resource error
 		const errorMsg = (error as Error).message.toLowerCase();
 		if (
@@ -104,6 +107,21 @@ export const processImage = async (
 				413,
 				{
 					code: "RESOURCE_LIMIT_ERROR",
+				},
+			);
+		}
+
+		// Defense in depth: sharp may still reject an oversized image during
+		// processing even if metadata succeeded. Map it to a clean 413.
+		if (
+			errorMsg.includes("pixel limit") ||
+			errorMsg.includes("exceeds pixel")
+		) {
+			throw new AppError(
+				`Image dimensions exceed allowed limit (${MAX_WIDTH}x${MAX_HEIGHT})`,
+				413,
+				{
+					code: "DIMENSION_LIMIT_ERROR",
 				},
 			);
 		}
@@ -128,13 +146,15 @@ const processImageWithLimits = async (
 		throw new AppError("File path not allowed", 403);
 	}
 
-	// Get original image information
+	// Get original image information.
+	// NOTE: do NOT pass limitInputPixels here — sharp would throw a generic
+	// "Input image exceeds pixel limit" before the explicit dimension check
+	// below can produce a clean 413 DIMENSION_LIMIT_ERROR response.
 	logger.debug(
 		{ imagePath: imageFile.path },
 		"Getting original image metadata",
 	);
 	const imageInfo = await sharp(imageFile.path, {
-		limitInputPixels: MAX_DIMENSIONS, // Limit pixel size
 		sequentialRead: true, // Lower memory usage for large images
 	}).metadata();
 	logger.debug({ imageInfo }, "Metadata obtained");

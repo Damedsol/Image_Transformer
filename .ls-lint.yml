@@ -50,3 +50,7 @@ ignore:
   - backend/temp
   - .agents
   - .gemini
+  - .ia
+  - assets
+  - src/__tests__
+  - backend/src/__tests__

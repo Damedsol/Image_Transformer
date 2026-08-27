@@ -152,7 +152,7 @@ export const validateContentType = (allowedTypes: string[]): RequestHandler => {
 		) {
 			return next(
 				AppError.badRequest(
-					`Tipo de contenido no permitido. Permitidos: ${allowedTypes.join(", ")}`,
+					`Content type not allowed. Allowed: ${allowedTypes.join(", ")}`,
 				),
 			);
 		}

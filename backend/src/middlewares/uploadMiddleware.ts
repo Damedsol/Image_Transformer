@@ -68,7 +68,7 @@ const storage = multer.diskStorage({
 		const uniqueFilename = generateUniqueFilename(file.originalname);
 		logger.debug(
 			{ originalname: file.originalname, uniqueFilename },
-			"Generando nombre de archivo único",
+			"Generating unique file name",
 		);
 		cb(null, uniqueFilename);
 	},
@@ -90,10 +90,12 @@ const validateFileType = (
 		"image/jpg",
 		"image/png",
 		"image/webp",
+		"image/gif",
+		"image/avif",
 	];
 
 	// Lista de extensiones permitidas
-	const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+	const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"];
 
 	const mimetype = file.mimetype.toLowerCase();
 	const extension = path.extname(file.originalname).toLowerCase();
@@ -105,7 +107,7 @@ const validateFileType = (
 	) {
 		logger.debug(
 			{ filename: file.originalname },
-			"Tipo de archivo válido, aceptando provisionalmente",
+			"Valid file type, accepting temporarily",
 		);
 		cb(null, true); // Aceptar provisionalmente
 	} else {
@@ -115,7 +117,7 @@ const validateFileType = (
 		);
 		cb(
 			new AppError(
-				`Solo se permiten imágenes en formato ${allowedExtensions.join(", ")}`,
+				`Only image files are allowed: ${allowedExtensions.join(", ")}`,
 				400,
 			),
 		);

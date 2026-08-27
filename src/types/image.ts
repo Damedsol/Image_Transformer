@@ -1,14 +1,7 @@
 /**
  * Tipos de formato de imagen soportados
  */
-export type ImageFormat =
-	| "png"
-	| "jpeg"
-	| "webp"
-	| "gif"
-	| "bmp"
-	| "tiff"
-	| "avif";
+export type ImageFormat = "png" | "jpeg" | "webp" | "gif" | "avif";
 
 /**
  * Opciones de conversión de imagen

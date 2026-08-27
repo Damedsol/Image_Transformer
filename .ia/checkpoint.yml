@@ -1,0 +1,10 @@
+# Pipeline Checkpoint — imageTransformer
+
+pipeline:
+  status: "completed" # último paso completado: plan_completed | build_completed | reviewer_approved | completed
+  plan_file: "" # plan carried in-thread (2026-08-27 Lucide→Iconoir migration)
+  spec_file: ".ia/docs/specs/license-attribution.md"
+  adr_file: ".ia/docs/adr/0002-iconoir-icon-migration.md"
+  last_step: "scribe"
+  completed_at: "2026-08-27T16:20:00Z"
+  cycle_summary: "1 ciclo, 2 escalados (ID-01, ID-02), reviewer aprobado — migración Lucide→Iconoir (9 SVGs assets/icons/ vía ?raw, footer brand icons, lucide removido, docs alineadas)"
