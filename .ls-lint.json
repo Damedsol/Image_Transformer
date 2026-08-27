@@ -1,0 +1,35 @@
+{
+	"ls": {
+		".dir": "kebab-case",
+		"src/components": { ".ts": "PascalCase", ".tsx": "PascalCase" },
+		"src/utils": { ".ts": "camelCase", ".tsx": "camelCase" },
+		"backend/src/controllers": { ".ts": "camelCase" },
+		"backend/src/middlewares": { ".ts": "camelCase" },
+		"backend/src/routes": { ".ts": "camelCase" },
+		"backend/src/utils": { ".ts": "camelCase" },
+		".js": "kebab-case | camelCase",
+		".jsx": "kebab-case | camelCase",
+		".ts": "kebab-case | camelCase",
+		".tsx": "kebab-case | camelCase",
+		".json": "kebab-case",
+		".css": "kebab-case",
+		".md": "kebab-case | screamingsnakecase"
+	},
+	"ignore": [
+		"node_modules",
+		"dist",
+		"build",
+		".git",
+		".github",
+		".husky",
+		".husky/_",
+		"backend/node_modules",
+		"backend/dist",
+		"backend/logs",
+		"backend/temp",
+		".agents",
+		"assets",
+		"src/__tests__",
+		"backend/src/__tests__"
+	]
+}

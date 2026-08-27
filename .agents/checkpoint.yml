@@ -1,0 +1,10 @@
+# Pipeline Checkpoint — imageTransformer
+
+pipeline:
+  status: "completed" # plan_completed | build_completed | reviewer_approved | completed
+  plan_file: "" # ls-lint→lint-filenames migration plan carried in-thread
+  spec_file: ".agents/docs/specs/license-attribution.md"
+  adr_file: ".agents/docs/adr/0002-iconoir-icon-migration.md"
+  last_step: "scribe"
+  completed_at: "2026-08-27T20:10:00Z"
+  cycle_summary: "Ciclo de 2 unidades atómicas: (1) harness consolidado en .agents/ [de70831], (2) @ls-lint/ls-lint → script zero-dep scripts/lint-filenames.mjs + .ls-lint.json [6c3b5bb]. Reviewer APROBADO, 82/82 tests, pnpm qa + build verdes."

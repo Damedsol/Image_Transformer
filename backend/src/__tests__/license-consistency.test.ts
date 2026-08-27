@@ -20,7 +20,7 @@ describe("license & attribution consistency", () => {
 			"README.md",
 			"docs/README.md",
 			"index.html",
-			".ia/project_manifest.yml",
+			".agents/project_manifest.yaml",
 		];
 		for (const file of files) {
 			const content = read(file);

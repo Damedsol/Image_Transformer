@@ -37,7 +37,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 | Type-check (FE + BE) | `pnpm type-check` |
 | Type-check frontend | `pnpm type-check:frontend` |
 | Type-check backend | `pnpm type-check:backend` |
-| Lint (FE + BE + ls-lint) | `pnpm lint` |
+| Lint (FE + BE + filenames) | `pnpm lint` |
 | Lint frontend | `pnpm lint:frontend` |
 | Lint backend | `pnpm lint:backend` |
 | Format (write) | `pnpm format` (biome format --write) |
@@ -47,7 +47,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 
 **Backend start (compiled):** `pnpm --filter image-transformer-backend start`.
 
-## File naming (enforced by ls-lint in pre-commit)
+## File naming (enforced by lint-filenames in `pnpm lint`/`pnpm qa`)
 
 | Location | Rule | Example |
 |----------|------|---------|
@@ -65,7 +65,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 
 - **Biome** (`biome.json`): **formatter only** (linter is `"enabled": false`). Tabs, width 2, double quotes, trailing commas, LF. Organize imports on save.
 - **Oxlint** (`.oxlintrc.json`): **correctness errors only** — no style rules. Two env-specific configs exist: root (browser) and `backend/` (node).
-- **ls-lint** (`.ls-lint.yml`): validates file/dir names. Ignores `.husky/`, `.git/`, `node_modules/`, `dist/`, `build/`, `.agents/`, `.gemini/`, `.ia/`, `assets/`, `src/__tests__/`.
+- **lint-filenames** (`.ls-lint.json`): validates file/dir names via `scripts/lint-filenames.mjs` (zero-dep Node replacement for the unmaintained `@ls-lint/ls-lint`). Ignores `.husky/`, `.git/`, `node_modules/`, `dist/`, `build/`, `.agents/`, `assets/`, `src/__tests__/`.
 - **`eslint.config.js`** and **`.prettierrc`** are empty stubs — **do not add configuration to them**. They exist only to suppress tool warnings from IDE extensions. All lint and format config lives in `biome.json` + `.oxlintrc.json`.
 - **commitlint** validates Conventional Commits via the `commit-msg` hook. No non-standard commit types.
 
@@ -109,17 +109,18 @@ If type-check fails, the entire commit is blocked. Use `--no-verify` only when t
 - Dev uses `:delegated` volume mounts for hot-reload. Prod uses nginx-alpine for frontend and zero-exposed ports (internal Docker network only).
 - All `pnpm install` in Dockerfiles use `--ignore-scripts` to skip husky `prepare` in the container.
 
-## Dual-layer agent governance
+## Agent governance & knowledge management
 
-- `AGENTS.md` (this file): technical standards, dev commands, tooling.
-- `.ia/AGENTS.md`: memory/context management, UI migration workflow to Neon-Code UI Kit, token hygiene rules for long-running sessions.
-- `context.md`: runtime log of technical decisions, errors, and changelog. Read it at session start. Update it after changes. Keep under 200 lines.
-- `.ia/memory/context.md`: session-level memory with compression rules (same 200-line limit).
+- `AGENTS.md` (this file): canonical governance — technical standards, dev commands, tooling, safety gates.
+- `.agents/` (harness): `project_manifest.yaml` (workspace mapping), `checkpoint.yml` (pipeline state), `context/` (memory), `docs/` (ADR + specs), `skills/` (project-local).
+- **Mandatory reading:** `.agents/context/project.md` + `.agents/context/history.md` at the start of every session.
+- **Continuous update:** `.agents/context/history.md` after significant changes, critical error resolutions, or at end of session.
+- **Compression:** keep `history.md` under 200 lines — keep the last 3 records, consolidate older ones into a "Consolidated History" paragraph. `project.md` is stable and never compressed.
 
 ## Safety gates
 
 - Never run interactive prompts (`nano`, `vim`, etc.) or destructive commands (`rm -rf`) without confirmation.
 - Never leave conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in files.
 - Changing `.env`, adding dependencies (`pnpm add`), or running DB migrations requires explicit user confirmation.
-- 3 consecutive failures on any automated task → abort, log to `.gemini/error.log`, return control to user.
+- 3 consecutive failures on any automated task → abort, log to `.agents/context/error.log`, return control to user.
 - No auto-commit or auto-push. Present `git add` + `git commit` as a copy-paste block.

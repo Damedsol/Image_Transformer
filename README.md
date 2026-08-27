@@ -20,7 +20,7 @@ A powerful web application for transforming and converting images between differ
 | **Frontend Core** | TypeScript & Vite | v6.0 / v8.0 | Superfast frontend dev server and production builder with modern ES2022+ features. |
 | **UI Components** | Vanilla Web Components | ES2022 | Modular, reusable UI components built without framework overhead. |
 | **Quality Control** | Oxlint & Biome | Latest | Lightning-fast linting and formatting replacing ESLint & Prettier. |
-| **File Structure** | ls-lint | Latest | Validates directory and file naming structures. |
+| **File Structure** | lint-filenames | Latest | Validates directory and file naming structures. |
 | **DevOps / Tools** | Docker & Compose | Latest | Standardized containerization for development and production environments. |
 
 ---
@@ -94,7 +94,7 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
 ### Common Quality Control Utilities
 
 - **Code Formatting:** `pnpm format` (formats the entire workspace with Biome).
-- **Linter & File Names Check:** `pnpm lint` (runs Oxlint for deep inspection and ls-lint for strict casing checks).
+- **Linter & File Names Check:** `pnpm lint` (runs Oxlint for deep inspection and lint-filenames for strict casing checks).
 - **TypeScript Type Verification:** `pnpm type-check` (performs dry-run compilation using `tsc --noEmit`).
 
 ---
@@ -119,14 +119,12 @@ Uploaded images and generated ZIPs live under `backend/temp/` (`uploads/` + `out
 
 ```
 imageTransformer/
-├── .agents/              # System agent configuration files and local tools
-├── .gemini/              # Gemini CLI specific local configurations & templates
+├── .agents/              # Agent harness (manifest, checkpoint, context, docs, skills)
 ├── .husky/               # Git lifecycle hooks
 ├── backend/              # Node.js API Service (pnpm workspace package)
 │   ├── src/              # Express controllers, routes, and processing logic
 │   ├── temp/             # Temporary folder for active transformations
-│   ├── package.json      # Backend-specific package configurations
-│   └── context.md        # Local backend contextual memory
+│   └── package.json      # Backend-specific package configurations
 ├── docs/                 # Detailed manuals and architectural documentations
 ├── public/               # Frontend static assets and configurations
 ├── src/                  # Frontend Application Source Code
@@ -136,7 +134,6 @@ imageTransformer/
 │   └── main.ts           # Frontend main application entry-point
 ├── biome.json            # Global unified Biome formatter configuration
 ├── pnpm-workspace.yaml   # Monorepo hoisting and overrides setup
-├── context.md            # Root context and development memory log
 └── README.md             # This documentation file
 ```
 
