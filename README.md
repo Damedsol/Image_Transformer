@@ -119,14 +119,12 @@ Uploaded images and generated ZIPs live under `backend/temp/` (`uploads/` + `out
 
 ```
 imageTransformer/
-├── .agents/              # System agent configuration files and local tools
-├── .gemini/              # Gemini CLI specific local configurations & templates
+├── .agents/              # Agent harness (manifest, checkpoint, context, docs, skills)
 ├── .husky/               # Git lifecycle hooks
 ├── backend/              # Node.js API Service (pnpm workspace package)
 │   ├── src/              # Express controllers, routes, and processing logic
 │   ├── temp/             # Temporary folder for active transformations
-│   ├── package.json      # Backend-specific package configurations
-│   └── context.md        # Local backend contextual memory
+│   └── package.json      # Backend-specific package configurations
 ├── docs/                 # Detailed manuals and architectural documentations
 ├── public/               # Frontend static assets and configurations
 ├── src/                  # Frontend Application Source Code
@@ -136,7 +134,6 @@ imageTransformer/
 │   └── main.ts           # Frontend main application entry-point
 ├── biome.json            # Global unified Biome formatter configuration
 ├── pnpm-workspace.yaml   # Monorepo hoisting and overrides setup
-├── context.md            # Root context and development memory log
 └── README.md             # This documentation file
 ```
 

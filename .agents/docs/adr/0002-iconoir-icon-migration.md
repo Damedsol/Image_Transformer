@@ -3,7 +3,7 @@
 - **Status:** Accepted
 - **Date:** 2026-08-27
 - **Deciders:** User + pipeline (plan → build → reviewer ✅ → scribe)
-- **Related plan:** 2026-08-27 Lucide→Iconoir migration (plan carried in-thread, not persisted to `.ia/docs/`)
+- **Related plan:** 2026-08-27 Lucide→Iconoir migration (plan carried in-thread, not persisted to `.agents/docs/`)
 
 ## Context
 

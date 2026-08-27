@@ -3,13 +3,13 @@
 - **Status:** Accepted
 - **Date:** 2026-08-17
 - **Deciders:** User + pipeline (plan → build → reviewer ✅ → scribe)
-- **Related plan:** 2026-08-17 footer-license-consistency (plan file removed after archival; see `.ia/docs/specs/license-attribution.md`)
+- **Related plan:** 2026-08-17 footer-license-consistency (plan file removed after archival; see `.agents/docs/specs/license-attribution.md`)
 
 ## Context
 
 The repo presented legal/attribution incongruences: the footer used a bare
 `© 2026 Created by Damedsol` (all-rights-reserved framing) next to a CC BY 4.0
-grant; `.ia/project_manifest.yml` declared `CC BY-NC-SA 4.0` while every other
+grant; `.agents/project_manifest.yaml` declared `CC BY-NC-SA 4.0` while every other
 file said `CC BY 4.0`; `README.md` linked the license via a machine-local
 `file:///` path; bundled fonts (Figtree, IBM Plex Mono) shipped without their
 OFL 1.1 license text (violating OFL condition 2); and no third-party notices

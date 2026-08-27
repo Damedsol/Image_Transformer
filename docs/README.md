@@ -103,8 +103,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ```
 imageTransformer/
-├── .agents/                 # System agent configuration files and tools
-├── .gemini/                 # Local templates and configs
+├── .agents/                 # Agent harness (manifest, checkpoint, context, docs, skills)
 ├── .husky/                  # Automated Git hooks
 ├── backend/                 # Backend Workspace (pnpm workspace)
 │   ├── src/                 # API controllers, routers, and processing layers
