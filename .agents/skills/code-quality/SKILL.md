@@ -1,4 +1,4 @@
-# Code Quality Skill: Unified Formatting & Linting (Biome, Oxlint, ls-lint)
+# Code Quality Skill: Unified Formatting & Linting (Biome, Oxlint, lint-filenames)
 
 This skill provides comprehensive context, architectural patterns, and operational rules for maintaining code consistency, styling, linting, and directory structuring across Monorepos using modern toolchains.
 
@@ -19,7 +19,7 @@ This skill provides comprehensive context, architectural patterns, and operation
 
 Traditional linters and formatters (like ESLint and Prettier) suffer from severe performance bottlenecks and configuration complexity in large-scale codebases. This skill establishes a high-performance, unified alternative leveraging Rust-based tooling:
 - **Zero Configuration Conflict:** Separate formatting/import organization (Biome) from logical rule validation (Oxlint).
-- **Structural Integrity:** Validate file-system layout rules (ls-lint) dynamically rather than through expensive custom linter rules.
+- **Structural Integrity:** Validate file-system layout rules (lint-filenames) dynamically rather than through expensive custom linter rules.
 - **Pre-commit Speed:** Perform all checks in milliseconds using pre-compiled binaries via `lint-staged`.
 
 ---
@@ -37,14 +37,14 @@ Traditional linters and formatters (like ESLint and Prettier) suffer from severe
 
 - **Biome:** A single, fast tool that formats code and organizes imports.
 - **Oxlint:** An extremely fast linter designed to catch bugs and bad patterns without requiring Node.js startup overhead.
-- **ls-lint:** A file-system and directory linter that checks naming rules (PascalCase, camelCase, kebab-case) in sub-milliseconds.
+- **lint-filenames:** A project-local Node script (`scripts/lint-filenames.mjs`) that checks file/directory naming rules (PascalCase, camelCase, kebab-case). Self-contained, zero-dep replacement for the unmaintained `@ls-lint/ls-lint`; config at `.ls-lint.json`.
 
 ---
 
 ## The "Do Not" List (Anti-Patterns)
 
 - **DO NOT** install Prettier or ESLint as devDependencies. They conflict with Biome and Oxlint and slow down development pipelines.
-- **DO NOT** use complex regex patterns globally in `ls-lint`. Map explicit rules to target directories to avoid false negatives.
+- **DO NOT** use complex regex patterns globally in `lint-filenames`. Map explicit rules to target directories to avoid false negatives.
 - **DO NOT** let lint-staged execute `git add` at the end of the script in modern Git versions. This is handled automatically.
 
 ---
@@ -54,7 +54,7 @@ Traditional linters and formatters (like ESLint and Prettier) suffer from severe
 For a single-package project:
 - Define `biome.json` in the root.
 - Define `.oxlintrc.json` in the root.
-- Define `.ls-lint.yml` in the root.
+- Define `.ls-lint.json` in the root.
 - Configure `.lintstagedrc` to process `.js`, `.ts`, `.tsx`, and `.json` files.
 
 ---
@@ -64,7 +64,7 @@ For a single-package project:
 For a multi-package pnpm monorepo:
 1. Place a single `biome.json` in the root.
 2. Define `.oxlintrc.json` in subpackages where environment globals differ (e.g., `browser` for web frontend, `node` for API servers).
-3. Centralize naming policies inside `.ls-lint.yml` using precise directory exclusions.
+3. Centralize naming policies inside `.ls-lint.json` using precise directory exclusions.
 
 ---
 
@@ -72,7 +72,7 @@ For a multi-package pnpm monorepo:
 
 For details on advanced monorepo rules, configuration syntax, pre-commit pipelines, performance debugging, and template structures, refer to the dedicated reference documents:
 - **Biome Reference:** See [biome-rules.md](file:///projects/Github/imageTransformer/.agents/skills/code-quality/references/biome-rules.md) for custom rules and error handling.
-- **Oxlint & ls-lint Reference:** See [oxlint-lslint.md](file:///projects/Github/imageTransformer/.agents/skills/code-quality/references/oxlint-lslint.md) for custom environment mappings and directory structures.
+- **Oxlint & lint-filenames Reference:** See [oxlint-lslint.md](file:///projects/Github/imageTransformer/.agents/skills/code-quality/references/oxlint-lslint.md) for custom environment mappings and directory structures.
 
 ---
 

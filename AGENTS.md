@@ -37,7 +37,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 | Type-check (FE + BE) | `pnpm type-check` |
 | Type-check frontend | `pnpm type-check:frontend` |
 | Type-check backend | `pnpm type-check:backend` |
-| Lint (FE + BE + ls-lint) | `pnpm lint` |
+| Lint (FE + BE + filenames) | `pnpm lint` |
 | Lint frontend | `pnpm lint:frontend` |
 | Lint backend | `pnpm lint:backend` |
 | Format (write) | `pnpm format` (biome format --write) |
@@ -47,7 +47,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 
 **Backend start (compiled):** `pnpm --filter image-transformer-backend start`.
 
-## File naming (enforced by ls-lint in pre-commit)
+## File naming (enforced by lint-filenames in `pnpm lint`/`pnpm qa`)
 
 | Location | Rule | Example |
 |----------|------|---------|
@@ -65,7 +65,7 @@ All commands are centralized in the root `package.json`. Frontend (Vite :5173) a
 
 - **Biome** (`biome.json`): **formatter only** (linter is `"enabled": false`). Tabs, width 2, double quotes, trailing commas, LF. Organize imports on save.
 - **Oxlint** (`.oxlintrc.json`): **correctness errors only** — no style rules. Two env-specific configs exist: root (browser) and `backend/` (node).
-- **ls-lint** (`.ls-lint.yml`): validates file/dir names. Ignores `.husky/`, `.git/`, `node_modules/`, `dist/`, `build/`, `.agents/`, `.gemini/`, `.ia/`, `assets/`, `src/__tests__/`.
+- **lint-filenames** (`.ls-lint.json`): validates file/dir names via `scripts/lint-filenames.mjs` (zero-dep Node replacement for the unmaintained `@ls-lint/ls-lint`). Ignores `.husky/`, `.git/`, `node_modules/`, `dist/`, `build/`, `.agents/`, `assets/`, `src/__tests__/`.
 - **`eslint.config.js`** and **`.prettierrc`** are empty stubs — **do not add configuration to them**. They exist only to suppress tool warnings from IDE extensions. All lint and format config lives in `biome.json` + `.oxlintrc.json`.
 - **commitlint** validates Conventional Commits via the `commit-msg` hook. No non-standard commit types.
 

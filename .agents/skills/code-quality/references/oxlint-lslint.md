@@ -1,6 +1,6 @@
-# Oxlint & ls-lint Code Quality Integration
+# Oxlint & lint-filenames Code Quality Integration
 
-This reference document covers advanced configurations, environment specialization, and directory rules for using Oxlint (high-speed linting) and ls-lint (file-system formatting) inside monorepos.
+This reference document covers advanced configurations, environment specialization, and directory rules for using Oxlint (high-speed linting) and lint-filenames (file-system naming checks) inside monorepos.
 
 ## Quick Start (Oxlint configuration)
 
@@ -60,34 +60,24 @@ In monorepos containing both frontend and backend modules, environment-specific 
 
 ---
 
-## Directory Structuring with ls-lint
+## Directory Structuring with lint-filenames
 
-`ls-lint` is critical for ensuring clean monorepo architecture without allowing chaotic file naming choices that can break server builds or module imports.
+`lint-filenames` (`scripts/lint-filenames.mjs`) ensures clean monorepo architecture without allowing chaotic file naming choices that can break server builds or module imports. It is a self-contained, zero-dependency Node replacement for the unmaintained `@ls-lint/ls-lint`; the config is `.ls-lint.json`.
 
-### Standard `.ls-lint.yml` Configuration:
+### Standard `.ls-lint.json` Configuration:
 
-```yaml
-ls:
-  .dir: kebab-case
-  .js: camelCase
-  .ts: camelCase
-  .tsx: PascalCase
-
-  src/components:
-    .dir: PascalCase
-    .tsx: PascalCase
-
-  backend/src:
-    .dir: kebab-case
-    .ts: camelCase
-
-ignore:
-  - .git
-  - .husky
-  - node_modules
-  - backend/node_modules
-  - dist
-  - build
+```json
+{
+	"ls": {
+		".dir": "kebab-case",
+		".js": "camelCase",
+		".ts": "camelCase",
+		".tsx": "PascalCase",
+		"src/components": { ".dir": "PascalCase", ".tsx": "PascalCase" },
+		"backend/src": { ".dir": "kebab-case", ".ts": "camelCase" }
+	},
+	"ignore": [".git", ".husky", "node_modules", "backend/node_modules", "dist", "build"]
+}
 ```
 
 ---
@@ -104,20 +94,20 @@ To execute oxlint on changed files automatically:
 }
 ```
 
-### 2. Overlapping File Extensions in ls-lint
-If some `.md` files should be uppercase (like `README.md` or `LICENSE.md`) but others should be kebab-case (like `release-notes.md`), use multiple rules in `.ls-lint.yml`:
+### 2. Overlapping File Extensions in lint-filenames
+If some `.md` files should be uppercase (like `README.md` or `LICENSE.md`) but others should be kebab-case (like `release-notes.md`), use multiple rules in `.ls-lint.json`:
 
-```yaml
-ls:
-  .md: kebab-case | screamingsnakecase
+```json
+{ "ls": { ".md": "kebab-case | screamingsnakecase" }, "ignore": [] }
 ```
+
 This pattern allows both standard documentation standards to coexist flawlessly.
 
 ---
 
 ## Common Mistakes & Anti-Patterns ("The Do Not List")
 
-- **DO NOT** use global regular expressions like `.*` in `ls-lint` configurations. This slows down the scan and introduces false negatives on directories that should have been ignored.
+- **DO NOT** use global regular expressions like `.*` in `lint-filenames` configurations. This slows down the scan and introduces false negatives on directories that should have been ignored.
 - **DO NOT** run Oxlint using slow Node wrapper scripts if native pre-compiled binaries are available for your operating system.
 - **DO NOT** add conflicting rules in `.oxlintrc.json` that overlap with Biome's formatting capabilities, such as indentation or quote style warnings. Keep Oxlint strictly focused on logical warnings.
 

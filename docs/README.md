@@ -8,7 +8,7 @@
 
 - **Frontend**: TypeScript (v6.0+) + Vite (v8.0+) + Native Web Components
 - **Backend**: Node.js (v24.0.0+) + Express (v5.2.1) + Sharp (v0.34.5)
-- **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + ls-lint (strict file/directory naming check)
+- **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + lint-filenames (strict file/directory naming check)
 - **Git Hook Automation**: Husky + lint-staged + commitlint
 - **Containers**: Docker + Docker Compose with individual environment-specific configurations
 - **Logging**: Conditional, zero-overhead high-performance system (using Pino)
@@ -94,7 +94,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 ### Quality Control & DevOps
 - **Oxlint** — Extremely fast code linting replacing legacy ESLint.
 - **Biome** — Consolidated workspace-wide formatter replacing Prettier.
-- **ls-lint** — Enforces strict kebab-case directory/file structures.
+- **lint-filenames** — Enforces strict kebab-case directory/file structures.
 - **Docker & Compose** — Standardized microservices orchestration.
 
 ---
