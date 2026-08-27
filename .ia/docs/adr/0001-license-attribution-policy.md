@@ -27,7 +27,9 @@ documented runtime dependency licenses.
 3. **OFL compliance:** bundled fonts must ship their OFL 1.1 text +
    exact upstream copyright line (`assets/fonts/<Font>/OFL.txt`).
 4. **Third-party notices:** runtime dependency licenses documented in
-   `docs/THIRD_PARTY_NOTICES.md` (ISC/MIT/Apache-2.0/BSD-2-Clause/OFL-1.1).
+   `THIRD_PARTY_NOTICES.md` (project root; MIT/Apache-2.0/BSD-2-Clause/OFL-1.1
+   + Iconoir MIT for vendored icons). Moved from `docs/` to root on
+   2026-08-27; `lucide` (ISC) removed after the 2026-08-27 Iconoir migration.
 5. **Regression guard placement:** the fs-based license-consistency test
    lives in the **backend suite** (`backend/src/__tests__/`) because the
    frontend tsconfig restricts `types: ["vitest/globals"]` (no node types

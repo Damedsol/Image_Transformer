@@ -100,7 +100,7 @@ If type-check fails, the entire commit is blocked. Use `--no-verify` only when t
 - Components: Vanilla Web Components (`customElements.define`), imported as side-effects.
 - Styles: `src/style.css` + component-scoped CSS via Shadow DOM where used.
 - API client: `src/utils/api.ts` — uses relative `/api` in production (nginx proxy), absolute `http://localhost:3001/api` in dev.
-- Icons: Lucide (`lucide` package), imported individually. Not Lucide React — this is vanilla.
+- Icons: Iconoir — 9 SVGs vendored in `assets/icons/` (upload, trash, download, media-image, check-circle, warning-circle, settings, github, linkedin), imported via Vite `?raw` into the `<tn-icon>` Web Component (`src/components/TnIcon.ts`). Rendered with `stroke-width` 1.75 and `square`/`miter` stroke (cyberpunk-flat). Not iconoir-react — this is vanilla.
 
 ## Docker
 

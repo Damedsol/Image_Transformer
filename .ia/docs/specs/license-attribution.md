@@ -22,7 +22,7 @@
 - [✓] **R5 — README license link (2026-08-17):** `file:///projects/Github/...` → `./LICENSE.md` (relative, portable). No `file:///` references remain.
 - [✓] **R6 — package.json SPDX (2026-08-17):** `"license": "CC-BY-4.0"` in root + `backend/package.json`.
 - [✓] **R7 — Font licenses shipped (2026-08-17):** `assets/fonts/Figtree/OFL.txt` (Copyright 2022 The Figtree Project Authors) + `assets/fonts/IBM_Plex_Mono/OFL.txt` (Copyright © 2017 IBM Corp., Reserved Font Name "Plex"). Full OFL 1.1 text (PREAMBLE/DEFINITIONS/PERMISSION/TERMINATION/DISCLAIMER). OFL condition 2 requires the license to accompany redistribution.
-- [✓] **R8 — Third-party notices (2026-08-17):** `docs/THIRD_PARTY_NOTICES.md` — runtime deps (lucide ISC; express/multer/zod/pino/helmet/cors/archiver/express-rate-limit MIT; sharp Apache-2.0; dotenv BSD-2-Clause) + fonts (OFL-1.1).
+- [✓] **R8 — Third-party notices (2026-08-17, path updated 2026-08-27):** `THIRD_PARTY_NOTICES.md` (project root) — runtime deps (express/multer/zod/pino/helmet/cors/archiver/express-rate-limit MIT; sharp Apache-2.0; dotenv BSD-2-Clause) + fonts (OFL-1.1) + bundled icons (Iconoir MIT). Moved from `docs/` to root on 2026-08-27; `lucide` removed (replaced by Iconoir in the 2026-08-27 icon migration).
 - [✓] **R9 — Memory (2026-08-17):** change-history entry in `.ia/memory/context.md` incl. reviewer verdict.
 
 ## Regression Guard

@@ -195,12 +195,12 @@ The bundled fonts and runtime dependencies are redistributed under their own lic
 
 - **Figtree** — SIL Open Font License 1.1 (`assets/fonts/Figtree/OFL.txt`)
 - **IBM Plex Mono** — SIL Open Font License 1.1 (`assets/fonts/IBM_Plex_Mono/OFL.txt`)
-- **Lucide** — ISC
+- **Iconoir** — MIT (`assets/icons/` — vendored icon SVGs)
 - **Express, Multer, Zod, Pino, Helmet, CORS, Archiver, express-rate-limit** — MIT
 - **Sharp** — Apache-2.0
 - **dotenv** — BSD-2-Clause
 
-See [docs/THIRD_PARTY_NOTICES.md](docs/THIRD_PARTY_NOTICES.md) for the full list.
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full list.
 
 ---
 
