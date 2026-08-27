@@ -780,6 +780,9 @@ kbd {
 
 .footer-links a,
 .footer-attribution a {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.375rem;
 	color: var(--text-muted);
 	text-decoration: none;
 	border-bottom: 1px solid transparent;

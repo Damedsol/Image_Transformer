@@ -75,4 +75,14 @@ describe("tn-icon (SNA-36)", () => {
 		const svg = el.shadowRoot!.querySelector("svg");
 		expect(svg).not.toBeNull();
 	});
+
+	it("renders brand icons (github, linkedin) via Iconoir", () => {
+		for (const name of ["github", "linkedin"]) {
+			const el = mount("tn-icon");
+			el.setAttribute("name", name);
+			const svg = el.shadowRoot!.querySelector("svg");
+			expect(svg, `icon "${name}"`).not.toBeNull();
+			expect(svg!.getAttribute("aria-hidden")).toBe("true");
+		}
+	});
 });
