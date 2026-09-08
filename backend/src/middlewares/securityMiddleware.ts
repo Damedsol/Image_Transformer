@@ -7,10 +7,19 @@ import { AppError } from "../utils/apiError.js";
  * Configuración de Helmet con opciones de seguridad
  */
 /**
- * Configuración de Helmet con políticas de seguridad estrictas
- * Compatible con CORS pero manteniendo seguridad
+ * Directivas CSP como objeto plano testeable (sin `'unsafe-inline'`, sin wildcards).
  */
-export const configureHelmet = (): RequestHandler => {
+export interface CspDirectives {
+	[directive: string]: string[];
+}
+
+/**
+ * Construye las directivas CSP a partir de las variables de entorno.
+ * Función pura (solo lee `process.env`) para testearla sin harness HTTP.
+ * El backend sirve únicamente JSON y estáticos de `/temp`, por lo que no se
+ * permiten scripts/estilos inline y `connectSrc` solo admite orígenes exactos.
+ */
+export const buildCspDirectives = (): CspDirectives => {
 	// Obtener orígenes permitidos desde variables de entorno para CSP
 	const allowedOrigins: string[] = [];
 	if (process.env.CORS_ORIGIN) {
@@ -32,7 +41,7 @@ export const configureHelmet = (): RequestHandler => {
 		});
 	}
 
-	// Backend URL para connectSrc
+	// Backend URL para connectSrc (origen exacto, sin wildcard)
 	const backendUrl =
 		process.env.BACKEND_URL || "https://image-transformer-r99u.onrender.com";
 	let backendOrigin: string;
@@ -43,29 +52,30 @@ export const configureHelmet = (): RequestHandler => {
 		backendOrigin = "https://image-transformer-r99u.onrender.com";
 	}
 
+	return {
+		defaultSrc: ["'self'"],
+		scriptSrc: ["'self'"],
+		styleSrc: ["'self'"],
+		imgSrc: ["'self'", "data:", "blob:"],
+		connectSrc: ["'self'", backendOrigin, ...allowedOrigins],
+		fontSrc: ["'self'"],
+		objectSrc: ["'none'"],
+		mediaSrc: ["'self'"],
+		frameSrc: ["'none'"],
+		workerSrc: ["'self'", "blob:"],
+		baseUri: ["'self'"],
+		formAction: ["'self'"],
+	};
+};
+
+/**
+ * Configuración de Helmet con políticas de seguridad estrictas
+ * Compatible con CORS pero manteniendo seguridad
+ */
+export const configureHelmet = (): RequestHandler => {
 	return helmet({
 		contentSecurityPolicy: {
-			directives: {
-				defaultSrc: ["'self'"],
-				scriptSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline necesario para algunos frameworks
-				styleSrc: ["'self'", "'unsafe-inline'"], // unsafe-inline necesario para estilos inline
-				imgSrc: ["'self'", "data:", "blob:"],
-				// Permitir conexiones solo a orígenes específicos y conocidos
-				connectSrc: [
-					"'self'",
-					backendOrigin,
-					...allowedOrigins,
-					// Permitir conexiones desde el frontend al backend
-					"https://*.onrender.com",
-				],
-				fontSrc: ["'self'"],
-				objectSrc: ["'none'"], // Bloquear plugins
-				mediaSrc: ["'self'"],
-				frameSrc: ["'none'"], // Bloquear iframes
-				workerSrc: ["'self'", "blob:"],
-				baseUri: ["'self'"],
-				formAction: ["'self'"],
-			},
+			directives: buildCspDirectives(),
 		},
 		// Configuración balanceada: permitir CORS pero mantener seguridad
 		crossOriginEmbedderPolicy: false, // Necesario para CORS con credenciales
@@ -94,10 +104,12 @@ export const apiRateLimiter = rateLimit({
 	max: parseInt(process.env.RATE_LIMIT_MAX || "100"), // 100 peticiones por ventana
 	standardHeaders: true,
 	legacyHeaders: false,
-	// Usar múltiples factores para identificar al cliente con soporte IPv6
+	// Key on IP (with IPv6 subnet support). User-Agent is attacker-controlled
+	// and would let an attacker bypass per-IP limits by rotating it. With
+	// `trust proxy` set, req.ip reflects the real client.
 	keyGenerator: (req) => {
 		const ip = ipKeyGenerator(req.ip || "unknown");
-		return `${ip}-${req.headers["user-agent"] || "unknown"}`;
+		return ip;
 	},
 	handler: (_req: Request, _res: Response, next: NextFunction) => {
 		next(AppError.tooManyRequests());
