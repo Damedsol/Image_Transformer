@@ -1,60 +1,126 @@
-# AGENTS.md — Agentic System Configuration & Directives
+# AGENTS.md — imageTransformer
 
-This file specifies the behavior, constraints, tools, and workflows for AI agents operating within the `imageTransformer` monorepo.
+pnpm monorepo. Frontend: Vanilla Web Components + Vite + TypeScript. Backend: Express 5 + Sharp. Node >=24.0.0, pnpm >=11.0.0.
 
-## 👤 PROFILE
+## Profile
 
-- **Role:** Senior Expert Developer focused on maximum technical precision with minimal token consumption.
-- **Language Policy:**
-  - **Chat Interface:** Always respond to the USER in **SPANISH**. Keep responses extremely concise. No greetings, preambles, or conversational filler.
-  - **Artifacts and Code:** All generated documents (markdown files, logs, skills), code comments, commit messages, and repository files MUST be written strictly in **ENGLISH**.
-- **Token Hygiene:**
-  - **No preambles:** Begin directly with code, patches, or action blocks.
-  - **Silent mode:** Do not explain implementation details unless explicitly requested for complex architectural changes.
-  - **Self-explanatory code:** Avoid redundant comments or explanations inside code blocks to optimize token usage.
-  - **Lazy activation:** Activate specialized skills (`activate_skill`) ONLY when the specific domain is detected in the files to be actively edited.
+- **Chat:** respond in ENGLISH, no greetings, no filler.
+- **Artifacts (code, commits, docs, logs):** ENGLISH only.
+- **Auto-self-review:** validate syntax, imports, and types before marking done.
+- **No auto-runs:** do not run `tsc`, lint, or formatter unless asked. Propose the command instead.
 
-## 🧠 CONTEXT & KNOWLEDGE MANAGEMENT
+## Workspace layout
 
-### 🧠 Knowledge Management (context.md)
+```
+.                         → package "imagetransformer" (frontend Vite app)
+backend/                  → package "image-transformer-backend" (Express/Sharp API)
+```
 
-1. **Mandatory Reading:** You MUST read `context.md` at the beginning of each work session to understand the current state, previous errors, and technical decisions.
-2. **Continuous Update:** After each commit or relevant change, you MUST update `context.md` with new learnings, resolved issues, or changes in the workflow.
-3. **Line-Count Integrity:** Keep `context.md` files (root and local) strictly under **200 lines** to maintain high context density.
+- All dependencies are resolved from the root; there is no per-package `node_modules`.
+- `pnpm-workspace.yaml` holds the **catalog** (`catalog:`) — devDependencies reference it as `"catalog:"`. The catalog is the single source of truth for shared versions. Never add version numbers inline that are declared in the catalog.
+- `pnpm-workspace.yaml` also enforces `preferFrozenLockfile: true`, `strictPeerDependencies: true`, `engineStrict: true`, and `blockExoticSubdeps: true`. Any install or add that violates these will fail.
 
-### Workspace Structure & Tools
-- **Package Manager:** Strictly `pnpm` (v11 monorepo). **NEVER use NPM or Yarn**.
-- **Quality Control Suite:** Biome (unified root config) for formatting and imports, Oxlint for linting, and ls-lint for strict file and directory naming conventions.
+## Dev commands (from root)
 
-## 🛠️ INSTRUCTIONS & DEVELOPMENT PROTOCOLS
+All commands are centralized in the root `package.json`. Frontend (Vite :5173) and backend (tsx watch :3001) run concurrently via `concurrently`.
 
-### Code Editing Principles
-- **EXTEND:** Extend existing functions before creating new ones.
-- **IMPROVE:** Refine defined endpoints and typings.
-- **REUSE:** Reuse shared components and utilities.
-- **INTEGRATE:** Safely synchronize with current systems.
-- **KISS & SOLID:** Prioritize simplicity and separation of concerns.
-- **YAGNI (You Aren't Gonna Need It):** Strictly implement what is required for the current request. Avoid over-engineering.
-- **DRY (Don't Repeat Yourself):** Centralize common behavior into modular utilities.
-- **LAST RESORT:** Create new files only when existing options are technically unviable.
+| Action | Command |
+|--------|---------|
+| Install | `pnpm install` |
+| Dev (FE + BE) | `pnpm dev` |
+| Dev frontend only | `pnpm dev:frontend` (Vite on :5173) |
+| Dev backend only | `pnpm dev:backend` (tsx watch on :3001) |
+| Build all | `pnpm build` (backend tsc → frontend tsc + vite build) |
+| Build frontend | `pnpm build:frontend` |
+| Build backend | `pnpm build:backend` |
+| QA (type → lint → fmt → test) | `pnpm qa` |
+| Type-check (FE + BE) | `pnpm type-check` |
+| Type-check frontend | `pnpm type-check:frontend` |
+| Type-check backend | `pnpm type-check:backend` |
+| Lint (FE + BE + filenames) | `pnpm lint` |
+| Lint frontend | `pnpm lint:frontend` |
+| Lint backend | `pnpm lint:backend` |
+| Format (write) | `pnpm format` (biome format --write) |
+| Format check | `pnpm format:check` |
+| Tests | `pnpm test` (vitest run) |
+| Tests watch | `pnpm test:watch` |
 
-### Quality Verification
-- **Logical Self-Review:** Analytically validate basic syntax, import references, and types of modified code before completing a task.
-- **No Heavy Auto-runs:** To maximize token efficiency, do not auto-run heavy workspace checks like `tsc`, `eslint`, or `prettier` unless explicitly instructed by the user.
+**Backend start (compiled):** `pnpm --filter image-transformer-backend start`.
 
-### Git & Closing Protocol
-- **No Auto-commit:** Strictly forbidden to perform automatic commits or pushes without interactive confirmation. All Git commands must be presented for manual execution.
-- **Conventional Commits Standard:** Commit messages must be written in **ENGLISH** and follow: `<type>(<scope>): <short description in imperative present tense>`
-- **Closing Steps:**
-  1. Recommend manual execution of tests, compilers, or local linters.
-  2. Briefly list manual verification steps for the user to validate.
-  3. Present a ready-to-copy terminal block with precise `git add` and `git commit` commands.
+## File naming (enforced by lint-filenames in `pnpm lint`/`pnpm qa`)
 
-## 🛡️ TOOLS & GUARDRAILS (Safety Gates)
+| Location | Rule | Example |
+|----------|------|---------|
+| All directories | `kebab-case` | `src/components/` |
+| `src/components/` | `PascalCase` | `ImagePreview.ts` |
+| `src/utils/` | `camelCase` | `fileUtils.ts` |
+| `backend/src/controllers/` | `camelCase` | `imageController.ts` |
+| `backend/src/middlewares/` | `camelCase` | `errorMiddleware.ts` |
+| `backend/src/routes/` | `camelCase` | `imageRoutes.ts` |
+| `backend/src/utils/` | `camelCase` | `logger.ts` |
+| `.md` files | `kebab-case` or `SCREAMING_SNAKE_CASE` | `README.md` |
+| Test files | `*.test.ts` (in `src/__tests__/`) | `DropZone.test.ts` |
 
-- **Interactive Blockers:** Never silently run processes that open interactive blocking prompts (such as `nano`, `vim`, or interactive prompts) in automated terminal sessions.
-- **Destructive Commands:** Silently running massive or recursive deletions (e.g., `rm -rf`) is strictly prohibited without explicit user confirmation.
-- **No Conflict Markers:** Never mark a task as completed while leaving version control conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in any workspace file.
-- **System Isolation:** Do not modify global OS configurations unless explicitly requested.
-- **Environment & Database Safeguards:** Modifying `.env` variables, applying database migrations, or installing new npm packages requires explicit user confirmation.
-- **Infinite Loop Prevention:** If an automated terminal task (compilation, tests, or scripts) fails consecutively **3 times**, abort the execution immediately, record the error stack in `.gemini/error.log` (or root), and return control to the user.
+## Toolkit specifics
+
+- **Biome** (`biome.json`): **formatter only** (linter is `"enabled": false`). Tabs, width 2, double quotes, trailing commas, LF. Organize imports on save.
+- **Oxlint** (`.oxlintrc.json`): **correctness errors only** — no style rules. Two env-specific configs exist: root (browser) and `backend/` (node).
+- **lint-filenames** (`.ls-lint.json`): validates file/dir names via `scripts/lint-filenames.mjs` (zero-dep Node replacement for the unmaintained `@ls-lint/ls-lint`). Ignores `.husky/`, `.git/`, `node_modules/`, `dist/`, `build/`, `.agents/`, `assets/`, `src/__tests__/`.
+- **`eslint.config.js`** and **`.prettierrc`** are empty stubs — **do not add configuration to them**. They exist only to suppress tool warnings from IDE extensions. All lint and format config lives in `biome.json` + `.oxlintrc.json`.
+- **commitlint** validates Conventional Commits via the `commit-msg` hook. No non-standard commit types.
+
+## Pre-commit hook (execution order matters)
+
+1. `tsc --noEmit` (type-check from root `tsconfig.json` — covers `src/` only)
+2. `lint-staged` → `oxlint --fix` + `biome format --write --no-errors-on-unmatched`
+
+If type-check fails, the entire commit is blocked. Use `--no-verify` only when the user explicitly requests it.
+
+## Testing
+
+- **Framework:** Vitest with globals enabled (`describe`, `it`, `expect`, `vi` available without imports).
+- **Environment:** `jsdom`.
+- **Setup:** `src/__tests__/setup.ts` (polyfills `matchMedia`, `getComputedStyle`, cleans DOM between tests).
+- **Test location:** `src/__tests__/**/*.test.ts`.
+- **Helpers:** `src/__tests__/helpers/dom.ts` — `mount(tagName)`, `html`, `createMockFile`, `createFileList`.
+- **Run single test file:** `pnpm vitest run src/__tests__/components/DropZone.test.ts`
+- **No backend test suite exists.**
+
+## Backend quirks
+
+- **ESM:** backend uses `"type": "module"`. Local imports **must** include `.js` extension (e.g., `import { imageRoutes } from "./routes/imageRoutes.js"`). TSC does not rewrite extensions.
+- **Dev server:** uses `tsx watch --clear-screen=false`, NOT `ts-node` or `ts-node-dev`. The `ts-node` and `nodemon` devDependencies are legacy.
+- **Logger:** Pino (`backend/src/utils/logger.ts`). Always use the logger instance instead of `console.log`.
+- **Zod 4:** for request validation. Zod v4 has different API surface than v3 — check imports.
+- **Express 5:** async error handling is native (no `express-async-errors` needed).
+
+## Frontend architecture
+
+- Entry: `src/main.ts` → mounts `<image-converter>` into `#app` on `DOMContentLoaded`.
+- Components: Vanilla Web Components (`customElements.define`), imported as side-effects.
+- Styles: `src/style.css` + component-scoped CSS via Shadow DOM where used.
+- API client: `src/utils/api.ts` — uses relative `/api` in production (nginx proxy), absolute `http://localhost:3001/api` in dev.
+- Icons: Iconoir — 9 SVGs vendored in `assets/icons/` (upload, trash, download, media-image, check-circle, warning-circle, settings, github, linkedin), imported via Vite `?raw` into the `<tn-icon>` Web Component (`src/components/TnIcon.ts`). Rendered with `stroke-width` 1.75 and `square`/`miter` stroke (cyberpunk-flat). Not iconoir-react — this is vanilla.
+
+## Docker
+
+- Two compose files: `docker-compose.yml` (dev) and `docker-compose.prod.yml`.
+- **Build context is root (`.`) for BOTH services** — because they need `pnpm-workspace.yaml` and catalogs. The Dockerfiles are at `Dockerfile` (frontend) and `backend/Dockerfile`.
+- Dev uses `:delegated` volume mounts for hot-reload. Prod uses nginx-alpine for frontend and zero-exposed ports (internal Docker network only).
+- All `pnpm install` in Dockerfiles use `--ignore-scripts` to skip husky `prepare` in the container.
+
+## Agent governance & knowledge management
+
+- `AGENTS.md` (this file): canonical governance — technical standards, dev commands, tooling, safety gates.
+- `.agents/` (harness): `project_manifest.yaml` (workspace mapping), `checkpoint.yml` (pipeline state), `context/` (memory), `docs/` (ADR + specs), `skills/` (project-local).
+- **Mandatory reading:** `.agents/context/project.md` + `.agents/context/history.md` at the start of every session.
+- **Continuous update:** `.agents/context/history.md` after significant changes, critical error resolutions, or at end of session.
+- **Compression:** keep `history.md` under 200 lines — keep the last 3 records, consolidate older ones into a "Consolidated History" paragraph. `project.md` is stable and never compressed.
+
+## Safety gates
+
+- Never run interactive prompts (`nano`, `vim`, etc.) or destructive commands (`rm -rf`) without confirmation.
+- Never leave conflict markers (`<<<<<<<`, `=======`, `>>>>>>>`) in files.
+- Changing `.env`, adding dependencies (`pnpm add`), or running DB migrations requires explicit user confirmation.
+- 3 consecutive failures on any automated task → abort, log to `.agents/context/error.log`, return control to user.
+- No auto-commit or auto-push. Present `git add` + `git commit` as a copy-paste block.

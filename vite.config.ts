@@ -1,25 +1,36 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from "vite";
 
 export default defineConfig({
 	server: {
 		watch: {
 			usePolling: true,
-			interval: 300, // Intervalo de sondeo ajustado
+			interval: 300,
 			ignored: ["node_modules/**", "dist/**"],
 		},
-		host: true, // Escuchar en todas las interfaces de red
+		// Bind to localhost for local dev (hardens against Vite dev-server CVEs).
+		// Docker dev overrides this via `--host 0.0.0.0` in docker-compose.yml.
+		host: "localhost",
 		hmr: {
-			// Opciones optimizadas para HMR
 			clientPort: 5173,
 			host: "localhost",
 			overlay: true,
 		},
 	},
-	// Opciones para optimizar la construcción y recarga
 	optimizeDeps: {
-		force: false, // No forzar la reoptimización en cada reinicio
+		force: false,
 	},
 	css: {
-		devSourcemap: true, // Mapeos para CSS en desarrollo
+		devSourcemap: true,
+	},
+	test: {
+		environment: "jsdom",
+		globals: true,
+		setupFiles: ["./src/__tests__/setup.ts"],
+		include: [
+			"src/__tests__/**/*.test.ts",
+			"backend/src/__tests__/**/*.test.ts",
+		],
+		css: true,
 	},
 });

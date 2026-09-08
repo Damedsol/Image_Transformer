@@ -68,7 +68,7 @@ const storage = multer.diskStorage({
 		const uniqueFilename = generateUniqueFilename(file.originalname);
 		logger.debug(
 			{ originalname: file.originalname, uniqueFilename },
-			"Generando nombre de archivo único",
+			"Generating unique file name",
 		);
 		cb(null, uniqueFilename);
 	},
@@ -90,10 +90,12 @@ const validateFileType = (
 		"image/jpg",
 		"image/png",
 		"image/webp",
+		"image/gif",
+		"image/avif",
 	];
 
 	// Lista de extensiones permitidas
-	const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"];
+	const allowedExtensions = [".jpg", ".jpeg", ".png", ".webp", ".gif", ".avif"];
 
 	const mimetype = file.mimetype.toLowerCase();
 	const extension = path.extname(file.originalname).toLowerCase();
@@ -105,7 +107,7 @@ const validateFileType = (
 	) {
 		logger.debug(
 			{ filename: file.originalname },
-			"Tipo de archivo válido, aceptando provisionalmente",
+			"Valid file type, accepting temporarily",
 		);
 		cb(null, true); // Aceptar provisionalmente
 	} else {
@@ -115,7 +117,7 @@ const validateFileType = (
 		);
 		cb(
 			new AppError(
-				`Solo se permiten imágenes en formato ${allowedExtensions.join(", ")}`,
+				`Only image files are allowed: ${allowedExtensions.join(", ")}`,
 				400,
 			),
 		);
@@ -129,7 +131,14 @@ export const upload = multer({
 	limits: {
 		fileSize: parseInt(process.env.MAX_FILE_SIZE || "10485760"), // 10MB por defecto
 		files: 10, // Máximo 10 archivos simultáneos
-	},
+		fields: 20, // Límite de campos no-file (mitiga abuso)
+		fieldNameSize: 128, // Tamaño máximo del nombre de campo
+		fieldSize: 1024 * 1024, // 1MB por campo no-file
+		// fieldNestingDepth existe en multer 2.2.0 (mitiga CVE-2026-5079), pero
+		// @types/multer 2.2.0 aún no lo declara; el cast es temporal hasta que
+		// los tipos se actualicen.
+		fieldNestingDepth: 5, // Mitiga DoS de campos anidados
+	} as unknown as multer.Options["limits"],
 });
 
 // Función para eliminar archivos de forma segura

@@ -2,7 +2,6 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Favicons -->
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -12,50 +11,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta
       name="description"
-      content="Online image converter - Convert image formats easily and quickly"
+      content="Online image converter — Convert image formats easily and quickly"
     />
     <meta name="format-detection" content="telephone=no" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
-    <link rel="preload" href="/src/style.css" as="style" />
-    <link rel="preload" href="/src/main.ts" as="script" />
+    <!-- Font preloads use /assets/ path (Vite serves assets/ as static) -->
     <title>Image Converter</title>
   </head>
 
   <body>
-    <a href="#main-content" class="skip-link">Skip to main content</a>
-    <header class="app-header">
-      <button
-        id="open-a11y-dialog"
-        class="a11y-button"
-        aria-label="Open accessibility options"
-        aria-haspopup="dialog"
-      >
-        <svg
-          aria-hidden="true"
-          focusable="false"
-          width="24"
-          height="24"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 8v4"></path>
-          <path d="M12 16h.01"></path>
-          <path d="M4.93 7.5a8 8 0 0 1 14.14 0"></path>
-          <path d="M4.93 16.5a8 8 0 0 0 14.14 0"></path>
-        </svg>
-      </button>
-    </header>
+    <a href="#main-content" class="skip-link">Skip to content</a>
 
     <main id="main-content" class="app-main">
-      <div id="app" aria-live="polite"></div>
+      <div id="app"></div>
     </main>
 
     <footer class="app-footer">
+      <div class="footer-content">
+        <p class="footer-attribution">
+          <a
+            href="https://github.com/Damedsol/Image_Transformer"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Damedsol</a
+          >
+          · Licensed under
+          <a
+            href="https://creativecommons.org/licenses/by/4.0/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >CC BY 4.0</a
+          >
+        </p>
+        <nav class="footer-links" aria-label="External links">
+          <a
+            href="https://github.com/Damedsol/Image_Transformer#readme"
+            target="_blank"
+            rel="noopener noreferrer"
+            >README</a
+          >
+          <a
+            href="https://github.com/Damedsol/Image_Transformer"
+            target="_blank"
+            rel="noopener noreferrer"
+            ><tn-icon name="github" size="16"></tn-icon>GitHub</a
+          >
+          <a
+            href="https://www.linkedin.com/in/david-medina-soloza/"
+            target="_blank"
+            rel="noopener noreferrer"
+            ><tn-icon name="linkedin" size="16"></tn-icon>LinkedIn</a
+          >
+        </nav>
+      </div>
       <div
         id="offline-indicator"
         class="offline-indicator"
@@ -63,112 +70,12 @@
         aria-live="assertive"
         role="status"
       >
-        No connection - Some features may not be available
+        You are offline
       </div>
     </footer>
 
     <div id="status-announcer" class="sr-only" aria-live="polite" role="status"></div>
 
-    <div
-      id="a11y-dialog"
-      class="a11y-dialog"
-      role="dialog"
-      aria-labelledby="a11y-dialog-title"
-      aria-hidden="true"
-      hidden
-      aria-modal="true"
-    >
-      <div class="a11y-dialog-content">
-        <h2 id="a11y-dialog-title">Accessibility options</h2>
-        <button id="close-a11y-dialog" aria-label="Close accessibility dialog">
-          <svg
-            aria-hidden="true"
-            focusable="false"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-        <div class="a11y-options">
-          <div class="a11y-option">
-            <label for="high-contrast">
-              <input type="checkbox" id="high-contrast" aria-describedby="high-contrast-desc" />
-              <span>High contrast</span>
-            </label>
-            <span id="high-contrast-desc" class="option-description"
-              >Increases color contrast for better readability</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="font-size">Text size</label>
-            <select id="font-size" aria-describedby="font-size-desc">
-              <option value="default">Default</option>
-              <option value="large">Large</option>
-              <option value="larger">Extra large</option>
-            </select>
-            <span id="font-size-desc" class="option-description"
-              >Changes text size throughout the application</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="dyslexic-font">
-              <input type="checkbox" id="dyslexic-font" aria-describedby="dyslexic-font-desc" />
-              <span>Dyslexic font</span>
-            </label>
-            <span id="dyslexic-font-desc" class="option-description"
-              >Uses a font designed to facilitate reading for people with dyslexia</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="reduce-motion">
-              <input type="checkbox" id="reduce-motion" aria-describedby="reduce-motion-desc" />
-              <span>Reduce animations</span>
-            </label>
-            <span id="reduce-motion-desc" class="option-description"
-              >Minimizes or eliminates animations and motion effects</span
-            >
-          </div>
-          <div class="a11y-option">
-            <label for="text-spacing">Text spacing</label>
-            <select id="text-spacing" aria-describedby="text-spacing-desc">
-              <option value="default">Default</option>
-              <option value="medium">Medium</option>
-              <option value="large">Wide</option>
-            </select>
-            <span id="text-spacing-desc" class="option-description"
-              >Adjusts spacing between letters, words and text lines</span
-            >
-          </div>
-        </div>
-        <div class="keyboard-shortcuts">
-          <h3 id="keyboard-shortcuts-title">Keyboard shortcuts</h3>
-          <ul aria-labelledby="keyboard-shortcuts-title">
-            <li>
-              <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>A</kbd>: Open/close accessibility options
-            </li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>C</kbd>: Toggle high contrast mode</li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>D</kbd>: Load an image from the device</li>
-            <li><kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>S</kbd>: Start image conversion</li>
-          </ul>
-          <p class="shortcut-note">Note: On Mac, use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd></p>
-        </div>
-      </div>
-    </div>
     <script type="module" src="/src/main.ts"></script>
-    <script>
-      if (!('IntersectionObserver' in window)) {
-        document.write(
-          '<script src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver"><\/script>'
-        );
-      }
-    </script>
   </body>
 </html>

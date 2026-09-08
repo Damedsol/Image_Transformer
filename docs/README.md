@@ -8,7 +8,7 @@
 
 - **Frontend**: TypeScript (v6.0+) + Vite (v8.0+) + Native Web Components
 - **Backend**: Node.js (v24.0.0+) + Express (v5.2.1) + Sharp (v0.34.5)
-- **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + ls-lint (strict file/directory naming check)
+- **Quality Control**: Oxlint (lightning-fast linting) + Biome (unified formatter) + lint-filenames (strict file/directory naming check)
 - **Git Hook Automation**: Husky + lint-staged + commitlint
 - **Containers**: Docker + Docker Compose with individual environment-specific configurations
 - **Logging**: Conditional, zero-overhead high-performance system (using Pino)
@@ -71,7 +71,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ### 📊 **Performance & Quality**
 - Lightning-fast asynchronous queue processing.
-- Automatic background cleanup of temporary uploads/results.
+- Automatic background cleanup of temporary uploads/results: per-request deletion on success/error, a startup sweep for files orphaned by crashes/restarts, and a periodic sweep for files older than `TEMP_FILE_MAX_AGE_MS` (default 30 min) — see [README → Temp File Lifecycle](../README.md).
 - Code quality secured via Biome formatters, Oxlint linters, and Husky hooks.
 - Conditional logging causing zero overhead in production.
 
@@ -94,7 +94,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 ### Quality Control & DevOps
 - **Oxlint** — Extremely fast code linting replacing legacy ESLint.
 - **Biome** — Consolidated workspace-wide formatter replacing Prettier.
-- **ls-lint** — Enforces strict kebab-case directory/file structures.
+- **lint-filenames** — Enforces strict kebab-case directory/file structures.
 - **Docker & Compose** — Standardized microservices orchestration.
 
 ---
@@ -103,8 +103,7 @@ docker compose -f docker-compose.prod.yml up -d --build
 
 ```
 imageTransformer/
-├── .agents/                 # System agent configuration files and tools
-├── .gemini/                 # Local templates and configs
+├── .agents/                 # Agent harness (manifest, checkpoint, context, docs, skills)
 ├── .husky/                  # Automated Git hooks
 ├── backend/                 # Backend Workspace (pnpm workspace)
 │   ├── src/                 # API controllers, routers, and processing layers
@@ -165,4 +164,4 @@ docker system prune -f
 ## 📄 License & Contact
 
 This project is licensed under the **Creative Commons Attribution 4.0 International (CC BY 4.0)**.  
-👉 Developed by **Damedsol**.
+👉 Developed by **Damedsol** · [GitHub](https://github.com/Damedsol/Image_Transformer) · [LinkedIn](https://www.linkedin.com/in/david-medina-soloza/).

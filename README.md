@@ -1,7 +1,7 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-1.3.2-blue.svg)](https://github.com/Damedsol/Image_Transformer)
+[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Damedsol/Image_Transformer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Sharp](https://img.shields.io/badge/Sharp-0.34.5-green?logo=sharp)](https://sharp.pixelplumbing.com/)
@@ -20,7 +20,7 @@ A powerful web application for transforming and converting images between differ
 | **Frontend Core** | TypeScript & Vite | v6.0 / v8.0 | Superfast frontend dev server and production builder with modern ES2022+ features. |
 | **UI Components** | Vanilla Web Components | ES2022 | Modular, reusable UI components built without framework overhead. |
 | **Quality Control** | Oxlint & Biome | Latest | Lightning-fast linting and formatting replacing ESLint & Prettier. |
-| **File Structure** | ls-lint | Latest | Validates directory and file naming structures. |
+| **File Structure** | lint-filenames | Latest | Validates directory and file naming structures. |
 | **DevOps / Tools** | Docker & Compose | Latest | Standardized containerization for development and production environments. |
 
 ---
@@ -91,11 +91,29 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
   pnpm --filter image-transformer-backend start
   ```
 
+> **Production note:** the compiled frontend is served by Nginx with hardened rules that block scanner probes (`env.js`, `config.js`, `aws-*.js`, …) and redirect the default `/favicon.ico` probe. See [Production Nginx Hardening](docs/DOCKER.md#production-nginx-hardening).
+
 ### Common Quality Control Utilities
 
 - **Code Formatting:** `pnpm format` (formats the entire workspace with Biome).
-- **Linter & File Names Check:** `pnpm lint` (runs Oxlint for deep inspection and ls-lint for strict casing checks).
+- **Linter & File Names Check:** `pnpm lint` (runs Oxlint for deep inspection and lint-filenames for strict casing checks).
 - **TypeScript Type Verification:** `pnpm type-check` (performs dry-run compilation using `tsc --noEmit`).
+
+---
+
+## 🗂️ Temporary File Lifecycle
+
+Uploaded images and generated ZIPs live under `backend/temp/` (`uploads/` + `output/`) and are removed automatically so nothing accumulates on the server:
+
+- **Per-request cleanup:** on any success or error, all uploaded originals and processed files are deleted immediately (`TEMP_FILES_CLEANUP_MS` only delays ZIP deletion to allow the download, default 5 min).
+- **Startup sweep:** on boot, everything left in `temp/` from a previous session is removed (timers from a crashed/restarted process cannot run).
+- **Periodic sweep:** a background interval deletes any file older than the max age, covering edge cases where the per-file timer was lost.
+
+| Variable | Default | Purpose |
+| :--- | :--- | :--- |
+| `TEMP_FILES_CLEANUP_MS` | `300000` | Delay before a generated ZIP is deleted (download window). |
+| `TEMP_CLEANUP_INTERVAL_MS` | `300000` | Interval of the periodic temp directory sweep. |
+| `TEMP_FILE_MAX_AGE_MS` | `1800000` | Max age for a temp file before the periodic sweep removes it. |
 
 ---
 
@@ -103,14 +121,12 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
 
 ```
 imageTransformer/
-├── .agents/              # System agent configuration files and local tools
-├── .gemini/              # Gemini CLI specific local configurations & templates
+├── .agents/              # Agent harness (manifest, checkpoint, context, docs, skills)
 ├── .husky/               # Git lifecycle hooks
 ├── backend/              # Node.js API Service (pnpm workspace package)
 │   ├── src/              # Express controllers, routes, and processing logic
 │   ├── temp/             # Temporary folder for active transformations
-│   ├── package.json      # Backend-specific package configurations
-│   └── context.md        # Local backend contextual memory
+│   └── package.json      # Backend-specific package configurations
 ├── docs/                 # Detailed manuals and architectural documentations
 ├── public/               # Frontend static assets and configurations
 ├── src/                  # Frontend Application Source Code
@@ -120,7 +136,6 @@ imageTransformer/
 │   └── main.ts           # Frontend main application entry-point
 ├── biome.json            # Global unified Biome formatter configuration
 ├── pnpm-workspace.yaml   # Monorepo hoisting and overrides setup
-├── context.md            # Root context and development memory log
 └── README.md             # This documentation file
 ```
 
@@ -169,7 +184,22 @@ For in-depth architectural design, software flow charts, and logging behaviors, 
 ## 📄 License
 
 This project is licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**.  
-👉 **[Read Full LICENSE.md](file:///projects/Github/imageTransformer/LICENSE.md)**
+👉 **[Read Full LICENSE.md](./LICENSE.md)**
+
+---
+
+## 🎨 Fonts & Third-Party Licenses
+
+The bundled fonts and runtime dependencies are redistributed under their own licenses:
+
+- **Figtree** — SIL Open Font License 1.1 (`assets/fonts/Figtree/OFL.txt`)
+- **IBM Plex Mono** — SIL Open Font License 1.1 (`assets/fonts/IBM_Plex_Mono/OFL.txt`)
+- **Iconoir** — MIT (`assets/icons/` — vendored icon SVGs)
+- **Express, Multer, Zod, Pino, Helmet, CORS, Archiver, express-rate-limit** — MIT
+- **Sharp** — Apache-2.0
+- **dotenv** — BSD-2-Clause
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for the full list.
 
 ---
 
@@ -177,4 +207,4 @@ This project is licensed under the **Creative Commons Attribution 4.0 Internatio
 
 Developed with ❤️ by **Damedsol**:
 - **GitHub:** [@Damedsol](https://github.com/Damedsol)
-- **LinkedIn:** [Your Profile](https://www.linkedin.com/)
+- **LinkedIn:** [David Medina Soloza](https://www.linkedin.com/in/david-medina-soloza/)

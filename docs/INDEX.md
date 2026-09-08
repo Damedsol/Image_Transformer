@@ -31,7 +31,7 @@ This index provides a comprehensive map of all available technical documentation
 ### 3. Quality Control (Tooling)
 - **Fast Linting:** **Oxlint** replaces legacy ESLint, carrying out static analysis in milliseconds.
 - **Code Formatter:** Unified workspace **Biome** ruleset providing immediate file formatting replacing Prettier.
-- **File Structure:** **ls-lint** rules checking naming casing (directories in kebab-case, components in PascalCase, code in camelCase).
+- **File Structure:** **lint-filenames** rules checking naming casing (directories in kebab-case, components in PascalCase, code in camelCase).
 - **Quality Gates:** Automates Husky pre-commit triggers using lint-staged (running Oxlint and Biome on staged changes).
 
 ---
@@ -56,6 +56,16 @@ LOG_LEVEL=debug
 NODE_ENV=production
 # Debug Level (Silence stdout/stderr)
 LOG_LEVEL=silent
+```
+
+#### Temp File Lifecycle
+```bash
+# ZIP download window before deletion (ms)
+TEMP_FILES_CLEANUP_MS=300000
+# Periodic temp directory sweep interval (ms)
+TEMP_CLEANUP_INTERVAL_MS=300000
+# Max age of a temp file before the periodic sweep removes it (ms)
+TEMP_FILE_MAX_AGE_MS=1800000
 ```
 
 ### Docker Compose Environments Setup
@@ -103,7 +113,7 @@ docker compose down --volumes --remove-orphans
    - Ensure you deployed using the production compose file.
 
 2. **File Casing Fails on Git Commits:**
-   - Pre-commit hook blocks casing errors via `ls-lint`. Review filenames to make sure directories use kebab-case and components use PascalCase.
+   - Pre-commit hook blocks casing errors via `lint-filenames`. Review filenames to make sure directories use kebab-case and components use PascalCase.
 
 3. **Node/pnpm Compatibility Errors:**
    - Verify that your local execution engines comply with Node.js `>=24.0.0` and pnpm `>=11.0.0` declared inside the root `package.json` engines definitions.

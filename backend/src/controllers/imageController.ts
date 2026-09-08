@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import path from "path";
+import crypto from "crypto";
 import { z } from "zod";
 import {
 	processImage,
@@ -10,10 +11,7 @@ import { ConversionOptions, ConversionResult } from "../utils/types.js";
 import { AppError } from "../utils/apiError.js";
 import { safelyDeleteFile } from "../middlewares/uploadMiddleware.js";
 import logger from "../utils/logger.js";
-import dotenv from "dotenv";
-
-// Load environment variables
-dotenv.config();
+import { QuotaStore } from "../utils/quota.js";
 
 // Configuration limits
 const MAX_FILES_PER_REQUEST = parseInt(
@@ -21,12 +19,12 @@ const MAX_FILES_PER_REQUEST = parseInt(
 );
 const DAILY_QUOTA_PER_IP = parseInt(process.env.DAILY_QUOTA_PER_IP || "100");
 
-// In-memory storage for quotas (in production use Redis or database)
-interface IPQuota {
-	count: number;
-	resetAt: Date;
-}
-const ipQuotas = new Map<string, IPQuota>();
+// In-memory storage for quotas (in production use Redis or database).
+// Bounded via QuotaStore: expired entries are evicted first, then LRU.
+const IP_QUOTA_MAX_ENTRIES = parseInt(
+	process.env.IP_QUOTA_MAX_ENTRIES || "10000",
+);
+const ipQuotaStore = new QuotaStore({ maxEntries: IP_QUOTA_MAX_ENTRIES });
 
 // Validation schema for conversion options
 const formatSchema = z.enum(["jpeg", "png", "webp", "avif", "gif"]);
@@ -42,32 +40,8 @@ const conversionOptionsSchema = z.object({
  * Check and update IP quota
  * @returns true if IP has available quota, false if quota exceeded
  */
-const checkIPQuota = (ip: string): boolean => {
-	// In a production environment, this should be persisted in a database
-	const now = new Date();
-	const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-	let ipQuota = ipQuotas.get(ip);
-
-	// If quota doesn't exist or is from a previous day, reset
-	if (!ipQuota || ipQuota.resetAt < today) {
-		ipQuota = {
-			count: 0,
-			resetAt: today,
-		};
-	}
-
-	// Check if quota has been exceeded
-	if (ipQuota.count >= DAILY_QUOTA_PER_IP) {
-		return false;
-	}
-
-	// Update counter
-	ipQuota.count += 1;
-	ipQuotas.set(ip, ipQuota);
-
-	return true;
-};
+const checkIPQuota = (ip: string): boolean =>
+	ipQuotaStore.checkAndConsume(ip, DAILY_QUOTA_PER_IP);
 
 /**
  * Converts images according to specified options and returns a ZIP
@@ -84,6 +58,13 @@ export const convertImages = async (
 		if (!req.files || !Array.isArray(req.files)) {
 			throw new AppError("No images uploaded", 400);
 		}
+
+		// Register ALL uploaded files for guaranteed cleanup immediately, so
+		// any validation error below (max files, quota, options schema) still
+		// removes every temp file — 0 files left on the server.
+		req.files.forEach((file) => {
+			allTempFiles.push(file.path);
+		});
 
 		// Check maximum number of files
 		if (req.files.length > MAX_FILES_PER_REQUEST) {
@@ -134,37 +115,33 @@ export const convertImages = async (
 		};
 		logger.info({ options }, "Conversion options validated");
 
-		// Add original files to global cleanup list
-		req.files.forEach((file) => {
-			allTempFiles.push(file.path);
-		});
-
-		// Process each uploaded image
+		// Process each uploaded image sequentially, registering every produced
+		// file in the cleanup list IMMEDIATELY. Parallel processing (Promise.all)
+		// races with the error cleanup: when one image fails, the catch deletes
+		// the inputs while others are still processing — leaving their outputs
+		// orphaned in temp/output or failing with "Input file is missing".
+		// Sequential + early registration guarantees 0 files left on any error.
 		logger.info({ numFiles: req.files.length }, "Starting image processing");
-		const processedImages: ConversionResult[] = await Promise.all(
-			req.files.map((file: Express.Multer.File) =>
-				processImage(
-					{
-						path: file.path,
-						originalname: file.originalname,
-					},
-					options,
-				),
-			),
-		);
-
-		// Add processed images to global cleanup list
-		processedImages.forEach((img) => {
-			allTempFiles.push(img.path);
-		});
+		const processedImages: ConversionResult[] = [];
+		for (const file of req.files as Express.Multer.File[]) {
+			const processed = await processImage(
+				{
+					path: file.path,
+					originalname: file.originalname,
+				},
+				options,
+			);
+			processedImages.push(processed);
+			allTempFiles.push(processed.path);
+		}
 
 		logger.info(
 			{ numProcessed: processedImages.length },
 			"Image processing completed",
 		);
 
-		// Create ZIP name based on timestamp and random identifier
-		const zipFileName = `converted_images_${Date.now()}_${Math.random().toString(36).substring(2, 10)}`;
+		// Create ZIP name based on timestamp and CSPRNG identifier
+		const zipFileName = `converted_images_${Date.now()}_${crypto.randomBytes(8).toString("hex")}`;
 
 		// Create ZIP with processed images
 		logger.info({ zipFileName }, "Starting ZIP file creation");

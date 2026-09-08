@@ -3,7 +3,7 @@ FROM node:24-alpine AS base
 WORKDIR /app
 
 # Install pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11.15.0
 
 # Copy workspace dependency configuration files
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
@@ -27,7 +27,7 @@ CMD ["tsx", "watch", "--clear-screen=false", "src/index.ts"]
 # Compilation/build stage for production
 FROM base AS builder
 ENV NODE_ENV=production
-RUN pnpm install --prod=false --ignore-scripts
+RUN pnpm install --ignore-scripts
 COPY . .
 WORKDIR /app/backend
 RUN pnpm run build

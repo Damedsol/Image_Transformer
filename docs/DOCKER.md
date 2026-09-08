@@ -52,6 +52,18 @@ You can configure the deployment settings by exposing these variables in the env
 | `FRONTEND_PORT` | Port to map the Nginx frontend static server on the host. | `8080` |
 | `DOCKER_PROXY_NETWORK` | The external Docker network of your reverse proxy. | `proxy-tier` |
 
+### Production Nginx Hardening
+
+The production frontend image serves the compiled SPA through **Nginx** (`docker/nginx.conf`). Key runtime facts:
+
+- **Config is build-time**: the application reads its configuration from build arguments (`VITE_API_URL`), **not** from runtime JS files. There is no need for `env.js`, `config.js`, `aws-*.js`, `credentials.js`, etc. — those are **scanner probes** and are rejected anyway.
+- **Hardened defaults** enforced by `docker/nginx.conf`:
+  - Blocks dotfiles, sensitive config files (`package.json`, `docker-compose*.yml`, `serverless.yml`, …), and unused tech endpoints (Swagger, Kibana, GraphQL).
+  - Redirects the browser's default `/favicon.ico` probe to the real `/favicon.svg` (avoids the recurring 404).
+  - Silently returns `404` for runtime-config scanner probes (`env.js`, `config.js`, `__env.js`, `credentials.js`, `sw.js`, `aws*.js`) without cluttering the error log.
+  - Silently returns `404` for CMS/Vite-probe paths (`/wp-includes`, `/wp-content`, `/wp-admin`, `/media/system`, `/@fs`) without cluttering the error log.
+- The `/api/` and `/temp/` paths are reverse-proxied to the backend container; the SPA fallback (`try_files … /index.html`) handles client routing.
+
 ### Commands
 ```bash
 # Before launching, ensure your proxy network is created on the host (if not already existing)

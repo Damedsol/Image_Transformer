@@ -32,7 +32,7 @@ export const createImagePreview = (file: File): Promise<string> => {
 		};
 
 		reader.onerror = () => {
-			reject(new Error("No se pudo crear la vista previa de la imagen"));
+			reject(new Error("Could not create the image preview"));
 		};
 
 		reader.readAsDataURL(file);
@@ -56,7 +56,7 @@ export const getImageDimensions = (
 		};
 
 		img.onerror = () => {
-			reject(new Error("No se pudieron obtener las dimensiones de la imagen"));
+			reject(new Error("Could not read the image dimensions"));
 		};
 
 		img.src = imageUrl;
@@ -73,8 +73,6 @@ export const isValidImage = (file: File): boolean => {
 		"image/jpg",
 		"image/webp",
 		"image/gif",
-		"image/bmp",
-		"image/tiff",
 		"image/avif",
 	];
 
@@ -93,8 +91,6 @@ export const getExtensionFromMimeType = (
 		"image/jpg": "jpeg",
 		"image/webp": "webp",
 		"image/gif": "gif",
-		"image/bmp": "bmp",
-		"image/tiff": "tiff",
 		"image/avif": "avif",
 	};
 
