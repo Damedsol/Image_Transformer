@@ -1,3 +1,8 @@
+---
+name: code-quality
+description: Unified formatting and linting with Biome, Oxlint and lint-filenames for monorepos. Use when formatting code, linting, fixing file-naming conventions, or configuring pre-commit hooks.
+---
+
 # Code Quality Skill: Unified Formatting & Linting (Biome, Oxlint, lint-filenames)
 
 This skill provides comprehensive context, architectural patterns, and operational rules for maintaining code consistency, styling, linting, and directory structuring across Monorepos using modern toolchains.
@@ -71,8 +76,8 @@ For a multi-package pnpm monorepo:
 ## Advanced & Edge Cases (Complex Monorepos)
 
 For details on advanced monorepo rules, configuration syntax, pre-commit pipelines, performance debugging, and template structures, refer to the dedicated reference documents:
-- **Biome Reference:** See [biome-rules.md](file:///projects/Github/imageTransformer/.agents/skills/code-quality/references/biome-rules.md) for custom rules and error handling.
-- **Oxlint & lint-filenames Reference:** See [oxlint-lslint.md](file:///projects/Github/imageTransformer/.agents/skills/code-quality/references/oxlint-lslint.md) for custom environment mappings and directory structures.
+- **Biome Reference:** See [biome-rules.md](references/biome-rules.md) for custom rules and error handling.
+- **Oxlint & lint-filenames Reference:** See [oxlint-lslint.md](references/oxlint-lslint.md) for custom environment mappings and directory structures.
 
 ---
 
