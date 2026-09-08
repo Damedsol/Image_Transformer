@@ -91,6 +91,8 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
   pnpm --filter image-transformer-backend start
   ```
 
+> **Production note:** the compiled frontend is served by Nginx with hardened rules that block scanner probes (`env.js`, `config.js`, `aws-*.js`, …) and redirect the default `/favicon.ico` probe. See [Production Nginx Hardening](docs/DOCKER.md#production-nginx-hardening).
+
 ### Common Quality Control Utilities
 
 - **Code Formatting:** `pnpm format` (formats the entire workspace with Biome).

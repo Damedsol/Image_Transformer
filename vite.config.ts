@@ -8,7 +8,9 @@ export default defineConfig({
 			interval: 300,
 			ignored: ["node_modules/**", "dist/**"],
 		},
-		host: true,
+		// Bind to localhost for local dev (hardens against Vite dev-server CVEs).
+		// Docker dev overrides this via `--host 0.0.0.0` in docker-compose.yml.
+		host: "localhost",
 		hmr: {
 			clientPort: 5173,
 			host: "localhost",

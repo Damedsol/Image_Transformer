@@ -23,6 +23,9 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+// Behind Render/nginx: honor X-Forwarded-For so req.ip reflects the real
+// client. Without this, all clients share one rate-limit/quota bucket.
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3001;
 
 // Temp file lifecycle: sweep orphaned files (lost TTL timers from crashes or

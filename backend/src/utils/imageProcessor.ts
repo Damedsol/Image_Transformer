@@ -229,7 +229,7 @@ const processImageWithLimits = async (
 	// Process image with Sharp
 	logger.debug({ imagePath: imageFile.path }, "Creating Sharp instance");
 	const sharpInstance = sharp(imageFile.path, {
-		failOnError: true,
+		failOn: "error", // Throw on corrupt/invalid input (sharp ≥0.35 replaced failOnError)
 		limitInputPixels: MAX_DIMENSIONS, // Limit pixel size
 		sequentialRead: true, // Lower memory usage for large images
 	});

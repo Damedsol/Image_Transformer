@@ -131,7 +131,14 @@ export const upload = multer({
 	limits: {
 		fileSize: parseInt(process.env.MAX_FILE_SIZE || "10485760"), // 10MB por defecto
 		files: 10, // Máximo 10 archivos simultáneos
-	},
+		fields: 20, // Límite de campos no-file (mitiga abuso)
+		fieldNameSize: 128, // Tamaño máximo del nombre de campo
+		fieldSize: 1024 * 1024, // 1MB por campo no-file
+		// fieldNestingDepth existe en multer 2.2.0 (mitiga CVE-2026-5079), pero
+		// @types/multer 2.2.0 aún no lo declara; el cast es temporal hasta que
+		// los tipos se actualicen.
+		fieldNestingDepth: 5, // Mitiga DoS de campos anidados
+	} as unknown as multer.Options["limits"],
 });
 
 // Función para eliminar archivos de forma segura
