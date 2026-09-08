@@ -6,9 +6,10 @@
 
 ## Change History
 
-- **2026-09-08: Version bump 1.3.2 → 2.0.0**
-  - Detail: synced `package.json` (root + backend), `docker-compose.prod.yml` default images, README version badge, `.agents/project_manifest.yaml`.
-  - QA: per AGENTS.md no-auto-runs policy, NOT auto-run — propose `pnpm qa && pnpm build`.
+- **2026-09-08: Release 2.0.0 — version bump + reproducible docker builds + IT favicon (scribe)**
+  - Plan: N/A (direct user-driven session, no `/plan` file). Reviewer: N/A (no `/reviewer` gate this cycle).
+  - Detail: (A) bump `1.3.2` → `2.0.0` synced in `package.json` (root + backend), `docker-compose.prod.yml` default images, README badge, `.agents/project_manifest.yaml` → commit `f128550`. (B) docker build fix: unpinned `npm install -g pnpm` pulled pnpm 11, which rejects `--prod=false` (worked with pnpm 10 when 1.3.2 was built) → pinned `pnpm@11.15.0` + builder stage `pnpm install --ignore-scripts` in both Dockerfiles → commit `1633a54`. (C) new `public/favicon.svg` IT monogram mirroring currencyExchange EX style (lime `#b9f27c`/`#0d1117`, 2 paths); PNGs via `rsvg-convert` → commit `f3b5e4f`. Lesson: never `latest` in Dockerfiles — pin toolchains.
+  - QA: pre-commit hooks green on all 3 commits (type-check FE+BE, commitlint); full `pnpm qa && pnpm build` proposed to user, not auto-run.
 
 - **2026-08-28: Security session continuation (ses_fbb1 LOWs) — CSP hardening + bounded quota (build)**
   - Detail: (A) `securityMiddleware.ts` — extracted pure `buildCspDirectives()` (exact origins, no `'unsafe-inline'`, no `*.onrender.com` wildcard); `configureHelmet()` consumes it. (B) New `backend/src/utils/quota.ts` `QuotaStore` (bounded Map, expired-first→LRU eviction, `IP_QUOTA_MAX_ENTRIES` default 10_000); `imageController.ts` uses it with identical daily count/reset semantics. New suites `securityMiddleware.test.ts` (7) + `quota.test.ts` (6), TDD Red→Green.
