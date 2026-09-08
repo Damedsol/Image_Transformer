@@ -6,6 +6,10 @@
 
 ## Change History
 
+- **2026-09-08: Version bump 1.3.2 → 2.0.0**
+  - Detail: synced `package.json` (root + backend), `docker-compose.prod.yml` default images, README version badge, `.agents/project_manifest.yaml`.
+  - QA: per AGENTS.md no-auto-runs policy, NOT auto-run — propose `pnpm qa && pnpm build`.
+
 - **2026-08-28: Security session continuation (ses_fbb1 LOWs) — CSP hardening + bounded quota (build)**
   - Detail: (A) `securityMiddleware.ts` — extracted pure `buildCspDirectives()` (exact origins, no `'unsafe-inline'`, no `*.onrender.com` wildcard); `configureHelmet()` consumes it. (B) New `backend/src/utils/quota.ts` `QuotaStore` (bounded Map, expired-first→LRU eviction, `IP_QUOTA_MAX_ENTRIES` default 10_000); `imageController.ts` uses it with identical daily count/reset semantics. New suites `securityMiddleware.test.ts` (7) + `quota.test.ts` (6), TDD Red→Green.
   - QA: new suites **13/13 green**; full `pnpm test` **94/95** — 1 PRE-EXISTING failure unrelated to this change (`session-ses_fbb1.md` at root violates `.md` kebab-case, lint-filenames parity test). `type-check`/`build`/`qa` NOT auto-run per AGENTS.md no-auto-runs policy (commands proposed to user).
