@@ -6,7 +6,7 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Instalar pnpm
-RUN npm install -g pnpm
+RUN npm install -g pnpm@11.15.0
 
 # Etapa de desarrollo
 FROM base AS development
@@ -26,7 +26,7 @@ FROM base AS builder
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 ENV NODE_ENV=production
-RUN pnpm install --prod=false --ignore-scripts
+RUN pnpm install --ignore-scripts
 COPY . .
 RUN pnpm run build
 

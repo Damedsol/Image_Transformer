@@ -5,7 +5,7 @@
 # ============================================================
 
 project_name: "imageTransformer"
-version: "1.3.2"
+version: "2.0.0"
 type: "monorepo (pnpm workspace v11)"
 license: "CC BY 4.0"
 
