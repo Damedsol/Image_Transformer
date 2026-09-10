@@ -14,7 +14,7 @@ tech_stack:
   - "Vite 8 (dev server, HMR, polling mode)"
   - "Vanilla Web Components (Custom Elements v1, Shadow DOM)"
   - "Vanilla CSS / CSS Custom Properties"
-  - "Express 5 + Sharp 0.34 (backend REST API)"
+  - "Express 5 + Sharp 0.35 (backend REST API)"
   - "Iconoir Icons via <tn-icon> Web Component"
   - "Figtree (UI) + IBM Plex Mono (data/code)"
   - "WCAG 2.2 AAA"
@@ -28,7 +28,7 @@ tooling:
     - "lint-filenames v1 (script: naming)"
     - "Husky v9 + lint-staged + commitlint"
   testing: "Vitest + JSDOM"
-  docker: "Docker multi-stage (Node 24 Alpine + Nginx Alpine)"
+  docker: "Docker multi-stage (Node 24 Alpine digest-pinned + Nginx unprivileged :8080, non-root runtimes)"
 
 relevant_folders:
   - "src/components/       # Web Components PascalCase"
@@ -73,6 +73,7 @@ env_keys:
   - "MAX_FILE_SIZE"
   - "RATE_LIMIT_WINDOW_MS"
   - "RATE_LIMIT_MAX"
+  - "TRUST_PROXY_HOPS"
   - "CORS_ORIGIN"
   - "LOG_LEVEL"
   - "UPLOAD_DIR"

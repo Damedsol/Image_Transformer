@@ -6,6 +6,59 @@
 
 ## Change History
 
+- **2026-09-10: Cierre scribe — ciclo security-remediation + Dependabot (reviewer ✅ APROBADO)**
+  - Reviewer: `review_2026-09-10_security-remediation.md` — VERIFY total, QA con 3 INFO no bloqueantes, 40 tests KEEP / 0 REMOVE, suite 135/135 + audit 0/0 re-ejecutados.
+  - Scribe: spec `security-hardening.md` ampliada (sección C); ADR-0004 (container hardening); manifiesto actualizado (Sharp 0.35, nginx unprivileged, TRUST_PROXY_HOPS); checkpoint `completed`; reindexado index-mcp.
+  - Lecciones: (1) los overrides con rango resuelven al máximo — pin exacto para líneas que el consumidor espera (`undici` 8.10.2 → 7.29.0); (2) `USER node` + volumen root-owned son incompatibles — temp efímero justifica eliminar el volumen; (3) `nginx -t` en imagen real valida sintaxis sin build completo.
+
+- **2026-09-10: Restos del security_report atacados — nginx sin root, trust-proxy, magic-bytes (build, TDD)**
+  - (D) Magic-bytes reales: nuevo `backend/src/utils/imageValidation.ts` (`detectImageKind` jpeg/png/webp/gif/avif, `kindForExtension`, `isMagicAllowed`, `readFileHeader`, `validateUploadedImageMagic`); el controlador lo exige tras max-files y antes de cuota/procesado (cleanup ya garantizado). Suite `imageValidation.test.ts` (12). Sharp sigue como red final.
+  - (C) `trust proxy` configurable: `configureTrustProxy(app)` (`TRUST_PROXY_HOPS`, default 1, `0` = expuesto directo, inválidos → 1) + log en arranque + `TRUST_PROXY_HOPS=1` documentado en `.env.example`; `index.ts` lo consume. Tests (3).
+  - (A) Frontend sin root: `nginxinc/nginx-unprivileged:stable-alpine@sha256:4427…` + `listen 8080` + `EXPOSE 8080` + compose `expose 8080` (el proxy externo debe apuntar a :8080). `nginx -t` OK dentro de la imagen real como no-root.
+  - (B) Backend sin root verificado de verdad: imagen prod construida y arrancada (`whoami=node`, `temp/{uploads,output}` creados por node, `/` y `/api/formats` OK) y limpiada después. Requerido: eliminado el volumen `backend-temp` del compose prod (temp es efímero por diseño TTL 5min; un volumen root-owned habría roto al usuario node).
+  - QA: `pnpm test` **135/135** (18 ficheros); `pnpm audit` full **0**; `--prod` **0**. Nota: el `docker logs` del contenedor de verificación no mostró la línea de arranque (observabilidad menor, boot probado por endpoints); no se persiguió.
+
+- **2026-09-10: Cierre de cobertura del security_report — digests Docker + script jest obsoleto (build)**
+  - `Dockerfile` + `backend/Dockerfile`: `FROM` pineados por digest (`node:24-alpine@sha256:50c8…`, `nginx:stable-alpine@sha256:dc50…`; digests verificados contra registry). Cierra el hallazgo de tags mutables.
+  - `backend/package.json`: eliminado `"test": "jest"` obsoleto (CONFIG-01; la suite real es vitest desde raíz, nada lo referenciaba).
+  - QA: `pnpm test` **120/120**.
+
+- **2026-09-10: Dependabot js-yaml merge-keys CPU-exhaustion fix (build) — árbol a CERO**
+  - Reporte: `maxTotalMergeKeys` no limita CPU con merge sources vacías (GHSA-2883-xcg3-v3hh).
+  - Estado previo: **vulnerable** — `js-yaml@4.3.1` (vía `cosmiconfig@9.0.1`, rango `^4.1.0` ← commitlint; afectado `>=4.0.0 <4.3.2`).
+  - Fix: override `">=4.3.1 <5"` → `">=4.3.2 <5"` → **4.3.2** (dentro del `^4.1.0` de cosmiconfig). Lockfile regenerado.
+  - QA: `pnpm audit` (full) → **No known vulnerabilities found (0 en todo el árbol)**; `pnpm test` **120/120**; smoke `commitlint` exit 0 + `js-yaml.load` OK.
+
+- **2026-09-10: Dependabot fast-uri double-decode SSRF-bypass fix (build)**
+  - Reporte: doble decodificación de `%25` en hostname → `normalize()` devuelve destino distinto al aparente (variante incompleta de CVE-2026-6322).
+  - Estado previo: **vulnerable** — `fast-uri@4.1.2` único en el árbol (vía `ajv@8.20.0` ← commitlint; rango afectado `>=4.0.0 <4.1.3`).
+  - Fix: override `">=3.1.5"` → `">=4.1.3"` en `pnpm-workspace.yaml` → resuelto a **4.1.4**. Lockfile regenerado.
+  - QA: los 4 avisos fast-uri eliminados (5→1 hallazgo restante: js-yaml); `pnpm test` **120/120**; smoke `commitlint` (`feat: probe`) OK con ajv→fast-uri 4.1.4.
+
+- **2026-09-10: Dependabot vitest/@vitest/mocker path-traversal fix (build)**
+  - Reporte: redirect-mock sin validar contra `server.fs` → lectura de ficheros vía WebSocket HMR sin autenticar (solo dev-server expuesto; browser mode usa RPC con token).
+  - Estado previo: **vulnerable** — `vitest@4.1.10` + `@vitest/ui@4.1.10` (rango afectado `>=2.1.0 <4.1.11`).
+  - Fix: bump mínimo `^4.1.10` → `^4.1.11` en `package.json` (se queda en major 4, no 5.0.0). Lockfile regenerado → `vitest@4.1.11` + `@vitest/mocker@4.1.11`.
+  - QA: avisos vitest/mocker eliminados (7→5 hallazgos, resto dev-only preexistentes); `pnpm test` **120/120** con vitest 4.1.11.
+
+- **2026-09-10: Dependabot undici CRLF-injection fix (build)**
+  - Reporte: `body.type` de blob duck-typed sin validar → inyección CRLF / request smuggling en dispatcher HTTP/1.1. Parcheado en 6.28.0 / 7.29.0 / 8.9.0.
+  - Estado previo: **vulnerable** — `undici@7.28.0` único en el árbol (vía `jsdom@29.1.1`, rango `^7.25.0`).
+  - Fix: override `"undici": "7.29.0"` exacto en `pnpm-workspace.yaml` (el rango `>=7.29.0` resolvía a 8.10.2, major fuera de la línea que jsdom espera; se revirtió a 7.29.0). Lockfile regenerado.
+  - QA: `pnpm audit` sin rastro de undici (12→7 hallazgos, resto dev-only preexistentes); `pnpm test` **120/120**.
+
+- **2026-09-10: Dependabot esbuild CVE fix (build)**
+  - Reporte: path traversal Windows en dev-server `servedir` (`path.Clean` vs `\`), solo Windows, solo dev-server. GHSA-g7r4-m6w7-qqqr.
+  - Estado previo: **vulnerable** — `esbuild@0.27.7` transitivo (vía `vite@8.2.2`/`tsx@4.21.0`/`vitest`), rango afectado `>=0.27.3 <0.28.1`.
+  - Fix: override `"esbuild": ">=0.28.1"` en `pnpm-workspace.yaml` → resuelto a **0.28.2** (dentro del peer `^0.27.0 || ^0.28.0` de vite 8). Lockfile regenerado.
+  - QA: `pnpm audit` sin rastro de esbuild (14→12 hallazgos, todos dev-only preexistentes); `pnpm test` **120/120**; smoke `tsx --eval` OK con esbuild 0.28.2 (tsx declara `~0.27.0`, verificado funcional).
+
+- **2026-09-10: Security audit remediation — HIGH/MEDIUM/BUG fixes (build, TDD)**
+  - Plan: N/A (direct user-driven `Corrige las vulnerabilidades halladas`; source: `.agents/docs/security_report.md` 2026-09-10). Reviewer: pending → handoff `/reviewer`.
+  - Detail: (A) XSS H-1/H-2: new shared `src/utils/html.ts escapeHtml()`; `ImageConverter.updatePreviews` + `ImagePreview.render` escape names/badge (DRY refactor of the private helpers). (B) `sharp 0.35.3→0.35.4` + override `>=0.35.4` + lockfile regen → `pnpm audit --prod` 0. (C) Quota per-image (`QuotaStore.checkAndConsume(ip,limit,amount)`, atomic) + `normalizeQuotaKey` (IPv6 /56 via `ipKeyGenerator`); controller consumes `req.files.length`. (D) `/convert` limiter key IP-only via exported `convertRateLimitKey` (UA dropped). (E) `toPublicErrorBody` (prod-safe, dev-only details); `errorMiddleware` no longer throws on non-Error + masks Multer messages in prod; controller + `imageProcessor` use it (no more raw messages/paths to clients). (F) `registerBodyMiddleware` enforces JSON-parse-before-pollution-guard; `index.ts` uses it. (G) `booleanFromForm` fixes `z.coerce.boolean("false")→true`; schema exported. (H) `buildZipDownloadUrl` anchors trailing `/api`; `showMessage` clears stale 5s timer. (I) `buildProcessedFileName` (sanitized + CSPRNG suffix, no collisions); `createProcessingTimeout` (cancelled in `finally`); `trackArchiveCompletion` (listeners pre-finalize, destroy-on-error) + try/catch destroy in `createZipFromImages`; `path.sep`-aware boundary checks. (J) SPA CSP header in `docker/nginx.conf`; backend prod stage `USER node` (+chown); `.gitignore` gains `.env*`; `THIRD_PARTY_NOTICES.md` + license test cover libvips LGPL-3.0-or-later; `.ls-lint.json` ignores `.deepsec/` (audit workspace broke the parity test). Deferred with reason: nginx prod stays root (master must bind 80; needs unprivileged-image redesign), dev-only audit residuals (undici/fast-uri/vitest/js-yaml/esbuild), mutable base tags (no digests resolved).
+  - QA: `pnpm test` **120/120** green (was 95 pre-change; +25 new tests). `pnpm audit --prod` 0 vulns. `type-check`/`lint`/`build` NOT auto-run per no-auto-runs policy — proposed to user.
+  - Test command: `pnpm test` (full) · targeted: `pnpm vitest run <file>` per area.
+
 - **2026-09-08: Release 2.0.0 — version bump + reproducible docker builds + IT favicon (scribe)**
   - Plan: N/A (direct user-driven session, no `/plan` file). Reviewer: N/A (no `/reviewer` gate this cycle).
   - Detail: (A) bump `1.3.2` → `2.0.0` synced in `package.json` (root + backend), `docker-compose.prod.yml` default images, README badge, `.agents/project_manifest.yaml` → commit `f128550`. (B) docker build fix: unpinned `npm install -g pnpm` pulled pnpm 11, which rejects `--prod=false` (worked with pnpm 10 when 1.3.2 was built) → pinned `pnpm@11.15.0` + builder stage `pnpm install --ignore-scripts` in both Dockerfiles → commit `1633a54`. (C) new `public/favicon.svg` IT monogram mirroring currencyExchange EX style (lime `#b9f27c`/`#0d1117`, 2 paths); PNGs via `rsvg-convert` → commit `f3b5e4f`. Lesson: never `latest` in Dockerfiles — pin toolchains.
