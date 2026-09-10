@@ -26,6 +26,18 @@ interface ConversionResponse {
 }
 
 /**
+ * Construye la URL de descarga del ZIP.
+ * Solo se recorta el segmento final `/api`; un `replace("/api", "")` sin
+ * anclar rompería hosts que contengan "/api" (p. ej. https://api.example.com/api).
+ */
+export const buildZipDownloadUrl = (apiUrl: string, zipUrl: string): string => {
+	if (zipUrl.startsWith("http")) {
+		return zipUrl;
+	}
+	return `${apiUrl.replace(/\/api$/, "")}${zipUrl}`;
+};
+
+/**
  * Envía imágenes al servidor para su conversión
  */
 export const convertImagesAPI = async (
@@ -105,10 +117,7 @@ export const convertImagesAPI = async (
 
 		// Construir la URL completa para descargar el ZIP
 		// Si data.zipUrl ya es una URL completa, usarla directamente; si no, construirla
-		const baseUrl = API_URL.replace("/api", "");
-		const zipDownloadUrl = data.zipUrl.startsWith("http")
-			? data.zipUrl
-			: `${baseUrl}${data.zipUrl}`;
+		const zipDownloadUrl = buildZipDownloadUrl(API_URL, data.zipUrl);
 		logSuccess("imageConversion", {
 			zipUrl: zipDownloadUrl,
 			imagesCount: data.images.length,

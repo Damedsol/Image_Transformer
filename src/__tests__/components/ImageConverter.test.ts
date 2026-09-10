@@ -148,4 +148,44 @@ describe("ImageConverter (SNA-01 + SNA-15 + SNA-07)", () => {
 		expect(msg?.textContent).toContain("Daily quota exceeded");
 		expect(msg?.textContent).not.toMatch(/^\[!\]/);
 	});
+
+	it("keeps the latest status message for its full duration", () => {
+		vi.useFakeTimers();
+		try {
+			const el = mount("image-converter");
+			(
+				el as unknown as { showMessage: (t: string, ty: "success") => void }
+			).showMessage("first", "success");
+			vi.advanceTimersByTime(4000);
+			(
+				el as unknown as { showMessage: (t: string, ty: "success") => void }
+			).showMessage("second", "success");
+			vi.advanceTimersByTime(4000);
+
+			const msg = el.querySelector(".message-success");
+			expect(msg?.textContent).toContain("second");
+
+			vi.advanceTimersByTime(1000);
+			expect(el.querySelector(".message")).toBeNull();
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("escapes malicious file names in previews instead of injecting HTML", () => {
+		const maliciousName = '"><svg onload="window.__xss=1">.png';
+		const el = mount("image-converter");
+		(el as unknown as { images: (typeof mockImage)[] }).images = [
+			{ ...mockImage, name: maliciousName },
+		];
+		(el as unknown as { updatePreviews: () => void }).updatePreviews();
+
+		const previewArea = el.querySelector(".preview-area");
+		const name = el.querySelector(".preview-name");
+		expect(name?.textContent).toBe(maliciousName);
+		expect(previewArea?.querySelector("svg")).toBeNull();
+		expect(previewArea?.innerHTML).not.toContain(
+			'<svg onload="window.__xss=1">',
+		);
+	});
 });
