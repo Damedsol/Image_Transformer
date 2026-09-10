@@ -1,4 +1,9 @@
-import { Request, Response, NextFunction, RequestHandler } from "express";
+import express, {
+	Request,
+	Response,
+	NextFunction,
+	RequestHandler,
+} from "express";
 import helmet from "helmet";
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 import { AppError } from "../utils/apiError.js";
@@ -97,6 +102,24 @@ export const configureHelmet = (): RequestHandler => {
 };
 
 /**
+ * Configures how many reverse-proxy hops Express trusts for `req.ip`.
+ * Default 1 preserves the Render/nginx topology (real client IP for rate
+ * limits and quota). Set TRUST_PROXY_HOPS=0 when the backend is reachable
+ * directly: trusting `X-Forwarded-For` there lets clients spoof their IP
+ * and bypass rate limits and quota. Invalid values fall back to 1.
+ */
+export const configureTrustProxy = (app: {
+	set: (key: string, value: unknown) => void;
+}): number => {
+	const raw = process.env.TRUST_PROXY_HOPS;
+	const parsed =
+		raw === undefined || raw.trim() === "" ? 1 : Number.parseInt(raw, 10);
+	const hops = Number.isInteger(parsed) && (parsed as number) >= 0 ? parsed : 1;
+	app.set("trust proxy", hops);
+	return hops;
+};
+
+/**
  * Limitador de tasa para API
  */
 export const apiRateLimiter = rateLimit({
@@ -147,6 +170,22 @@ export const protectFromPrototypePollution = (
 	}
 
 	next();
+};
+
+/** Parser JSON compartido: debe ejecutarse antes del guard de prototype pollution. */
+export const jsonBodyParser = express.json({ limit: "1mb" });
+
+/**
+ * Registra el pipeline de cuerpo en el orden correcto: primero se parsea el
+ * JSON y después se sanea. Registrar el guard antes del parser deja
+ * `req.body` como undefined y la sanitización nunca se aplica.
+ */
+export const registerBodyMiddleware = (app: {
+	use: (middleware: RequestHandler) => void;
+}): void => {
+	app.use(jsonBodyParser);
+	app.use(protectFromPrototypePollution);
+	app.use(validateContentType(["application/json", "multipart/form-data"]));
 };
 
 /**

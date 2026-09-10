@@ -151,8 +151,12 @@ export const safelyDeleteFile = (filePath: string): boolean => {
 		// Verificar que el archivo existe
 		if (fs.existsSync(filePath)) {
 			// Verificar que el archivo está dentro de los directorios permitidos
+			// (con separador: un prefijo simple aceptaría `<tempDir>-evil`).
 			const normalizedPath = path.normalize(filePath);
-			const isInTempDir = normalizedPath.startsWith(path.normalize(tempDir));
+			const normalizedTempDir = path.normalize(tempDir);
+			const isInTempDir =
+				normalizedPath === normalizedTempDir ||
+				normalizedPath.startsWith(normalizedTempDir + path.sep);
 
 			if (!isInTempDir) {
 				logger.error(

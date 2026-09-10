@@ -55,3 +55,41 @@ export class AppError extends Error implements ApiError {
 		return new AppError(message, 500, { code: "INTERNAL_ERROR", details });
 	}
 }
+
+export interface PublicErrorBody {
+	message: string;
+	code?: string;
+	details?: unknown;
+}
+
+const isDevelopment = (): boolean => process.env.NODE_ENV === "development";
+
+/**
+ * Convierte cualquier error en un cuerpo de respuesta seguro para clientes.
+ * En producción nunca expone detalles internos (mensajes crudos, rutas);
+ * solo en desarrollo.
+ */
+export const toPublicErrorBody = (
+	error: unknown,
+	fallbackMessage = "Error processing images",
+): PublicErrorBody => {
+	if (error instanceof AppError) {
+		return {
+			message: error.message,
+			code: error.code,
+			details: isDevelopment() ? error.details : undefined,
+		};
+	}
+	return {
+		message: fallbackMessage,
+		details: isDevelopment()
+			? error instanceof Error
+				? error.message
+				: "Unknown error"
+			: undefined,
+	};
+};
+
+/** Lee el mensaje solo cuando el valor es un Error real. */
+export const getErrorMessage = (error: unknown): string | undefined =>
+	error instanceof Error ? error.message : undefined;
