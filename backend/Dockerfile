@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:24-alpine@sha256:50c8e8ca1d27439048670df5883f32d57cf81cff6233222c893fd0d9884cbd81 AS base
 
 WORKDIR /app
 
@@ -32,12 +32,14 @@ COPY . .
 WORKDIR /app/backend
 RUN pnpm run build
 
-# Production runtime stage
+# Production runtime stage (non-root: the app only needs its own files + temp/)
 FROM base AS production
 ENV NODE_ENV=production
 RUN pnpm install --prod --ignore-scripts
 COPY --from=builder /app/backend/dist ./backend/dist
 COPY backend/.env.example ./backend/.env
+RUN chown -R node:node /app
+USER node
 WORKDIR /app/backend
 EXPOSE 3001
 CMD ["sh", "-c", "node dist/index.js"]

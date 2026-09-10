@@ -2,6 +2,7 @@ import { ImageInfo, ConversionOptions, ConversionStatus } from "../types/image";
 import { DropZoneElement, ConversionOptionsElement } from "../types/components";
 import { prepareImageFile } from "../utils/fileUtils";
 import { convertImagesAPI } from "../utils/api";
+import { escapeHtml } from "../utils/html";
 import { logApiError } from "../utils/logger";
 import "./TnIcon";
 
@@ -10,6 +11,7 @@ import "./TnIcon";
  */
 export class ImageConverter extends HTMLElement {
 	private images: ImageInfo[] = [];
+	private messageTimeout: ReturnType<typeof setTimeout> | undefined;
 	private options: ConversionOptions;
 	private status: ConversionStatus = "idle";
 	private statusAnnouncer: HTMLElement | null = null;
@@ -81,19 +83,6 @@ export class ImageConverter extends HTMLElement {
 
 	private getErrorMessage(error: unknown, fallback: string): string {
 		return error instanceof Error && error.message ? error.message : fallback;
-	}
-
-	private escapeHtml(value: string): string {
-		return value.replace(/[&<>"']/g, (char) => {
-			const entities: Record<string, string> = {
-				"&": "&amp;",
-				"<": "&lt;",
-				">": "&gt;",
-				'"': "&quot;",
-				"'": "&#39;",
-			};
-			return entities[char];
-		});
 	}
 
 	private async handleFilesSelected(files: FileList) {
@@ -286,14 +275,15 @@ export class ImageConverter extends HTMLElement {
 				`Image ${index + 1}: ${image.name}`,
 			);
 
+			const safeName = escapeHtml(image.name);
 			previewItem.innerHTML = `
-            <img src="${image.preview}" alt="${image.name}" loading="lazy" />
+            <img src="${image.preview}" alt="${safeName}" loading="lazy" />
             <div class="preview-info">
-              <div class="preview-name">${image.name}</div>
+              <div class="preview-name">${safeName}</div>
               <div class="preview-meta">${(image.size / 1024).toFixed(2)} KB</div>
             </div>
             <div class="preview-actions">
-              <button class="btn-outline preview-remove" data-id="${image.id}" aria-label="Remove image ${image.name}">
+              <button class="btn-outline preview-remove" data-id="${image.id}" aria-label="Remove image ${safeName}">
                 <tn-icon name="trash" size="14"></tn-icon>
                 Remove
               </button>
@@ -354,9 +344,14 @@ export class ImageConverter extends HTMLElement {
 		const iconName = type === "error" ? "alert" : "check";
 		messageElement.innerHTML = `
         <tn-icon name="${iconName}" size="16"></tn-icon>
-        <span>${this.escapeHtml(text)}</span>
+        <span>${escapeHtml(text)}</span>
       `;
-		setTimeout(() => {
+		// A new message restarts the auto-dismiss timer; otherwise a stale
+		// timeout from a previous message removes the current one early.
+		if (this.messageTimeout) {
+			clearTimeout(this.messageTimeout);
+		}
+		this.messageTimeout = setTimeout(() => {
 			if (messageElement && messageElement.parentNode) {
 				messageElement.parentNode.removeChild(messageElement);
 			}

@@ -1,6 +1,6 @@
 {
 	"name": "image-transformer-backend",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"license": "CC-BY-4.0",
 	"description": "Backend para convertir imágenes usando Sharp",
 	"main": "dist/index.js",
@@ -9,7 +9,6 @@
 		"build": "tsc",
 		"start": "node dist/index.js",
 		"dev": "tsx watch --clear-screen=false src/index.ts",
-		"test": "jest",
 		"lint": "oxlint --fix",
 		"format": "biome format --write .",
 		"format:check": "biome format .",
@@ -22,9 +21,9 @@
 		"express": "5.2.1",
 		"express-rate-limit": "8.3.2",
 		"helmet": "8.1.0",
-		"multer": "2.2.0",
+		"multer": "2.3.0",
 		"pino": "10.3.1",
-		"sharp": "0.35.3",
+		"sharp": "0.35.4",
 		"zod": "4.4.3"
 	},
 	"devDependencies": {

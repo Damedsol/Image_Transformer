@@ -5,7 +5,7 @@
  * while the daily count/reset semantics stay intact.
  */
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { QuotaStore } from "../utils/quota.js";
+import { QuotaStore, normalizeQuotaKey } from "../utils/quota.js";
 
 beforeEach(() => {
 	vi.useRealTimers();
@@ -90,5 +90,27 @@ describe("QuotaStore", () => {
 		// Assert
 		expect(store.size).toBe(1);
 		expect(store.has("2.2.2.2")).toBe(true);
+	});
+
+	it("keys IPv6 clients by subnet so rotating addresses does not reset quota", () => {
+		// Arrange + Act
+		const first = normalizeQuotaKey("2001:db8:abcd:0012::1");
+		const sameSubnet = normalizeQuotaKey("2001:db8:abcd:0012::2");
+		const otherSubnet = normalizeQuotaKey("2001:db8:ffff:0012::1");
+		// Assert
+		expect(sameSubnet).toBe(first);
+		expect(otherSubnet).not.toBe(first);
+		expect(normalizeQuotaKey("1.2.3.4")).toBe("1.2.3.4");
+	});
+
+	it("consumes one quota unit per image in the same request", () => {
+		// Arrange
+		const store = new QuotaStore({ maxEntries: 10 });
+		// Act: a request with 3 images consumes 3 units of a limit of 5.
+		expect(store.checkAndConsume("1.1.1.1", 5, 3)).toBe(true);
+		// Assert: only 2 units remain, so another 3-image request is blocked.
+		expect(store.checkAndConsume("1.1.1.1", 5, 3)).toBe(false);
+		expect(store.checkAndConsume("1.1.1.1", 5, 2)).toBe(true);
+		expect(store.checkAndConsume("1.1.1.1", 5, 1)).toBe(false);
 	});
 });

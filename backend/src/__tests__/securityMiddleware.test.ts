@@ -78,3 +78,76 @@ describe("buildCspDirectives", () => {
 		expect(directives.connectSrc).toContain("https://b.example.com");
 	});
 });
+
+describe("configureTrustProxy", () => {
+	it("defaults to one trusted hop (Render/nginx in front)", async () => {
+		delete process.env.TRUST_PROXY_HOPS;
+		const { configureTrustProxy } = await import(
+			"../middlewares/securityMiddleware.js"
+		);
+		const seen: Record<string, unknown> = {};
+		const app = {
+			set: (key: string, value: unknown) => {
+				seen[key] = value;
+			},
+		};
+		expect(configureTrustProxy(app as never)).toBe(1);
+		expect(seen["trust proxy"]).toBe(1);
+	});
+
+	it("honours TRUST_PROXY_HOPS=0 for directly-exposed backends", async () => {
+		process.env.TRUST_PROXY_HOPS = "0";
+		const { configureTrustProxy } = await import(
+			"../middlewares/securityMiddleware.js"
+		);
+		const seen: Record<string, unknown> = {};
+		const app = {
+			set: (key: string, value: unknown) => {
+				seen[key] = value;
+			},
+		};
+		try {
+			expect(configureTrustProxy(app as never)).toBe(0);
+			expect(seen["trust proxy"]).toBe(0);
+		} finally {
+			delete process.env.TRUST_PROXY_HOPS;
+		}
+	});
+
+	it("falls back to one hop on invalid values", async () => {
+		process.env.TRUST_PROXY_HOPS = "evil";
+		const { configureTrustProxy } = await import(
+			"../middlewares/securityMiddleware.js"
+		);
+		try {
+			expect(configureTrustProxy({ set: () => {} } as never)).toBe(1);
+		} finally {
+			delete process.env.TRUST_PROXY_HOPS;
+		}
+	});
+});
+
+describe("registerBodyMiddleware", () => {
+	it("parses JSON bodies before the prototype-pollution guard runs", async () => {
+		// Arrange
+		const { registerBodyMiddleware, jsonBodyParser } = await import(
+			"../middlewares/securityMiddleware.js"
+		);
+		const calls: unknown[] = [];
+		const app = {
+			use: (middleware: unknown) => {
+				calls.push(middleware);
+			},
+		};
+		// Act
+		registerBodyMiddleware(app as never);
+		// Assert: JSON parsing must precede the guard, otherwise req.body
+		// is undefined when the guard runs and body sanitization is dead code.
+		const { protectFromPrototypePollution } = await import(
+			"../middlewares/securityMiddleware.js"
+		);
+		expect(calls[0]).toBe(jsonBodyParser);
+		expect(calls).toContain(protectFromPrototypePollution);
+		expect(calls.indexOf(protectFromPrototypePollution)).toBeGreaterThan(0);
+	});
+});

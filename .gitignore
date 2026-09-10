@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# DeepSec audit workspace (local scan data + tooling, never commit)
+.deepsec/
+
+# Environment files (never commit secrets; only *.example templates)
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

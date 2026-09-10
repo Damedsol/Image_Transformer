@@ -7,10 +7,10 @@ import { imageRoutes } from "./routes/imageRoutes.js";
 import { errorHandler } from "./middlewares/errorMiddleware.js";
 import {
 	configureHelmet,
+	configureTrustProxy,
 	apiRateLimiter,
-	protectFromPrototypePollution,
 	preventClickjacking,
-	validateContentType,
+	registerBodyMiddleware,
 } from "./middlewares/securityMiddleware.js";
 import logger from "./utils/logger.js";
 import {
@@ -25,7 +25,8 @@ const __dirname = dirname(__filename);
 const app = express();
 // Behind Render/nginx: honor X-Forwarded-For so req.ip reflects the real
 // client. Without this, all clients share one rate-limit/quota bucket.
-app.set("trust proxy", 1);
+// TRUST_PROXY_HOPS=0 when reachable directly (see securityMiddleware).
+const trustProxyHops = configureTrustProxy(app);
 const PORT = process.env.PORT || 3001;
 
 // Temp file lifecycle: sweep orphaned files (lost TTL timers from crashes or
@@ -132,14 +133,13 @@ app.use(
 // Aplicar middlewares de seguridad (después de CORS)
 app.use(configureHelmet());
 app.use(preventClickjacking);
-app.use(protectFromPrototypePollution);
 
 // Aplicar limitador de tasa a todas las rutas de la API
 app.use("/api", apiRateLimiter);
 
-// Middleware para parsear JSON (con límite de tamaño)
-app.use(express.json({ limit: "1mb" }));
-app.use(validateContentType(["application/json", "multipart/form-data"]));
+// Pipeline de cuerpo en orden: parsear JSON antes de sanear (si el guard
+// corre antes del parser, req.body es undefined y no sanea nada).
+registerBodyMiddleware(app);
 
 // Ruta para servir archivos temporales (solo archivos permitidos)
 app.use("/temp", (req, res, next): void => {
@@ -167,7 +167,7 @@ app.use(errorHandler);
 // Iniciar el servidor
 app.listen(PORT, () => {
 	logger.info(
-		{ port: PORT, env: process.env.NODE_ENV },
+		{ port: PORT, env: process.env.NODE_ENV, trustProxyHops },
 		`Server started on port ${PORT}`,
 	);
 });

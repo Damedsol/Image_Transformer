@@ -9,11 +9,27 @@ export interface QuotaEntry {
 	resetAt: Date;
 }
 
+import { ipKeyGenerator } from "express-rate-limit";
+
 export interface QuotaStoreOptions {
 	maxEntries?: number;
 }
 
+/**
+ * Normalize a client IP into its quota/rate-limit bucket.
+ * IPv6 clients are keyed by subnet (via express-rate-limit's ipKeyGenerator)
+ * so rotating addresses within the same allocation does not reset quota.
+ */
+
 const DEFAULT_MAX_ENTRIES = 10_000;
+
+export const normalizeQuotaKey = (ip: string): string => {
+	try {
+		return ipKeyGenerator(ip || "unknown");
+	} catch {
+		return ip || "unknown";
+	}
+};
 
 const startOfToday = (now: Date): Date =>
 	new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -35,10 +51,12 @@ export class QuotaStore {
 	}
 
 	/**
-	 * Check the quota for an IP and consume one unit when available.
+	 * Check the quota for an IP and consume `amount` units when available.
+	 * Consumption is atomic: if the requested amount would exceed the limit,
+	 * nothing is consumed.
 	 * @returns true if the IP has available quota, false if exhausted.
 	 */
-	checkAndConsume(ip: string, limit: number): boolean {
+	checkAndConsume(ip: string, limit: number, amount = 1): boolean {
 		const today = startOfToday(new Date());
 		let entry = this.entries.get(ip);
 
@@ -51,11 +69,12 @@ export class QuotaStore {
 			this.entries.set(ip, entry);
 		}
 
-		if (entry.count >= limit) {
+		const units = Number.isInteger(amount) && amount > 0 ? amount : 1;
+		if (entry.count + units > limit) {
 			return false;
 		}
 
-		entry.count += 1;
+		entry.count += units;
 		return true;
 	}
 

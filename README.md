@@ -1,7 +1,7 @@
 # ImageTransformer 🖼️
 
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
-[![Version](https://img.shields.io/badge/version-2.0.0-blue.svg)](https://github.com/Damedsol/Image_Transformer)
+[![Version](https://img.shields.io/badge/version-2.0.1-blue.svg)](https://github.com/Damedsol/Image_Transformer)
 [![TypeScript](https://img.shields.io/badge/TypeScript-6.0-blue?logo=typescript)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-8.0-646CFF?logo=vite)](https://vitejs.dev/)
 [![Sharp](https://img.shields.io/badge/Sharp-0.34.5-green?logo=sharp)](https://sharp.pixelplumbing.com/)
@@ -91,7 +91,7 @@ Execute commands from the project root using `pnpm` to launch dev servers or run
   pnpm --filter image-transformer-backend start
   ```
 
-> **Production note:** the compiled frontend is served by Nginx with hardened rules that block scanner probes (`env.js`, `config.js`, `aws-*.js`, …) and redirect the default `/favicon.ico` probe. See [Production Nginx Hardening](docs/DOCKER.md#production-nginx-hardening).
+> **Production note:** the compiled frontend is served by unprivileged Nginx (non-root, port `8080` — point your reverse proxy at `<frontend>:8080`) with hardened rules that block scanner probes (`env.js`, `config.js`, `aws-*.js`, …), send a strict Content-Security-Policy, and redirect the default `/favicon.ico` probe. See [Production Nginx Hardening](docs/DOCKER.md#production-nginx-hardening).
 
 ### Common Quality Control Utilities
 

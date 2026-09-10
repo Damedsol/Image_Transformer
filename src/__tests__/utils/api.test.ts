@@ -79,3 +79,22 @@ describe("convertImagesAPI error handling", () => {
 		);
 	});
 });
+
+describe("buildZipDownloadUrl", () => {
+	it("strips only the trailing /api segment, not /api inside the host", async () => {
+		const { buildZipDownloadUrl } = await import("../../utils/api");
+		expect(
+			buildZipDownloadUrl("https://api.example.com/api", "/temp/x.zip"),
+		).toBe("https://api.example.com/temp/x.zip");
+		expect(
+			buildZipDownloadUrl("http://localhost:3001/api", "/temp/x.zip"),
+		).toBe("http://localhost:3001/temp/x.zip");
+	});
+
+	it("passes through absolute URLs untouched", async () => {
+		const { buildZipDownloadUrl } = await import("../../utils/api");
+		expect(buildZipDownloadUrl("/api", "https://cdn.example.com/x.zip")).toBe(
+			"https://cdn.example.com/x.zip",
+		);
+	});
+});

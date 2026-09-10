@@ -41,15 +41,21 @@ The production environment is structured to align with professional, secure, and
    - **Backend**: Max memory `512M` (Express/Sharp image processor).
 3. **Log Rotation**: Disk safety is guaranteed by imposing strict log rotations (`max-size: "10m"`, `max-file: "3"`).
 4. **Proxy Network Integration**: Services are integrated into an external network (`proxy-net`) dynamically named through environment variables. This allows the application to attach directly to existing reverse proxies (e.g., Nginx Proxy Manager) without hardcoded references.
+5. **Non-Root Runtimes**: no production process runs as root — the backend runs as `USER node` and the frontend runs the `nginx-unprivileged` image (USER `nginx`). All `FROM` lines are digest-pinned for reproducible base layers (see [ADR-0004](../.agents/docs/adr/0004-container-hardening.md)).
 
-### Production Environment Variables
+### Production Ports (read this before deploying)
 
-You can configure the deployment settings by exposing these variables in the environment or specifying them in a root `.env` file:
+Production publishes **no ports to the host** — services talk only inside the external proxy network. The port inventory is fixed (no `ports:` mappings, no overrides):
+
+| Service | Container port | Reachable from | Notes |
+| :--- | :--- | :--- | :--- |
+| `backend` | `3001` | internal only (`proxy-net`) | Express API; also serves `/temp/` downloads |
+| `frontend` | **`8080`** | internal only (`proxy-net`) | Unprivileged nginx cannot bind ports < 1024 |
+
+> **Nginx Proxy Manager:** point this service's Proxy Host at `image-transformer-frontend:8080` (scheme `http`), **not** `:80`. Until NPM targets `:8080`, the site answers `502` after redeploying — update NPM in the same deploy window. Backend `:3001` is never a target (the frontend reverse-proxies `/api/` and `/temp/` internally).
 
 | Environment Variable | Description | Default Value |
 | :--- | :--- | :--- |
-| `BACKEND_PORT` | Port to map the Express backend API on the host. | `3001` |
-| `FRONTEND_PORT` | Port to map the Nginx frontend static server on the host. | `8080` |
 | `DOCKER_PROXY_NETWORK` | The external Docker network of your reverse proxy. | `proxy-tier` |
 
 ### Production Nginx Hardening
@@ -62,6 +68,7 @@ The production frontend image serves the compiled SPA through **Nginx** (`docker
   - Redirects the browser's default `/favicon.ico` probe to the real `/favicon.svg` (avoids the recurring 404).
   - Silently returns `404` for runtime-config scanner probes (`env.js`, `config.js`, `__env.js`, `credentials.js`, `sw.js`, `aws*.js`) without cluttering the error log.
   - Silently returns `404` for CMS/Vite-probe paths (`/wp-includes`, `/wp-content`, `/wp-admin`, `/media/system`, `/@fs`) without cluttering the error log.
+  - Sends a strict `Content-Security-Policy` on every response (same-origin scripts/styles, images `self` + `data:`/`blob:` for previews, `frame-ancestors 'none'`) as defense-in-depth for DOM-XSS.
 - The `/api/` and `/temp/` paths are reverse-proxied to the backend container; the SPA fallback (`try_files … /index.html`) handles client routing.
 
 ### Commands
@@ -86,5 +93,5 @@ docker compose -f docker-compose.prod.yml down
 
 ## 📦 Shared Data Persistence
 
-The stack defines a persistent local volume:
-- **`backend-temp`**: Mounted inside the backend Express container to handle safe storage and automatic cleanup of transient image operations.
+- **Development only — `backend-temp`**: mounted inside the backend container for transient image operations (the dev backend runs as root, so volume ownership is a non-issue).
+- **Production: ephemeral container storage, no volume.** `backend/temp/` holds only uploads/ZIPs with a 5-minute TTL (see [Temporary File Lifecycle](../README.md#temporary-file-lifecycle)), so persistence buys nothing — and a root-owned named volume would break the non-root (`USER node`) runtime. On redeploy, any not-yet-downloaded ZIP is lost by design.

@@ -1,9 +1,11 @@
 import sharp from "sharp";
 import path from "path";
 import fs from "fs";
+import crypto from "crypto";
+import type { EventEmitter } from "node:events";
 import archiver from "archiver";
 import { ConversionOptions, ImageFile, ConversionResult } from "./types.js";
-import { AppError } from "./apiError.js";
+import { AppError, getErrorMessage } from "./apiError.js";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import logger from "./logger.js";
@@ -35,6 +37,80 @@ if (!fs.existsSync(outputDir)) {
 }
 
 /**
+ * Builds the on-disk name for a processed image.
+ * The client-supplied name is reduced to its basename and sanitized, and a
+ * random suffix is appended so concurrent requests with the same file name
+ * and dimensions cannot overwrite (or read) each other's outputs.
+ */
+export const buildProcessedFileName = (
+	originalName: string,
+	width: number | string,
+	height: number | string,
+	format: string,
+	randomHex: string = crypto.randomBytes(4).toString("hex"),
+): string => {
+	const base = path.basename(originalName, path.extname(originalName));
+	const sanitized =
+		base.replace(/[^a-zA-Z0-9._-]/g, "_").replace(/^\.+/, "") || "image";
+	return `${sanitized}_${width ?? "auto"}x${height ?? "auto"}_${randomHex}.${format}`;
+};
+
+/**
+ * Creates a cancellable processing deadline.
+ * `cancel()` clears the timer so a finished (or abandoned) operation never
+ * fires a late rejection. Note: sharp itself offers no abort handle, so the
+ * timer is the cancellable part; callers must always cancel in `finally`.
+ */
+export const createProcessingTimeout = (
+	timeoutMs: number,
+	onTimeout: () => Error,
+): { promise: Promise<never>; cancel: () => void } => {
+	let timer: ReturnType<typeof setTimeout> | undefined;
+	const promise = new Promise<never>((_, reject) => {
+		timer = setTimeout(() => {
+			reject(onTimeout());
+		}, timeoutMs);
+	});
+	return {
+		promise,
+		cancel: () => {
+			if (timer !== undefined) {
+				clearTimeout(timer);
+				timer = undefined;
+			}
+		},
+	};
+};
+
+/**
+ * Tracks ZIP completion with listeners attached BEFORE finalization.
+ * Any archiver/output error destroys the write stream (no leaked fd) and
+ * rejects; the output `close` event resolves with the ZIP path.
+ */
+export const trackArchiveCompletion = (
+	archive: EventEmitter,
+	output: EventEmitter & { destroy: () => void },
+	zipPath: string,
+): Promise<string> =>
+	new Promise((resolve, reject) => {
+		const fail = (err: Error): void => {
+			logger.error({ err, zipPath }, "Error in archiver during ZIP creation");
+			try {
+				output.destroy();
+			} catch {
+				// The stream may already be closed; rejection still propagates.
+			}
+			reject(new AppError(`Error creating ZIP file: ${err.message}`, 500));
+		};
+		output.on("close", () => {
+			logger.info({ zipPath }, "ZIP stream closed, creation completed.");
+			resolve(zipPath);
+		});
+		output.on("error", fail);
+		archive.on("error", fail);
+	});
+
+/**
  * Verifies that a path is within the allowed directory
  */
 const ensurePathIsWithinBoundary = (
@@ -44,7 +120,12 @@ const ensurePathIsWithinBoundary = (
 	const normalizedPath = path.normalize(filePath);
 	const normalizedAllowedDir = path.normalize(allowedDirectory);
 
-	return normalizedPath.startsWith(normalizedAllowedDir);
+	// Exact match or strictly inside: a bare prefix also matches siblings
+	// such as `<dir>-evil`, so the separator is required after the prefix.
+	return (
+		normalizedPath === normalizedAllowedDir ||
+		normalizedPath.startsWith(normalizedAllowedDir + path.sep)
+	);
 };
 
 /**
@@ -61,16 +142,15 @@ export const processImage = async (
 		throw new AppError("File path not allowed", 403);
 	}
 
-	// Create a timer to limit processing time
-	const timeoutPromise = new Promise<never>((_, reject) => {
-		setTimeout(() => {
-			reject(
+	// Deadline for processing; always cancelled so no timer outlives the call.
+	const { promise: timeoutPromise, cancel: cancelTimeout } =
+		createProcessingTimeout(
+			IMAGE_PROCESSING_TIMEOUT,
+			() =>
 				new AppError("Processing time exceeded", 408, {
 					code: "TIMEOUT_ERROR",
 				}),
-			);
-		}, IMAGE_PROCESSING_TIMEOUT);
-	});
+		);
 
 	try {
 		logger.debug(
@@ -126,10 +206,12 @@ export const processImage = async (
 			);
 		}
 
-		throw new AppError(
-			`Error processing image: ${(error as Error).message}`,
-			500,
-		);
+		throw new AppError("Error processing image", 500, {
+			code: "PROCESSING_ERROR",
+			details: getErrorMessage(error),
+		});
+	} finally {
+		cancelTimeout();
 	}
 };
 
@@ -213,12 +295,14 @@ const processImageWithLimits = async (
 		}
 	}
 
-	// Create name for processed file
-	const fileNameWithoutExt = path.basename(
+	// Unique, sanitized name per processed file: concurrent requests with the
+	// same client file name and dimensions must never share an output path.
+	const outputFileName = buildProcessedFileName(
 		imageFile.originalname, // originalname should be present
-		path.extname(imageFile.originalname),
+		width ?? "auto",
+		height ?? "auto",
+		options.format,
 	);
-	const outputFileName = `${fileNameWithoutExt}_${width ?? "auto"}x${height ?? "auto"}.${options.format}`;
 	const outputPath = path.join(outputDir, outputFileName);
 
 	// Verify that the output path is within the allowed directory
@@ -329,61 +413,56 @@ export const createZipFromImages = async (
 		zlib: { level: 9 }, // Maximum compression level
 	});
 
-	// Handle output stream errors
-	output.on("error", (err) => {
-		logger.error({ err, zipPath }, "Error in writeStream when creating ZIP");
-		// Consider if throwing AppError here is best or if already handled
-		// throw new AppError('Error creating ZIP file', 500);
-	});
+	// Completion listeners are attached BEFORE finalization so no archiver or
+	// stream error can slip through unhandled. Any error destroys the write
+	// stream instead of leaking the file descriptor.
+	const completion = trackArchiveCompletion(archive, output, zipPath);
 
 	// Pipe output file to file
 	archive.pipe(output);
 
-	// Check total file size
-	let totalSize = 0;
-	logger.debug("Adding files to ZIP...");
-	for (const image of processedImages) {
-		// Verify that the path is within the allowed directory
-		if (!ensurePathIsWithinBoundary(image.path, tempDir)) {
-			throw new AppError("File path not allowed", 403);
-		}
+	try {
+		// Check total file size
+		let totalSize = 0;
+		logger.debug("Adding files to ZIP...");
+		for (const image of processedImages) {
+			// Verify that the path is within the allowed directory
+			if (!ensurePathIsWithinBoundary(image.path, tempDir)) {
+				throw new AppError("File path not allowed", 403);
+			}
 
-		const stats = fs.statSync(image.path);
-		totalSize += stats.size;
-		logger.debug({ file: image.path, size: stats.size }, "Adding file to ZIP");
-
-		// Check if size already exceeds configured limit
-		if (totalSize > MAX_ZIP_SIZE) {
-			throw new AppError(
-				`Total image size exceeds allowed limit (${MAX_ZIP_SIZE / 1000000} MB)`,
-				413,
-				{ code: "ZIP_SIZE_LIMIT_ERROR" },
+			const stats = fs.statSync(image.path);
+			totalSize += stats.size;
+			logger.debug(
+				{ file: image.path, size: stats.size },
+				"Adding file to ZIP",
 			);
+
+			// Check if size already exceeds configured limit
+			if (totalSize > MAX_ZIP_SIZE) {
+				throw new AppError(
+					`Total image size exceeds allowed limit (${MAX_ZIP_SIZE / 1000000} MB)`,
+					413,
+					{ code: "ZIP_SIZE_LIMIT_ERROR" },
+				);
+			}
+
+			const fileName = path.basename(image.path);
+			archive.file(image.path, { name: fileName });
 		}
+		logger.debug({ totalSize }, "All files added to ZIP descriptor");
 
-		const fileName = path.basename(image.path);
-		archive.file(image.path, { name: fileName });
+		// Finalize file
+		logger.debug("Finalizing ZIP file (writing to disk)...");
+		await archive.finalize();
+		logger.info({ zipPath, totalSize }, "ZIP file finalized and written");
+	} catch (error) {
+		// A mid-build failure must not leave the write stream open.
+		output.destroy();
+		throw error;
 	}
-	logger.debug({ totalSize }, "All files added to ZIP descriptor");
 
-	// Finalize file
-	logger.debug("Finalizing ZIP file (writing to disk)...");
-	await archive.finalize();
-	logger.info({ zipPath, totalSize }, "ZIP file finalized and written");
-
-	// Promise resolves/rejects based on output stream events
-	return new Promise((resolve, reject) => {
-		output.on("close", () => {
-			logger.info({ zipPath }, "ZIP stream closed, creation completed.");
-			resolve(zipPath);
-		});
-
-		// Error is already handled with output.on('error', ...), but we add reject just in case
-		archive.on("error", (err) => {
-			logger.error({ err, zipPath }, "Error in archiver during ZIP creation");
-			reject(new AppError(`Error creating ZIP file: ${err.message}`, 500));
-		});
-	});
+	return completion;
 };
 
 /**
