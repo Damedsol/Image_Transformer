@@ -56,6 +56,12 @@ describe("license & attribution consistency", () => {
 		).toBe(true);
 	});
 
+	it("documents the LGPL-3.0-or-later libvips runtime shipped with sharp", () => {
+		const notices = read("THIRD_PARTY_NOTICES.md");
+		expect(notices).toContain("sharp-libvips");
+		expect(notices).toContain("LGPL-3.0-or-later");
+	});
+
 	it("declares the SPDX license id in both package.json files", () => {
 		const rootPkg = JSON.parse(read("package.json")) as { license?: string };
 		const backendPkg = JSON.parse(read("backend/package.json")) as {
