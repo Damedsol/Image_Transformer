@@ -9,6 +9,7 @@
 - **2026-09-10: Cierre scribe — ciclo security-remediation + Dependabot (reviewer ✅ APROBADO)**
   - Reviewer: `review_2026-09-10_security-remediation.md` — VERIFY total, QA con 3 INFO no bloqueantes, 40 tests KEEP / 0 REMOVE, suite 135/135 + audit 0/0 re-ejecutados.
   - Scribe: spec `security-hardening.md` ampliada (sección C); ADR-0004 (container hardening); manifiesto actualizado (Sharp 0.35, nginx unprivileged, TRUST_PROXY_HOPS); checkpoint `completed`; reindexado index-mcp.
+  - Post-cierre (petición usuario): `docs/DOCKER.md` + nota `README` con inventario real de puertos (frontend 8080) y retarget NPM → commit `docs(deploy)` atómico; 6 commits en total, tree limpio, suite 135/135.
   - Lecciones: (1) los overrides con rango resuelven al máximo — pin exacto para líneas que el consumidor espera (`undici` 8.10.2 → 7.29.0); (2) `USER node` + volumen root-owned son incompatibles — temp efímero justifica eliminar el volumen; (3) `nginx -t` en imagen real valida sintaxis sin build completo.
 
 - **2026-09-10: Restos del security_report atacados — nginx sin root, trust-proxy, magic-bytes (build, TDD)**
