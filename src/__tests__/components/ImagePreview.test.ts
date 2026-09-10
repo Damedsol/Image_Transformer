@@ -78,4 +78,19 @@ describe("ImagePreview (SNA-03 + SNA-08)", () => {
 		expect(metaText).toContain("800");
 		expect(metaText).toContain("600");
 	});
+
+	it("escapes a malicious file name instead of injecting HTML", () => {
+		const maliciousName = '<img src=x onerror="window.__xss=1">.png';
+		const el = mount("image-preview");
+		(el as any).image = { ...mockImage, name: maliciousName };
+
+		const name = el.querySelector(".preview-name");
+		const images = el.querySelectorAll("img");
+		const previewImg = el.querySelector("img");
+		expect(name?.textContent).toBe(maliciousName);
+		expect(images.length).toBe(1);
+		expect(previewImg?.getAttribute("src")).toBe(mockImage.preview);
+		expect(previewImg?.getAttribute("onerror")).toBeNull();
+		expect(el.querySelector("svg")).toBeNull();
+	});
 });

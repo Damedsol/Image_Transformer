@@ -18,8 +18,10 @@ services:
       - LOG_LEVEL=silent
     env_file:
       - ./backend/.env
-    volumes:
-      - backend-temp:/app/backend/temp
+    # No temp volume on purpose: temp/ holds only ephemeral uploads/ZIPs
+    # (5-minute TTL cleanup) and the backend runs as USER node, which cannot
+    # write into a root-owned named volume. Ephemeral container storage is
+    # sufficient and safer.
     deploy:
       resources:
         limits:
@@ -49,8 +51,10 @@ services:
     init: true
     security_opt:
       - no-new-privileges:true
+    # The unprivileged nginx image serves on 8080: point the outer reverse
+    # proxy (proxy-tier network) at <frontend>:8080, not :80.
     expose:
-      - "80"
+      - "8080"
     environment:
       - NODE_ENV=production
     depends_on:
@@ -72,6 +76,3 @@ networks:
     name: ${DOCKER_PROXY_NETWORK:-proxy-tier}
     external: true
 
-volumes:
-  backend-temp:
-    driver: local

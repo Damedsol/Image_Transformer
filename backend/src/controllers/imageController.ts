@@ -8,10 +8,11 @@ import {
 	cleanTempFiles,
 } from "../utils/imageProcessor.js";
 import { ConversionOptions, ConversionResult } from "../utils/types.js";
-import { AppError } from "../utils/apiError.js";
+import { AppError, toPublicErrorBody } from "../utils/apiError.js";
 import { safelyDeleteFile } from "../middlewares/uploadMiddleware.js";
 import logger from "../utils/logger.js";
-import { QuotaStore } from "../utils/quota.js";
+import { QuotaStore, normalizeQuotaKey } from "../utils/quota.js";
+import { validateUploadedImageMagic } from "../utils/imageValidation.js";
 
 // Configuration limits
 const MAX_FILES_PER_REQUEST = parseInt(
@@ -28,20 +29,47 @@ const ipQuotaStore = new QuotaStore({ maxEntries: IP_QUOTA_MAX_ENTRIES });
 
 // Validation schema for conversion options
 const formatSchema = z.enum(["jpeg", "png", "webp", "avif", "gif"]);
-const conversionOptionsSchema = z.object({
+
+/**
+ * Boolean parser for multipart form data (everything arrives as strings).
+ * `z.coerce.boolean()` maps ANY non-empty string — including "false" — to
+ * true, so the string values are interpreted explicitly here instead.
+ */
+const booleanFromForm = z.preprocess((value) => {
+	if (value === undefined) {
+		return undefined;
+	}
+	if (typeof value === "string") {
+		const normalized = value.trim().toLowerCase();
+		if (["true", "1", "yes", "on"].includes(normalized)) {
+			return true;
+		}
+		if (["false", "0", "no", "off", ""].includes(normalized)) {
+			return false;
+		}
+	}
+	return value;
+}, z.boolean());
+
+export const conversionOptionsSchema = z.object({
 	format: formatSchema,
 	width: z.coerce.number().positive().optional(),
 	height: z.coerce.number().positive().optional(),
 	quality: z.coerce.number().min(1).max(100).optional().default(80),
-	maintainAspectRatio: z.coerce.boolean().optional().default(true),
+	maintainAspectRatio: booleanFromForm.optional().default(true),
 });
 
 /**
- * Check and update IP quota
+ * Check and update IP quota, consuming one unit per image in the request.
+ * The key is subnet-normalized so IPv6 address rotation cannot reset quota.
  * @returns true if IP has available quota, false if quota exceeded
  */
-const checkIPQuota = (ip: string): boolean =>
-	ipQuotaStore.checkAndConsume(ip, DAILY_QUOTA_PER_IP);
+const checkIPQuota = (ip: string, imageCount: number): boolean =>
+	ipQuotaStore.checkAndConsume(
+		normalizeQuotaKey(ip),
+		DAILY_QUOTA_PER_IP,
+		imageCount,
+	);
 
 /**
  * Converts images according to specified options and returns a ZIP
@@ -74,11 +102,18 @@ export const convertImages = async (
 			);
 		}
 
+		// Verify on-disk magic numbers match the claimed extensions.
+		// Runs before quota and processing: MIME/extension are
+		// client-controlled, bytes are not. Cleanup is already guaranteed.
+		for (const file of req.files) {
+			validateUploadedImageMagic(file.path, file.originalname);
+		}
+
 		// Get client IP
 		const clientIP = req.ip || "unknown";
 
-		// Check IP quota
-		if (!checkIPQuota(clientIP)) {
+		// Check IP quota (one unit per image, not per request)
+		if (!checkIPQuota(clientIP, req.files.length)) {
 			logger.warn(
 				{
 					ip: clientIP,
@@ -224,25 +259,17 @@ export const convertImages = async (
 		});
 		logger.warn("Error cleanup completed.");
 
-		// Send error response
+		// Send error response (production-safe: no internal details leaked)
 		if (error instanceof AppError) {
 			res.status(error.statusCode).json({
 				success: false,
-				error: {
-					message: error.message,
-					code: error.code,
-					details: error.details,
-				},
+				error: toPublicErrorBody(error),
 			});
 		} else {
 			// Generic error
 			res.status(500).json({
 				success: false,
-				error: {
-					message: "Error processing images",
-					details:
-						error instanceof Error ? error.message : "Unknown generic error",
-				},
+				error: toPublicErrorBody(error),
 			});
 		}
 	}

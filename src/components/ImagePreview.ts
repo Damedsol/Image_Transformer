@@ -1,5 +1,6 @@
 import { ImageInfo } from "../types/image";
 import { formatFileSize } from "../utils/fileUtils";
+import { escapeHtml } from "../utils/html";
 import "./TnIcon";
 
 /**
@@ -46,27 +47,29 @@ export class ImagePreview extends HTMLElement {
 			? `${dimensions.width} x ${dimensions.height}`
 			: "--";
 		const formatExt = type.split("/").pop()?.toUpperCase() || "FILE";
+		const safeName = escapeHtml(name);
+		const safeFormat = escapeHtml(formatExt);
 
 		this.innerHTML = `
       <div class="preview-item" id="preview-${this.imageInfo.id}">
         <img
           src="${preview}"
-          alt="${name}"
+          alt="${safeName}"
           loading="lazy"
         />
         <div class="preview-info">
-          <div class="preview-name" title="${name}">${name}</div>
+          <div class="preview-name" title="${safeName}">${safeName}</div>
           <div class="preview-meta">
             <span>${formattedSize}</span>
             <span>${dimensionsText}</span>
-            <span class="badge">${formatExt}</span>
+            <span class="badge">${safeFormat}</span>
           </div>
         </div>
         <div class="preview-actions">
           <button
             type="button"
             class="btn-outline preview-remove"
-            aria-label="Remove image ${name}"
+            aria-label="Remove image ${safeName}"
           >
             <tn-icon name="trash" size="14"></tn-icon>
             Remove

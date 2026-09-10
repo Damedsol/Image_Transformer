@@ -2,9 +2,9 @@
 
 pipeline:
   status: "completed" # plan_completed | build_completed | reviewer_approved | completed
-  plan_file: "N/A (direct session, no plan file)"
-  spec_file: "N/A (no spec deltas this cycle)"
-  adr_file: "N/A (no new architectural decision)"
+  plan_file: "N/A (direct session: security_report 2026-09-10 + 13 Dependabot reports, no plan file)"
+  spec_file: ".agents/docs/specs/security-hardening.md (section C: 2026-09-10 remediation)"
+  adr_file: ".agents/docs/adr/0004-container-hardening.md"
   last_step: "scribe"
-  completed_at: "2026-09-08"
-  cycle_summary: "Release 2.0.0: bump 1.3.2→2.0.0 (f128550) + docker pnpm pin/fix (1633a54) + IT favicon (f3b5e4f). Sin plan ni reviewer (sesión directa). Hooks pre-commit verdes en los 3 commits."
+  completed_at: "2026-09-10"
+  cycle_summary: "Full security remediation: 2 HIGH XSS + sharp CVE + 13 Dependabot reports + deferred hardening (nginx rootless, trust-proxy, magic-bytes, digests). Reviewer APROBADO (40 KEEP/0 REMOVE). Suite 135/135, audit full+prod 0."

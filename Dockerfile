@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:24-alpine@sha256:50c8e8ca1d27439048670df5883f32d57cf81cff6233222c893fd0d9884cbd81 AS base
 
 WORKDIR /app
 
@@ -31,10 +31,12 @@ COPY . .
 RUN pnpm run build
 
 # Etapa de producción con nginx para servir los estáticos
-FROM nginx:stable-alpine AS production
+# Unprivileged nginx: runs as the `nginx` user (no root). It cannot bind
+# ports < 1024, so the SPA is served on 8080 (see docker-compose.prod.yml).
+FROM nginxinc/nginx-unprivileged:stable-alpine@sha256:442753882674b49ae2c1de83ed67896131c0777f56df5005e356e62bc3f7e7ce AS production
 # Copiar los archivos estáticos compilados
 COPY --from=builder /app/dist /usr/share/nginx/html
 # Configuración para que las rutas SPA funcionen correctamente
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"] 

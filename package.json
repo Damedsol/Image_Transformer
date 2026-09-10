@@ -31,7 +31,7 @@
 		"@biomejs/biome": "catalog:",
 		"@commitlint/cli": "catalog:",
 		"@commitlint/config-conventional": "catalog:",
-		"@vitest/ui": "^4.1.10",
+		"@vitest/ui": "^4.1.11",
 		"concurrently": "catalog:",
 		"globals": "catalog:",
 		"husky": "catalog:",
@@ -40,7 +40,7 @@
 		"oxlint": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
-		"vitest": "^4.1.10"
+		"vitest": "^4.1.11"
 	},
 	"engines": {
 		"node": ">=24.0.0",

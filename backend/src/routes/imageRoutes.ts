@@ -10,6 +10,13 @@ import { Request, Response, NextFunction } from "express";
 
 const router = express.Router();
 
+/**
+ * Clave del limitador de conversión: solo IP (con soporte de subred IPv6).
+ * User-Agent es controlable por el atacante y rotarlo no debe resetear el límite.
+ */
+export const convertRateLimitKey = (req: Request): string =>
+	ipKeyGenerator(req.ip || "unknown");
+
 // Limitador de tasa específico para conversión de imágenes (más restrictivo)
 const convertRateLimiter = rateLimit({
 	windowMs: parseInt(
@@ -18,11 +25,8 @@ const convertRateLimiter = rateLimit({
 	max: parseInt(process.env.RATE_LIMIT_IMAGE_UPLOAD_MAX || "20"), // 20 peticiones por hora
 	standardHeaders: true,
 	legacyHeaders: false,
-	// Identificar al cliente mediante IP y user-agent para mayor precisión con soporte IPv6
-	keyGenerator: (req) => {
-		const ip = ipKeyGenerator(req.ip || "unknown");
-		return `${ip}-${req.headers["user-agent"] || "unknown"}`;
-	},
+	// Identificar al cliente solo por IP (con soporte de subred IPv6)
+	keyGenerator: convertRateLimitKey,
 	handler: (_req, _res, next) => {
 		next(
 			new AppError(

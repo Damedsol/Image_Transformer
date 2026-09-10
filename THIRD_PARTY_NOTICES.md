@@ -31,6 +31,7 @@ The following third-party components are redistributed as part of this project. 
 | archiver | backend | MIT |
 | express-rate-limit | backend | MIT |
 | dotenv | backend | BSD-2-Clause |
+| @img/sharp-libvips-* (prebuilt libvips binaries pulled in by sharp) | backend | LGPL-3.0-or-later |
 
 ## Notes
 
