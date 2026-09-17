@@ -1,0 +1,107 @@
+{
+	"cycle": "2026-09-17 dependency refresh (slices C1 + C2a) + Dependabot enablement + review fixes",
+	"plan_file": ".agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md",
+	"change_spec": ".agents/specs/change_spec.yaml",
+	"review_file": ".agents/docs/review_2026-09-17_dependency-refresh-dependabot.md",
+	"head": "8a62fde (feature/minor-fixes-and-security)",
+	"baseline": {
+		"tests": "18 files / 135 tests passing",
+		"audit_full": 0,
+		"audit_prod": 0
+	},
+	"review_fixes": {
+		"ID-01": {
+			"status": "fixed",
+			"verdict": "VERIFY (bloqueante)",
+			"change": "Removed the whole `ignore` block from .github/dependabot.yml (undici, nanoid, picomatch, js-yaml) and replaced it with a note explaining why no ignore rules are needed.",
+			"evidence": "RED->GREEN via backend/src/__tests__/dependencyConfig.test.ts: first run failed with `expected ['undici','nanoid','picomatch','js-yaml'] to deeply equal []`, after the fix 11/11 pass."
+		},
+		"ID-02": {
+			"status": "fixed",
+			"verdict": "QA (cosmético)",
+			"change": "Line count corrected in checkpoint.yml + build_state.json; diff_stat now reflects the final file (86 lines)."
+		},
+		"ID-03": {
+			"status": "fixed",
+			"verdict": "TESTS (sugerencia)",
+			"change": "New guard suite backend/src/__tests__/dependencyConfig.test.ts (11 tests) covering: the pin<->override-floor invariant (incl. a synthetic pre-fix zod case that proves the checker catches the historical bug), no `ignore` entry for a non-manifest dependency, and dependabot.yml structure (version 2, ecosystem/dirs/interval, no duplicate directories per ecosystem, majors out of the minor/patch group).",
+			"note": "Zero-dependency: both YAML files are parsed with a small line-oriented reader, so no new package was added to the tree."
+		}
+	},
+	"requirements": {
+		"R1": {
+			"status": "partial",
+			"note": "pnpm audit full+prod captured (0/0). Dependabot export blocked: no gh CLI, private repo, no auth."
+		},
+		"R2": {
+			"status": "done",
+			"note": "11/11 stale origin/dependabot refs classified; close-list emitted for the user."
+		},
+		"R3": {
+			"status": "no_op",
+			"note": "No live advisory in the locked tree (pnpm audit 0/0 + OSV 0/376 + OSV 0/57 post-change)."
+		},
+		"R4": { "status": "deferred", "slice": "C2b" },
+		"R5": {
+			"status": "done",
+			"versions": {
+				"helmet": "8.1.0 -> 8.3.0",
+				"express-rate-limit": "8.3.2 -> 8.7.0",
+				"zod": "4.4.3 -> 4.6.2",
+				"tsx": "4.21.0 -> 4.23.13"
+			}
+		},
+		"R6": {
+			"status": "done",
+			"versions": {
+				"minimatch@^10": "10.2.3 -> 10.2.6",
+				"flatted": "3.4.2 -> 3.4.4",
+				"path-to-regexp": "8.4.0 -> 8.4.2",
+				"ip-address": ">=10.3.1 -> >=10.7.0",
+				"postcss": ">=8.5.23 -> >=8.5.28",
+				"zod": ">=4.4.0 -> >=4.6.2"
+			}
+		},
+		"R7": {
+			"status": "done",
+			"evidence": {
+				"qa": { "command": "pnpm qa", "exit": 0, "files": 19, "tests": 146 },
+				"build": { "command": "pnpm build", "exit": 0 },
+				"audit": { "full": 0, "prod": 0 },
+				"osv": { "checked": 57, "hits": 0 },
+				"smoke": {
+					"GET /api/formats": 200,
+					"POST /api/convert": 200,
+					"detail": "webp 64x64 produced + zip archive"
+				}
+			}
+		},
+		"R8": { "status": "deferred", "slice": "C3" },
+		"R9": {
+			"status": "partial",
+			"note": "Dependabot version updates ENABLED and now guarded by tests (.github/dependabot.yml: npm for '/' + '/backend', docker for both Dockerfiles, grouped minor/patch, no ignore rules). CI workflow (.github/workflows/security.yml) still pending the user's go-ahead for GitHub Actions.",
+			"root_cause": "The repository had no .github/ directory in any branch/commit — Dependabot alerts and security updates are a repository setting (which is why 13 advisories + 11 dependabot/* branches appeared), but scheduled version updates require this file.",
+			"adapted_from": "/projects/Github/currencyExchange/.github/dependabot.yml"
+		},
+		"R10": { "status": "deferred", "slice": "C3" },
+		"R11": { "status": "done" },
+		"R12": { "status": "done", "note": "major upgrades recorded as follow-up" }
+	},
+	"diff_stat": "6 files modified + 4 new — backend/package.json 4+/4-, pnpm-workspace.yaml 6+/6-, pnpm-lock.yaml 59+/69-, .agents/*, .github/dependabot.yml (new, 86 lines), backend/src/__tests__/dependencyConfig.test.ts (new)",
+	"lessons": [
+		"`pnpm up -r` re-resolves the whole graph AND rewrites `catalog:` specifiers into inline pins + exact pins into carets — it produced a 1198-line lockfile diff and broke two manifest contracts. Surgical `pnpm install --no-frozen-lockfile` (which preserves existing resolutions) produced 128 lines with no manifest drift.",
+		"`resolutionMode: lowest-direct` + a range override beats an exact manifest pin: zod stayed 4.4.3 because the override floor was `>=4.4.0`. The OVERRIDE FLOOR is the effective control lever for direct deps — now guarded by a test.",
+		"`minimumReleaseAge: 7200` (5 days) rejected 8 of 19 planned targets; the newest allowed patch had to be computed from registry publish times.",
+		"Dependabot alerts/security updates work with no config file (repository setting); version updates do not. Their absence here was not a bug but a missing `.github/` directory.",
+		"GitHub forbids overlapping `directory` values for the same ecosystem+target branch, and pnpm workspaces need one PR per dependency -> `directories` + `group-by: dependency-name`.",
+		"Dependabot `ignore` also applies to SECURITY updates (official docs), and version updates only touch manifest-declared dependencies — so ignoring a TRANSITIVE package has no upside and can silently skip a security-update PR. Enforced by a test."
+	],
+	"open_items": [
+		"Q1: source/IDs of the reported advisories (needed to close the triage) — user action",
+		"C3 workflow: .github/workflows/security.yml (pnpm install --frozen-lockfile + qa + audit + OSV) — pending go-ahead",
+		"C2b: dev tooling refresh (biome 2.5.13, commitlint 21.2.2, concurrently 10.0.5, globals 17.12.0, oxlint 1.82.0, vite 8.3.0)",
+		"C3: check:security script, scripts/scan-advisories.mjs, ADR-0005",
+		"Watch the first Dependabot run: verify no `catalog:` specifier is inlined and that backend runtime deps receive PRs",
+		"Pre-existing (not this cycle): backend/tsconfig.json has no `__tests__` exclude, so test files are compiled into dist/"
+	]
+}

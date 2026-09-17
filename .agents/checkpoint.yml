@@ -1,10 +1,52 @@
 # Pipeline Checkpoint — imageTransformer
 
 pipeline:
-  status: "completed" # plan_completed | build_completed | reviewer_approved | completed
-  plan_file: "N/A (direct session: security_report 2026-09-10 + 13 Dependabot reports, no plan file)"
-  spec_file: ".agents/docs/specs/security-hardening.md (section C: 2026-09-10 remediation)"
+  status: "completed" # plan_completed | build_completed | reviewer_approved | reviewer_rejected | completed
+  plan_file: ".agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md"
+  spec_file: ".agents/specs/change_spec.yaml"
+  change_spec: ".agents/specs/change_spec.yaml"
+  analysis_file: ".agents/docs/analysis_2026-09-17_security-advisory-triage.md"
+  triage_file: ".agents/docs/evidence/advisory_triage_2026-09-17.md"
+  dependabot_config: ".github/dependabot.yml"
+  review_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot-repass.md"
+  review_prev_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot.md"
+  reviewed_at: "2026-09-17"
+  reviewer_hash: "73ad2513d2f50ce9"
+  scribe_hash: "rev:73ad2513d2f50ce9+spec:security-hardening.md#D+R16-R21"
+  scribe_hash_note: "Readable composite key instead of sha256(reviewer_hash+domain.yaml): this repo has no domain.yaml (the living spec under .agents/docs/specs/ plays that role) and the /scribe sandbox exposes no hashing utility. Deterministic given the reviewed revision + merge target, which is all the R1 idempotency check needs."
+  completed_at: "2026-09-17T16:29:24+01:00"
+  completed_at_note: "Timestamp of this gate's mem_save (no `date` allowed in the /scribe sandbox)."
+  archive:
+    spec_merged_into: ".agents/docs/specs/security-hardening.md §D (R16..R21)"
+    change_spec: ".agents/specs/change_spec.yaml (status: archived)"
+    specs_readme: ".agents/specs/README.md (OpenSpec-equivalent flow)"
+    adr: ".agents/docs/adr/0005-dependency-advisory-policy.md"
+    memory_ids: [34, 35, 36]
+    index_project: "projects-github-imagetransformer (118 files / 282 symbols, first index)"
+    manifest_updated: ".agents/project_manifest.yaml (project.index_project + tooling/testing)"
   adr_file: ".agents/docs/adr/0004-container-hardening.md"
   last_step: "scribe"
-  completed_at: "2026-09-10"
-  cycle_summary: "Full security remediation: 2 HIGH XSS + sharp CVE + 13 Dependabot reports + deferred hardening (nginx rootless, trust-proxy, magic-bytes, digests). Reviewer APROBADO (40 KEEP/0 REMOVE). Suite 135/135, audit full+prod 0."
+  planned_at: "2026-09-17"
+  built_at: "2026-09-17"
+  build_hash: "slices C1+C2a + dependabot.yml + review fixes ID-01/02/03 @ 8a62fde — change_spec.yaml 2026-09-17-dependency-refresh-and-advisory-closure"
+  build_state: ".agents/.state/build_state.json"
+  diff_stat: "6 files modified + 4 new — backend/package.json 4+/4-, pnpm-workspace.yaml 6+/6-, pnpm-lock.yaml 59+/69-, .agents/*, .github/dependabot.yml (new, 86 lines), backend/src/__tests__/dependencyConfig.test.ts (new)"
+  cycle_summary: "Slices C1 + C2a + Dependabot enablement DONE. Headline: pnpm audit full+prod = 0 and OSV 0/376 → no live advisory; the perceived 'security advisory problem' is 11 stale origin/dependabot/* refs (close-list emitted, none to merge). Refreshed: helmet 8.3.0, express-rate-limit 8.7.0, zod 4.6.2, tsx 4.23.13 + 6 override floors. NEW: .github/dependabot.yml (version updates) — the repo never had a .github/ directory in any branch, and alerts/security updates run without config while scheduled version updates require it. Verified: pnpm qa exit 0 (18 files/135 tests), pnpm build exit 0, audit 0/0, OSV 0/57, runtime smoke 200/200, dependabot.yml structural validation 0 errors."
+  pending_ids:
+    - "SCRIBE (condición de la aprobación): archivar en 3 commits atómicos — (1) chore(deps) pins+floors+lockfile, (2) ci(dependabot) config + guard suite, (3) docs(agents) harness. Workload declarado: 481 líneas de código/config > SLO 400 (exceso = test ID-03)"
+    - "SCRIBE: reindexar index-mcp (mem_* no disponible en este ciclo) + mem_save type:session + comprobar history.md < 200 líneas"
+    - "T0.2 EXTERNO: Dependabot alert export (no gh CLI, private repo, no auth) — user action"
+    - "R9 PARTIAL: .github/workflows/security.yml pendiente de OK del usuario (introduce GitHub Actions por primera vez)"
+    - "R4/T3.1 DEFERRED -> slice C2b (dev tooling: biome ^2.5.13, commitlint ^21.2.2, concurrently ^10.0.5, globals ^17.12.0, oxlint ^1.82.0, vite ^8.3.0)"
+    - "R8/R10 DEFERRED -> slice C3 (check:security script, scripts/scan-advisories.mjs, ADR-0005)"
+    - "T1.1 EXECUTION pending user: close 11 Dependabot PRs / delete dead remote branches (commands in advisory_triage_2026-09-17.md)"
+    - "POST-MERGE WATCH: primer run de Dependabot — que ningún PR convierta `catalog:` en versión inline ni un pin exacto en caret; confirmar que las deps runtime del backend reciben PRs"
+  open_questions:
+    - "Q1: where are the advisories seen (GitHub Dependabot UI / email / pnpm audit)? Needed to close the triage."
+    - "Q2: GitHub vs Gitea as the canonical CI host (.github/** vs other)."
+  workload:
+    slices: "C1 done | C2a done (this cycle) | C2b + C3 pending"
+    note: "Slice C2a stayed inside the 5-file/400-line budget (4 files, 93 insertions). NEVER use `pnpm up -r` here: it produced a 1198-line lockfile diff and rewrote `catalog:`/exact pins. Use `pnpm install --no-frozen-lockfile`."
+  previous_cycle:
+    completed_at: "2026-09-10"
+    summary: "Full security remediation: 2 HIGH XSS + sharp CVE + 13 Dependabot reports + deferred hardening (nginx rootless, trust-proxy, magic-bytes, digests). Reviewer APROBADO (40 KEEP/0 REMOVE). Suite 135/135, audit full+prod 0."

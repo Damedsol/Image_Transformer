@@ -4,6 +4,10 @@
 # Date: 2026-08-27
 # ============================================================
 
+project:
+  index_project: "projects-github-imagetransformer" # index-mcp canonical name (AGENTS.md §1.5); use in every mem_*/search_* call
+  root_path: "/projects/Github/imageTransformer"
+
 project_name: "imageTransformer"
 version: "2.0.0"
 type: "monorepo (pnpm workspace v11)"
@@ -27,7 +31,8 @@ tooling:
     - "Oxlint v1 (linter)"
     - "lint-filenames v1 (script: naming)"
     - "Husky v9 + lint-staged + commitlint"
-  testing: "Vitest + JSDOM"
+    - "Dependabot version updates (.github/dependabot.yml: npm workspace ['/','/backend'] + docker, weekly, grouped minor/patch; no ignore rules)"
+  testing: "Vitest + JSDOM (19 suites / 146 tests; dependencyConfig guards the pin↔override-floor invariant and the dependabot.yml contract)"
   docker: "Docker multi-stage (Node 24 Alpine digest-pinned + Nginx unprivileged :8080, non-root runtimes)"
 
 relevant_folders:
