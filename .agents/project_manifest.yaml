@@ -9,7 +9,7 @@ project:
   root_path: "/projects/Github/imageTransformer"
 
 project_name: "imageTransformer"
-version: "2.0.0"
+version: "2.1.0"
 type: "monorepo (pnpm workspace v11)"
 license: "CC BY 4.0"
 
@@ -32,7 +32,7 @@ tooling:
     - "lint-filenames v1 (script: naming)"
     - "Husky v9 + lint-staged + commitlint"
     - "Dependabot version updates (.github/dependabot.yml: npm workspace ['/','/backend'] + docker, weekly, grouped minor/patch; no ignore rules)"
-  testing: "Vitest + JSDOM (21 suites / 157 tests; dependencyConfig guards the pin↔override-floor invariant and the dependabot.yml contract; corsOrigins + devServerConfig guard the dev/prod CORS split and the Vite strictPort/HMR contract — see .agents/docs/specs/dev-environment.md)"
+  testing: "Vitest + JSDOM (22 suites / 161 tests; dependencyConfig guards the pin↔override-floor invariant and the dependabot.yml contract; corsOrigins + devServerConfig guard the dev/prod CORS split and the Vite strictPort/HMR contract — see .agents/docs/specs/dev-environment.md; versionConsistency guards the 5 release-version carriers — see .agents/docs/specs/release-versioning.md)"
   docker: "Docker multi-stage (Node 24 Alpine digest-pinned + Nginx unprivileged :8080, non-root runtimes)"
 
 relevant_folders:
