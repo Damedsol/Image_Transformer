@@ -6,6 +6,13 @@
 
 ## Change History
 
+- **2026-09-17: Release 2.1.1 — bump verificado por guard (build)**
+  - `2.1.0` → `2.1.1` en los 6 portadores: `package.json` (raíz, fuente de verdad), `backend/package.json`, badge de `README.md`, los dos tags por defecto de `docker-compose.prod.yml` y `.agents/project_manifest.yaml`. **Sin cambios en el lockfile** (pnpm no registra versión de los proyectos del workspace → `preferFrozenLockfile` intacto).
+  - **TDD con el guard existente:** primero los 4 de código/config dejando el manifiesto atrás → **RED real** con un solo mensaje (`.agents/project_manifest.yaml: 2.1.0, expected 2.1.1`) → **GREEN** al sincronizarlo. `pnpm test` → **22 ficheros / 161 tests**.
+  - **Cierre previsto (usuario):** `chore: bump version 2.1.1` en `release/2.1.1` y `git flow release finish -m "V2.1.1" 2.1.1` — el `-m` es obligatorio (tag anotado sin TTY) y el árbol debe estar limpio: son las dos lecciones de 2.1.0. El tag será el nº 21 y la spec ("20 tags as of 2026-09-17") sigue siendo cierta gracias al fechado.
+  - Referencia: `.agents/docs/specs/release-versioning.md` (V1 + "Release procedure").
+  - **QA y cierre (ciclo cerrado):** reviewer ✅ **APROBADO** (`.agents/docs/review_2026-09-17_release-2.1.1.md`, `reviewer_hash 46566389e767135b`) · `pnpm test` exit 0 — **22 ficheros / 161 tests** · guard 4/4 aislado · `biome format` check-only 0 · diff de código/config = solo las 5 líneas de versión (sin deps, sin lockfile). **Pendiente del usuario:** commit `chore: bump version 2.1.1` y **después** `git flow release finish -m "V2.1.1" 2.1.1` — el intento previo abortó con *“Working tree contains unstaged changes”* porque el bump aún no estaba commiteado: el orden es commit → finish. Memoria **54** (session).
+
 - **2026-09-17: Release 2.1.0 CERRADA + corrección documental del arnés (build)**
   - **Finish: dos fallos encadenados, ambos resueltos.** (a) El merge a `main` conflictuó exactamente en los 5 portadores porque `main` estaba en **2.0.1** (`3af5a12` + merge `54ffdad`, **nunca etiquetado ni devuelto a develop**) mientras `develop` seguía en 2.0.0 → resuelto con `git checkout --theirs -- <portadores>` (gana el release: supersede 2.0.1 y trae los pins refrescados), `git add` + `git commit --no-edit` → merge `c5ae925`. (b) El tagging falló con `Fatal: Tagging failed` porque `/usr/bin/git-flow-release:872` crea un **tag anotado** y **solo añade `-m` si se lo pasas**; sin mensaje git abrió `nano` y sin TTY reventó → resuelto con `git flow release finish -m "V2.1.0" 2.1.0`.
   - **Resultado:** tag **V2.1.0** (objeto `70d54fda` → commit `c5ae925`), `release/2.1.0` borrada, back-merge en `develop`, rama actual `develop`, árbol limpio.

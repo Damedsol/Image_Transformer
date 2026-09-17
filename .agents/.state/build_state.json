@@ -1,56 +1,55 @@
 {
-	"cycle": "2026-09-17 release-2.1.0 documentation corrections (post-release, harness-only)",
+	"cycle": "2026-09-17 release 2.1.1 — version bump, guard-verified (patch release)",
 	"plan_file": null,
-	"plan_note": "Harness documentation correction, not a feature cycle: no plan_*.md and no change_spec deltas exist. Trigger: finishing release 2.1.0 exposed a false statement in the harness docs (the spec claimed the repository has no tags).",
-	"change_spec": ".agents/specs/change_spec.yaml (status: archived — untouched)",
+	"plan_note": "Patch bump on branch release/2.1.1, opened by the user with `git flow release start 2.1.1`. No plan or change_spec deltas: the contract is V1 of .agents/docs/specs/release-versioning.md — the root package.json is the source of truth and every other carrier must match it.",
+	"change_spec": ".agents/specs/change_spec.yaml (status: archived — belongs to the closed dependency cycle, untouched)",
 	"review_file": null,
-	"head": "70d54fda (annotated tag V2.1.0 → merge commit c5ae925) · current branch: develop",
+	"head": "release/2.1.1 (branched from develop 5b3ddea)",
 	"baseline": {
-		"tests": "22 files / 161 tests passing — unchanged, no production code touched"
+		"tests": "22 files / 161 tests passing"
 	},
 	"requirements": {
 		"R1": {
-			"status": "n/a",
-			"note": "No requirement to trace: this cycle edits only .agents/ documentation. TDD is not applicable (no production code, no behaviour). The invariant it documents is already guarded by backend/src/__tests__/versionConsistency.test.ts (green)."
+			"status": "green",
+			"requirement": "The released version is 2.1.1 in every carrier: root package.json (source of truth), backend/package.json, the README badge, both docker-compose.prod.yml default image tags and .agents/project_manifest.yaml.",
+			"test": "backend/src/__tests__/versionConsistency.test.ts (4 tests, zero dependencies) — reused as-is from the 2.1.0 cycle, no new test needed",
+			"change": "6 version strings synced 2.1.0 → 2.1.1 (5 carriers, one with two tags)"
 		}
 	},
-	"review_fixes": {
-		"ID-01": {
-			"verdict": "VERIFY (blocking)",
-			"change": "The tag count said 21; it is 20. Corrected in all four places (release-versioning.md, checkpoint.yml evidence, build_state.json evidence.tags, history.md), and the spec figure is now self-dated ('20 tags as of 2026-09-17') so a future release cannot invalidate it silently.",
-			"evidence": "git show-ref --tags | wc -l → 20 (V1.0.0 · V1.1.0-V1.1.9 · V1.2.0-V1.2.3 · V1.3.0-V1.3.2 · V2.0.0 · V2.1.0)."
-		},
-		"ID-02": {
-			"verdict": "VERIFY (blocking)",
-			"change": "Removed the volatile ahead-of-origin counts from both checkpoint.yml and this file: the push item now tells the user to measure them with git rev-list --count instead of trusting a recorded number.",
-			"evidence": "git rev-list --count origin/develop..develop → 12 at review time, not the recorded 6 (the 6 predated the release back-merge); origin/main..main → 9."
-		}
+	"red_green": {
+		"red": "The four code/config carriers were moved to 2.1.1 first while .agents/project_manifest.yaml stayed at 2.1.0 → `pnpm vitest run backend/src/__tests__/versionConsistency.test.ts` exit 1 with exactly one finding: '.agents/project_manifest.yaml: 2.1.0, expected 2.1.1' (3 passed / 1 failed). A real RED on a real bump, not a synthetic fixture.",
+		"green": "After syncing the harness manifest: guard 4/4 and the full suite `pnpm test` exit 0 — 22 files / 161 tests."
 	},
-	"what_changed": {
-		"release-versioning.md": "Removed the false claim that the repository has no tags. Added the 'Tagging and completion' section: V-prefixed annotated tags (V1.0.0 … V2.0.0, V2.1.0), the untagged V2.0.1 gap, and the four hard requirements of `git flow release finish` (-m without a TTY, clean working tree, run_filter_hook message duplication, idempotent re-run) plus the --theirs conflict recovery. Release procedure extended with the finish and post-finish verification steps.",
-		"checkpoint.yml": "Release 2.1.0 cycle moved from the top layer into closed_cycles (status completed, tag V2.1.0, commit_status resolved); the top layer now describes this correction cycle; the pending item that repeated the false claim ('the repo currently has no tags') was replaced with the real pending work (push main/develop/tags, optional V2.0.1 tag).",
-		"build_state.json": "This file (new cycle record).",
-		"history.md": "New entry: the release finish, its two chained failures and their fixes, the verification results, and the durable lessons."
+	"files": {
+		"modified": [
+			"package.json (root, source of truth)",
+			"backend/package.json",
+			"README.md (badge)",
+			"docker-compose.prod.yml (2 default image tags)",
+			".agents/project_manifest.yaml",
+			".agents/context/history.md"
+		]
 	},
-	"evidence": {
-		"tags": "git show-ref --tags → 20 tags, all V-prefixed; V2.1.0 present (object 70d54fda), V2.0.1 absent.",
-		"tag_object": "git show V2.1.0 --no-patch → annotated tag, message body 'V2.1.0 V2.1.0', pointing at commit c5ae925 (the merge into main).",
-		"git_flow_source": "/usr/bin/git-flow-release:872 builds `git tag -a` and only appends -m when supplied; :817 requires a clean working tree unconditionally (:571 lets only `start` honour gitflow.allowdirty); :844 and :859 skip an already-merged branch and an existing tag; /usr/bin/gitflow-common:758-759 is the `echo \"$@\"` fallback that appends the tag name to the message.",
-		"branch_and_carriers": "git branch --list 'release/2.1.0' → deleted; git diff main develop -- package.json backend/package.json README.md docker-compose.prod.yml .agents/project_manifest.yaml → empty (both branches at 2.1.0, the 2.0.1/2.0.0 drift is closed).",
-		"suite": "pnpm test on develop → 22 files / 161 tests green."
+	"workload": {
+		"code_config_files": 4,
+		"code_config_lines": 5,
+		"harness_files": 4,
+		"note": "Five one-line carrier edits plus harness bookkeeping in four .agents files (project_manifest.yaml, history.md, build_state.json, checkpoint.yml). No tests added or changed: the guard from the 2.1.0 cycle already enforces the invariant. Well inside the 5-file/400-line SLO."
 	},
 	"deliberate_non_changes": [
-		"review_2026-09-17_release-2.1.0.md is NOT edited: it is the reviewer's frozen artifact for that cycle. Its §6 claim about tags is marked superseded in release-versioning.md, checkpoint.yml and history.md instead.",
-		"No code, test, workflow or dependency was touched — the tree differs from the released V2.1.0 only inside .agents/.",
-		"The tag V2.1.0 was not re-created: its annotation duplication is cosmetic and re-tagging a published ref is not worth the churn (the optional fix is documented)."
+		"pnpm-lock.yaml untouched: pnpm records no version for workspace projects, so preferFrozenLockfile stays satisfied.",
+		"The version guard test was not modified — it needed no change for the second consecutive release, which is exactly its design (the root manifest drives the expectation).",
+		".agents/docs/specs/release-versioning.md untouched: its '20 tags as of 2026-09-17' stays true after V2.1.1 becomes tag number 21, precisely because the count is self-dated.",
+		"The release process itself (branch, commit, finish) stays a human action: /build must not commit."
 	],
 	"not_run": [
-		"pnpm qa as a whole — AGENTS.md no-auto-runs policy. `biome format .` was executed in check mode (no --write) to confirm the edited .md/.json stay biome-clean."
+		"pnpm build — AGENTS.md no-auto-runs policy. `biome format .` was run in check mode (no --write) to confirm the edited JSON/MD stay clean."
 	],
 	"pending_ids": [
-		"REVIEWER (pass 2): re-verify the corrected counts (tags = 20; no volatile ahead-of-origin figures left anywhere in the harness) and confirm the rest of the cycle did not regress",
-		"SCRIBE: commit the harness correction as docs(agents) — this sandbox blocks git add/commit, so the user runs the paste-safe commands",
-		"USER: push main + develop + tags (both branches carry unpushed commits — measure with git rev-list --count origin/<branch>..<branch>; point-in-time counts are deliberately not recorded because they go stale immediately)",
-		"USER (optional): git tag -a V2.0.1 54ffdad -m 'V2.0.1' to close the untagged 2.0.1 gap"
+		"REVIEWER: verify R1 (six carriers at 2.1.1, all equal; no lockfile change) and confirm the RED/GREEN evidence",
+		"USER: commit `chore: bump version 2.1.1` on release/2.1.1, then `git flow release finish -m \"V2.1.1\" 2.1.1` from a CLEAN tree (the -m is mandatory: annotated tag, no TTY)",
+		"USER (carried over): push main + develop + tags — measure the ahead counts instead of recording them",
+		"USER (carried over, optional): tag the untagged 2.0.1 merge — git tag -a V2.0.1 54ffdad -m 'V2.0.1'",
+		"carried over from closed cycles: kill the stale dev server on :5173 · OBS-02 docker --host forwarding · OBS-01 CSP/normalizeOrigin DRY · Dependabot alert export · security.yml decision · slices C2b/C3 · 11-ref close-list · first Dependabot run watch"
 	]
 }
