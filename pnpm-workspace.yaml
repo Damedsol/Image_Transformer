@@ -24,7 +24,7 @@ minimumReleaseAge: 7200
 catalog:
     "@biomejs/biome": "^2.0.0"
     "@commitlint/cli": "^21.0.0"
-    "@commitlint/config-conventional": "^21.0.0"
+    "@commitlint/config-conventional": "^21.2.2"
     "concurrently": "^10.0.4"
     "globals": "^17.0.0"
     "husky": "^9.0.0"
