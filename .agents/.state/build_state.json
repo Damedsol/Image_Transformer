@@ -1,0 +1,97 @@
+{
+	"cycle": "2026-09-17 dev port-fallback — CORS loopback patterns + Vite strictPort (ad-hoc Fast Path, CICLO CERRADO)",
+	"cycle_date_note": "OBS-03: /build labelled this cycle 2026-09-18; the real system date was 2026-09-17 (date -I + file mtimes + the previous cycle closing at 16:29 the same day). Normalised by /scribe here, in history.md and in checkpoint.yml.",
+	"plan_file": null,
+	"plan_note": "No /plan and no plan_*.md: user-reported dev bug, small and single-concern (AGENTS.md §4.1 inline Fast Path). Requirements R1..R3 were declared in the test docblocks that guard them and are archived as .agents/docs/specs/dev-environment.md §A (D1..D3).",
+	"change_spec": ".agents/specs/change_spec.yaml (status: archived — belongs to the closed 2026-09-17 dependency cycle, untouched)",
+	"review_file": ".agents/docs/review_2026-09-17_dev-port-fallback.md",
+	"head": "7d340af (feature/minor-fixes-and-security)",
+	"baseline": {
+		"tests": "19 files / 146 tests passing"
+	},
+	"root_cause": {
+		"summary": "Port collision, not a dependency regression. :5173 was held by an unrelated stale dev server (another project's Vite, pid 317796 alive since 2026-09-17) → this app's Vite fell back to :5174 → two hardcoded 5173 assumptions broke.",
+		"a": "backend/src/index.ts dev allowlist was the closed list ['http://localhost:3000','http://localhost:5173','http://localhost'] → no Access-Control-Allow-Origin for origin http://localhost:5174.",
+		"b": "vite.config.ts pinned server.hmr.clientPort: 5173 → the HMR socket targeted the OTHER project's server ('WebSocket closed without opened').",
+		"evidence": "ss -ltnp: [::1]:5174 pid=324645 (this app) vs *:5173 pid=317796 (currencyExchange Vite); the pre-existing backend on :3001 reproduced the missing ACAO."
+	},
+	"requirements": {
+		"R1": {
+			"status": "green",
+			"requirement": "Development CORS must accept any loopback port (localhost / 127.0.0.1 / ::1, any port) and still refuse remote or look-alike origins.",
+			"test": "backend/src/__tests__/corsOrigins.test.ts › 'R1 · development accepts any local port' (3 tests, asserted through the REAL cors middleware)",
+			"change": "backend/src/utils/corsOrigins.ts — dev branch returns anchored patterns instead of an exact-port list"
+		},
+		"R2": {
+			"status": "green",
+			"requirement": "Production allowlist must stay an exact-match list: CORS_ORIGIN (trailing slash normalized) + comma-separated CORS_ORIGINS (invalid entries dropped) + explicit ALLOW_LOCALHOST opt-in, and must still throw when nothing is configured. No RegExp may leak into production.",
+			"test": "backend/src/__tests__/corsOrigins.test.ts › 'R2 · production allowlist stays exact and explicit' (5 tests)",
+			"change": "verbatim extraction of normalizeOrigin + production branch, no semantic change"
+		},
+		"R3": {
+			"status": "green",
+			"requirement": "The Vite dev server must fail fast instead of silently drifting to another port, and HMR must never pin a clientPort the HTTP server may not own.",
+			"test": "src/__tests__/devServerConfig.test.ts (3 tests, imports vite.config)",
+			"change": "vite.config.ts — added server.strictPort: true, removed server.hmr.clientPort"
+		}
+	},
+	"red_green": {
+		"red": "pnpm vitest run backend/src/__tests__/corsOrigins.test.ts src/__tests__/devServerConfig.test.ts → exit 1, 4 failed / 7 passed: 'http://localhost:5174: expected undefined to be http://localhost:5174', same for 127.0.0.1:5174, plus strictPort + clientPort guards. The extraction was first written with the OLD dev list so RED exposed the logic gap, not a missing module. The 'refuses remote origins' guard already passed in RED (no false positives).",
+		"green": "same command → exit 0, 11/11; full suite pnpm test → exit 0, 21 files / 157 tests (was 19 / 146)"
+	},
+	"files": {
+		"new": [
+			"backend/src/utils/corsOrigins.ts",
+			"backend/src/__tests__/corsOrigins.test.ts",
+			"src/__tests__/devServerConfig.test.ts"
+		],
+		"modified": [
+			"backend/src/index.ts (inline CORS block extracted, −74 lines)",
+			"vite.config.ts"
+		]
+	},
+	"workload": {
+		"files": 5,
+		"changed_lines": 385,
+		"breakdown": "84 tracked (10+/74−) + 301 new (104 util, of which ~60 lines are code MOVED out of index.ts, plus 197 lines of tests)",
+		"agents_bookkeeping": "The .agents/ delta measured 132+/210− (342 changed lines) but is dominated by content MOVED, not authored: checkpoint.yml nests the closed cycle verbatim and build_state.json was rewritten, so moved text is double-counted as deletion + insertion. Following the previous cycle's convention, the SLO table counts code+config only: 5 files / 385 lines, inside the 5/400 budget. Net new production logic is ~52 lines.",
+		"correction": "An earlier draft of this file claimed '~455 lines including .agents/'; the measured figure is 385 code/config + 342 .agents changed lines = 727, so the estimate was wrong in both directions. Corrected here (ID-01/OBS-03 follow-up)."
+	},
+	"review": {
+		"verdict": "APPROVED",
+		"reviewer_hash": "5c53fd73e39b130a",
+		"tests_classified": "KEEP 11 / REMOVE 0",
+		"independent_evidence": "dev :3099 echoes Access-Control-Allow-Origin for http://localhost:5174, http://127.0.0.1:5180, http://[::1]:5174 + successful preflight OPTIONS /api/convert; prod :3098 serves only its exact origin (no localhost leak); prod with an empty allowlist exits 1 before listening; pnpm dev:frontend with :5173 taken exits 1 with 'Port 5173 is already in use'; served @vite/client ships hmrPort = null (page-port fallback).",
+		"findings": {
+			"ID-01": "cosmetic — biome wanted to expand one array in this file; resolved by expanding it here plus the .lintstagedrc *.json glob at commit.",
+			"OBS-01": "securityMiddleware.ts:29-47 re-implements the env-origin parsing now in normalizeOrigin and does not filter non-http(s) schemes for connectSrc (pre-existing, future cycle).",
+			"OBS-02": "docker-compose.yml:55 'pnpm run dev -- --host 0.0.0.0' never reaches Vite (concurrently swallows trailing CLI args; child argv [] in all 3 shapes) → the container frontend likely binds loopback and 5173:5173 cannot reach it; vite.config.ts:12 comment inaccurate. Pre-existing, unverified in-container, own cycle.",
+			"OBS-03": "cycle date correction (see cycle_date_note)."
+		}
+	},
+	"archive": {
+		"spec": ".agents/docs/specs/dev-environment.md §A (D1..D3)",
+		"adr": ".agents/docs/adr/0006-dev-origin-allowlist-and-port-binding.md",
+		"memory_ids": [45, 46, 47],
+		"memory_topic_keys": [
+			"architecture/dev-origin-allowlist",
+			"config/concurrently-arg-forwarding"
+		],
+		"index_project": "projects-github-imagetransformer"
+	},
+	"deliberate_non_changes": [
+		"Production CORS semantics are byte-identical to 7d340af (verified by diffing the extracted block against git show HEAD).",
+		"Docker dev keeps 5173:5173; the --host forwarding defect is pre-existing (OBS-02) and out of this cycle's scope.",
+		"No foreign process was killed by any gate."
+	],
+	"not_run": [
+		"pnpm build — no-auto-runs policy",
+		"pnpm qa as a whole (its lint step runs oxlint --fix and would mutate files inside a read-only gate); type-check, oxlint check-mode, lint-filenames and format:check were run individually instead"
+	],
+	"pending_ids": [
+		"USER EXTERNAL: kill the stale foreign dev server holding :5173 (with strictPort the failure is now explicit instead of a silent drift)",
+		"OBS-02: verify `docker compose up` and fix the --host forwarding (own cycle)",
+		"OBS-01: reuse normalizeOrigin in the CSP builder (own cycle)",
+		"USER DECISION (carried over): .github/workflows/security.yml, Dependabot alert export, slices C2b/C3, 11-ref close-list, first Dependabot run watch"
+	]
+}

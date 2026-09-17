@@ -66,3 +66,62 @@ All requirements completed [✓] 2026-09-10 · Suite 135/135 · `pnpm audit` ful
 Scenarios: happy (convert flow unchanged) · edge (evil filenames,
 non-Error throws, stale timers, colliding names, invalid hops) · side
 (dev-only CVE graph at zero without touching prod runtime).
+
+## D. 2026-09-17 advisory triage + supply-chain automation
+
+> Merged from `.agents/specs/change_spec.yaml` (now `status: archived`).
+> Cycle-local requirement IDs `R1..R12` of
+> `.agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md`
+> map onto `R16..R21` below. Reviewer ✅ APROBADO
+> (`review_2026-09-17_dependency-refresh-dependabot-repass.md`, tras 1 rechazo
+> por ID-01). Diff: 5 files + 2 new · 481 code/config lines (WARNING declarado).
+
+- [✓] **R16. Triage before remediation.** The authoritative inventory is
+  captured as evidence: `pnpm audit --json` (full + `--prod`) and an OSV
+  `querybatch` over every locked `name@version`; every alert is bucketed
+  FIXED-IN-TREE / OPEN / NOT-APPLICABLE. Result on 2026-09-17: **0 advisories by
+  both sources** (481 packages audited, 376 OSV-queried, 0 hits) → remediation
+  recorded as an explicit **no-op** and the 11 stale `dependabot/*` refs
+  reconciled with a close-list (none to merge). Dependabot alert export remains
+  an external dependency (no `gh`, private repo).
+- [✓] **R17. Dependency refresh within major.** Backend runtime pins:
+  `helmet` 8.3.0, `express-rate-limit` 8.7.0, `zod` 4.6.2, `tsx` 4.23.13 (exact
+  pins preserved); override floors: `minimatch@^10` 10.2.6, `flatted` 3.4.4,
+  `path-to-regexp` 8.4.2, `ip-address` ≥10.7.0, `postcss` ≥8.5.28, `zod` ≥4.6.2.
+  Deliberately unchanged: `undici` 7.29.0, `picomatch` 2.3.2, `js-yaml` <5,
+  `brace-expansion` 5.0.9, `fast-uri` 4.1.4, `multer` 2.3.0 (newest allowed).
+- [✓] **R18. `minimumReleaseAge` is respected.** The newest *allowed* patch is
+  derived from registry publish dates; 8 of 19 candidate targets were rejected
+  by the 5-day window and replaced by the previous patch.
+- [✓] **R19. Pin↔override-floor invariant.** With `lowest-direct`, an override
+  floor below an exact pin silently wins (real bug: `zod` 4.6.2 declared → 4.4.3
+  resolved). Guarded by `backend/src/__tests__/dependencyConfig.test.ts`
+  (11 tests, zero new dependencies), which also reproduces the historical bug as
+  a fixture.
+- [✓] **R20. Dependabot version updates enabled** —
+  `.github/dependabot.yml` (npm `directories: ["/", "/backend"]`,
+  `groups.minor-and-patch` + `group-by: dependency-name`; docker for both
+  digest-pinned Dockerfiles; `chore(deps)`/`chore(deps-dev)` prefixes). **No
+  `ignore` rules**: `ignore` also suppresses *security* updates, and version
+  updates only touch manifest-declared dependencies, so ignoring a transitive
+  package has no upside. Guarded by the same test suite (structure + no inert
+  ignore).
+- [✓] **R21. Majors stay out of scope.** TypeScript 7, Vitest 5, jsdom 30,
+  lint-staged 17 and archiver 8 are recorded as a follow-up cycle (R12 of the
+  plan); each needs its own migration against the 19-suite bed.
+
+Acceptance criteria (met 2026-09-17): `pnpm audit` full + `--prod` = 0 (JSON
+archived) · `pnpm audit` 0 and `pnpm build` green · `pnpm qa` **exit 0, 19 files
+/ 146 tests** · OSV re-check of the changed packages 0/57 · runtime smoke
+`GET /api/formats` 200 + `POST /api/convert` 200 · no production source file
+touched · no new dependency added.
+
+Scenarios: happy (install/lockfile consistent, suite green, backend converts) ·
+edge (`minimumReleaseAge` rejections, `lowest-direct` vs exact pin,
+re-introduced `ignore`) · side (dev tooling untouched — biome/oxlint/commitlint/
+vite deferred to slice C2b).
+
+Open (not acceptance-blocking): CI workflow `.github/workflows/security.yml`
+(pending user decision), `pnpm check:security`, `scripts/scan-advisories.mjs`,
+Dependabot alert export, execution of the 11-PR close-list. Policy codified in
+ADR-0005.
