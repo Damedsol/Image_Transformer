@@ -22,7 +22,7 @@ registries:
 
 minimumReleaseAge: 7200  
 catalog:
-    "@biomejs/biome": "^2.0.0"
+    "@biomejs/biome": "^2.5.13"
     "@commitlint/cli": "^21.0.0"
     "@commitlint/config-conventional": "^21.0.0"
     "concurrently": "^10.0.4"
