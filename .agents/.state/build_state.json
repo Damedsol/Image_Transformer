@@ -1,53 +1,56 @@
 {
-	"cycle": "2026-09-17 release 2.1.0 — version bump + version-consistency guard (build)",
+	"cycle": "2026-09-17 release-2.1.0 documentation corrections (post-release, harness-only)",
 	"plan_file": null,
-	"plan_note": "Release chore handed over from /scribe: the version carriers are code/config, outside that gate's write scope (`Gate /scribe solo escribe en .agents/`). No /plan file: mechanical sync with an established precedent (f128550, the 2.0.0 release). R1 is declared in the guard test docblock.",
-	"change_spec": ".agents/specs/change_spec.yaml (status: archived — untouched by this cycle)",
+	"plan_note": "Harness documentation correction, not a feature cycle: no plan_*.md and no change_spec deltas exist. Trigger: finishing release 2.1.0 exposed a false statement in the harness docs (the spec claimed the repository has no tags).",
+	"change_spec": ".agents/specs/change_spec.yaml (status: archived — untouched)",
 	"review_file": null,
-	"head": "e8b892f (branch release/2.1.0)",
-	"baseline": { "tests": "21 files / 157 tests passing" },
+	"head": "70d54fda (annotated tag V2.1.0 → merge commit c5ae925) · current branch: develop",
+	"baseline": {
+		"tests": "22 files / 161 tests passing — unchanged, no production code touched"
+	},
 	"requirements": {
 		"R1": {
-			"status": "green",
-			"requirement": "The released version is 2.1.0 in every carrier: root package.json (source of truth), backend/package.json, the README badge, both docker-compose.prod.yml default image tags and .agents/project_manifest.yaml; no carrier may drift.",
-			"test": "backend/src/__tests__/versionConsistency.test.ts (4 tests, zero dependencies) — lives in the backend suite because the frontend tsconfig has no node types",
-			"change": "5 carrier lines synced 2.0.0 → 2.1.0"
+			"status": "n/a",
+			"note": "No requirement to trace: this cycle edits only .agents/ documentation. TDD is not applicable (no production code, no behaviour). The invariant it documents is already guarded by backend/src/__tests__/versionConsistency.test.ts (green)."
 		}
 	},
-	"red_green": {
-		"green_baseline": "The guard was written first: while every carrier still agreed at 2.0.0 it passed 4/4, proving the detector produces no false positives.",
-		"red": "Deliberate half-applied bump (the realistic failure mode): the 4 code/config carriers moved to 2.1.0 while .agents/project_manifest.yaml stayed at 2.0.0 → exit 1 with exactly one message: 'harness manifest (.agents/project_manifest.yaml) carries 2.0.0, expected 2.1.0'. The wording was later trimmed to '<file>: <actual>, expected <expected>' so the template literal fits biome's 80-column budget; the synthetic detector tests keep the bite proven permanently.",
-		"green": "After syncing the harness manifest: guard 4/4, full suite `pnpm test` exit 0 — 22 files / 161 tests (baseline 21 / 157)."
+	"review_fixes": {
+		"ID-01": {
+			"verdict": "VERIFY (blocking)",
+			"change": "The tag count said 21; it is 20. Corrected in all four places (release-versioning.md, checkpoint.yml evidence, build_state.json evidence.tags, history.md), and the spec figure is now self-dated ('20 tags as of 2026-09-17') so a future release cannot invalidate it silently.",
+			"evidence": "git show-ref --tags | wc -l → 20 (V1.0.0 · V1.1.0-V1.1.9 · V1.2.0-V1.2.3 · V1.3.0-V1.3.2 · V2.0.0 · V2.1.0)."
+		},
+		"ID-02": {
+			"verdict": "VERIFY (blocking)",
+			"change": "Removed the volatile ahead-of-origin counts from both checkpoint.yml and this file: the push item now tells the user to measure them with git rev-list --count instead of trusting a recorded number.",
+			"evidence": "git rev-list --count origin/develop..develop → 12 at review time, not the recorded 6 (the 6 predated the release back-merge); origin/main..main → 9."
+		}
 	},
-	"files": {
-		"new": ["backend/src/__tests__/versionConsistency.test.ts (114 lines)"],
-		"modified": [
-			"package.json",
-			"backend/package.json",
-			"README.md",
-			"docker-compose.prod.yml (2 image tags)",
-			".agents/project_manifest.yaml",
-			".agents/context/history.md"
-		]
+	"what_changed": {
+		"release-versioning.md": "Removed the false claim that the repository has no tags. Added the 'Tagging and completion' section: V-prefixed annotated tags (V1.0.0 … V2.0.0, V2.1.0), the untagged V2.0.1 gap, and the four hard requirements of `git flow release finish` (-m without a TTY, clean working tree, run_filter_hook message duplication, idempotent re-run) plus the --theirs conflict recovery. Release procedure extended with the finish and post-finish verification steps.",
+		"checkpoint.yml": "Release 2.1.0 cycle moved from the top layer into closed_cycles (status completed, tag V2.1.0, commit_status resolved); the top layer now describes this correction cycle; the pending item that repeated the false claim ('the repo currently has no tags') was replaced with the real pending work (push main/develop/tags, optional V2.0.1 tag).",
+		"build_state.json": "This file (new cycle record).",
+		"history.md": "New entry: the release finish, its two chained failures and their fixes, the verification results, and the durable lessons."
 	},
-	"workload": {
-		"code_config_files": 5,
-		"code_config_lines": 119,
-		"breakdown": "5 carrier lines + 114 new test lines (harness files declared separately: manifest 1 line, history 7 lines, checkpoint + build_state rewritten)",
-		"note": "Within the 5-file/400-line SLO under the convention the reviewer applied in the previous two cycles (code+config counted, .agents/ declared separately)."
+	"evidence": {
+		"tags": "git show-ref --tags → 20 tags, all V-prefixed; V2.1.0 present (object 70d54fda), V2.0.1 absent.",
+		"tag_object": "git show V2.1.0 --no-patch → annotated tag, message body 'V2.1.0 V2.1.0', pointing at commit c5ae925 (the merge into main).",
+		"git_flow_source": "/usr/bin/git-flow-release:872 builds `git tag -a` and only appends -m when supplied; :817 requires a clean working tree unconditionally (:571 lets only `start` honour gitflow.allowdirty); :844 and :859 skip an already-merged branch and an existing tag; /usr/bin/gitflow-common:758-759 is the `echo \"$@\"` fallback that appends the tag name to the message.",
+		"branch_and_carriers": "git branch --list 'release/2.1.0' → deleted; git diff main develop -- package.json backend/package.json README.md docker-compose.prod.yml .agents/project_manifest.yaml → empty (both branches at 2.1.0, the 2.0.1/2.0.0 drift is closed).",
+		"suite": "pnpm test on develop → 22 files / 161 tests green."
 	},
 	"deliberate_non_changes": [
-		"pnpm-lock.yaml untouched: pnpm records no version for workspace projects, so preferFrozenLockfile: true stays satisfied — confirmed by the 2.0.0 release commit f128550, which also touched no lockfile.",
-		"Both docker image tags remain env-overridable defaults (BACKEND_IMAGE / FRONTEND_IMAGE).",
-		"No dependency added, bumped or installed in this cycle."
+		"review_2026-09-17_release-2.1.0.md is NOT edited: it is the reviewer's frozen artifact for that cycle. Its §6 claim about tags is marked superseded in release-versioning.md, checkpoint.yml and history.md instead.",
+		"No code, test, workflow or dependency was touched — the tree differs from the released V2.1.0 only inside .agents/.",
+		"The tag V2.1.0 was not re-created: its annotation duplication is cosmetic and re-tagging a published ref is not worth the churn (the optional fix is documented)."
 	],
 	"not_run": [
-		"pnpm build / pnpm type-check / pnpm format:check — AGENTS.md no-auto-runs policy; the pre-commit hook runs tsc + lint-staged on commit. The new file was hand-checked: no code line exceeds 80 columns (only comments do, which biome leaves alone)."
+		"pnpm qa as a whole — AGENTS.md no-auto-runs policy. `biome format .` was executed in check mode (no --write) to confirm the edited .md/.json stay biome-clean."
 	],
 	"pending_ids": [
-		"REVIEWER: verify R1 and classify the 4 new tests KEEP/REMOVE",
-		"SCRIBE (after approval): commit `chore: bump version 2.1.0` on release/2.1.0 — expected to touch 5 code/config files + .agents/, and no lockfile",
-		"USER: push and tag release 2.1.0 if that is the workflow (the repo currently has no tags)",
-		"carried over from the closed dev-port-fallback cycle: kill the foreign dev server holding :5173 · OBS-02 docker `--host` forwarding · OBS-01 CSP/normalizeOrigin DRY · Dependabot alert export · security.yml decision · slices C2b/C3 · 11-ref close-list · first Dependabot run watch"
+		"REVIEWER (pass 2): re-verify the corrected counts (tags = 20; no volatile ahead-of-origin figures left anywhere in the harness) and confirm the rest of the cycle did not regress",
+		"SCRIBE: commit the harness correction as docs(agents) — this sandbox blocks git add/commit, so the user runs the paste-safe commands",
+		"USER: push main + develop + tags (both branches carry unpushed commits — measure with git rev-list --count origin/<branch>..<branch>; point-in-time counts are deliberately not recorded because they go stale immediately)",
+		"USER (optional): git tag -a V2.0.1 54ffdad -m 'V2.0.1' to close the untagged 2.0.1 gap"
 	]
 }
