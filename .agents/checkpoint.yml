@@ -1,57 +1,59 @@
 # Pipeline Checkpoint — imageTransformer
 
-# Layer 1 = the CURRENT cycle (top level). Layer 2 = the previously closed cycle,
-# nested verbatim under `closed_cycle_2026-09-17`. Never let a key exist at both
-# layers: duplicate YAML keys are silently shadowed (last one wins), which would
-# hand a stale scribe_hash/reviewer_hash to the next gate.
+# Layer 1 = the CURRENT cycle (top level). Layer 2 = previously closed cycles,
+# nested under `closed_cycles`. Never let the same key exist at both layers:
+# duplicate YAML keys are silently shadowed (last one wins), which would hand a
+# stale reviewer_hash/scribe_hash to the next gate — that bit us twice already.
 
 pipeline:
   status: "completed" # plan_completed | build_completed | reviewer_approved | reviewer_rejected | completed
-  cycle: "2026-09-17 dev port-fallback — CORS loopback patterns + Vite strictPort (ad-hoc Fast Path, CICLO CERRADO)"
-  cycle_date_note: "OBS-03 resolved by /scribe: /build labelled the cycle 2026-09-18; the real date was 2026-09-17 (date -I, file mtimes, and the previous cycle closing at 16:29 the same day). Normalised here, in history.md and in build_state.json."
+  cycle: "2026-09-17 release 2.1.0 — version bump + version-consistency guard"
   plan_file: null
-  plan_note: "No /plan and no plan_*.md for this cycle: user-reported dev bug, small and single-concern (AGENTS.md §4.1 inline Fast Path). Requirements R1..R3 were declared and guarded inside the test docblocks (backend/src/__tests__/corsOrigins.test.ts, src/__tests__/devServerConfig.test.ts)."
+  plan_note: "Release chore handed over from /scribe (the version carriers are code/config, outside that gate's write scope). No plan_*.md: mechanical sync with an established precedent (f128550, the 2.0.0 release). R1 is declared in the guard test docblock."
   spec_file: ".agents/specs/change_spec.yaml"
-  change_spec: ".agents/specs/change_spec.yaml (status: archived — belongs to the closed 2026-09-17 dependency cycle, intentionally untouched: this Fast Path cycle produced no change_spec)"
-  review_file: ".agents/docs/review_2026-09-17_dev-port-fallback.md"
+  change_spec: ".agents/specs/change_spec.yaml (status: archived — belongs to the closed dependency cycle, untouched)"
+  review_file: ".agents/docs/review_2026-09-17_release-2.1.0.md"
   review_prev_file: null
   reviewed_at: "2026-09-17"
-  reviewer_hash: "5c53fd73e39b130a"
-  reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16] — same readable-composite convention as the closed cycle; the /reviewer sandbox exposes sha256sum only."
-  reviewer_evidence: "R1/R2/R3 verified over real HTTP (dev :3099 → ACAO echoed for http://localhost:5174, 127.0.0.1:5180, [::1]:5174; preflight OPTIONS ok; evil.example.com refused), production :3098 (exact origin only, no localhost), fail-loud :3097 (exit 1, never listened), Vite strictPort (exit 1 + 'Port 5173 is already in use'), HMR (served client has hmrPort = null → page port). Negative control: the pre-existing backend on :3001 reproduced the original missing ACAO for :5174."
-  reviewer_verdict: "APPROVED — tests KEEP 11 / REMOVE 0; workload 5 files / 385 code+config lines (inside SLO); ID-01 (cosmetic format of .agents/.state/build_state.json) was a /scribe condition, not a blocker."
-  build_hash: "ad-hoc@7d340af: R1 dev CORS accepts any loopback port + R2 production exact-match list unchanged + R3 vite strictPort/no hmr.clientPort"
+  reviewer_hash: "12c389674c6881d1"
+  reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16], both read from this file exactly as /build left them — same convention as the two previous cycles. Reviewer-surface hash of the frozen candidate (code/config diff + the new test, immune to this gate's own harness edits): 41482c9542bcdb76463c7fc348ffd5522e7c3f4041aa516c7ce0eb5cac71e4d1. Full working-tree hash at review time: 6d62dce2fbccb18e107d603d8394d0b4a690db164e7eae1063f4ec97e74bab71."
+  reviewer_evidence: "R1 verified independently: the 6 version points were extracted with the reviewer's own patterns (all 2.1.0), no 2.0.0 residue remains outside the guard's own docblock/fixtures, the dev compose carries no versioned tag (so there is no sixth carrier), and the guard's CARRIERS match exactly the version-bearing files of the 2.0.0 release (f128550) minus the history log. The build's real RED was reproduced in its report: a deliberate half-applied bump exits 1 with exactly one message naming the left-behind manifest. Suite: pnpm test exit 0 (22 files / 161 tests), pnpm type-check 0, oxlint root+backend in check mode 0, lint-filenames 0, biome format check-only 0 (71 files, no fixes) — the previous cycle's ID-01 formatting finding is resolved. No QA run modified the tree."
+  reviewer_verdict: "APPROVED — 4 KEEP / 0 REMOVE; workload 5 code/config files / 119 lines (inside SLO); 2 informational observations (OBS-01 hardcoded carrier list, OBS-02 dependency on .agents/ presence)."
+  build_hash: "release-2.1.0@e8b892f: 5 carriers synced 2.0.0 → 2.1.0 (package.json, backend/package.json, README badge, compose tags x2, manifest) + R1 guard"
   build_state: ".agents/.state/build_state.json"
-  diff_stat: "5 code/config files — backend/src/index.ts (10+/74-), vite.config.ts (5+/2-), NEW backend/src/utils/corsOrigins.ts (104), NEW backend/src/__tests__/corsOrigins.test.ts (168), NEW src/__tests__/devServerConfig.test.ts (29) = 385 changed lines (SLO 400 ok)"
-  diff_stat_correction: "An earlier note added '~455 including .agents bookkeeping'. The measured .agents delta is 132+/210− (342 changed lines) but is dominated by MOVED content (checkpoint nesting, build_state rewrite), so moved text is counted twice as deletion+insertion. Code+config stays 5 files / 385 lines; the aggregate is 727, not 455. Corrected in build_state.json too (ID-01/OBS-03 follow-up)."
+  diff_stat: "5 code/config files — package.json, backend/package.json, README.md, docker-compose.prod.yml (2 tags), NEW backend/src/__tests__/versionConsistency.test.ts (114 lines) = 119 lines; harness separate: .agents/project_manifest.yaml, history.md, checkpoint.yml, build_state.json"
   built_at: "2026-09-17"
-  date_note: "OBS-03: this cycle was labelled 2026-09-18 by /build while the system date was 2026-09-17. built_at was corrected here by /scribe (owner of .agents/). The review artifact already used the true date."
   last_step: "scribe"
-  scribe_hash: "rev:5c53fd73e39b130a+spec:dev-environment.md#A+D1-D3"
-  scribe_hash_note: "Readable composite key instead of sha256(reviewer_hash+domain.yaml): this repo has no domain.yaml (the living spec under .agents/docs/specs/ plays that role) and the /scribe sandbox exposes no hashing utility. Deterministic given the reviewed revision + merge target, which is all the R1 idempotency check needs."
-  completed_at: "2026-09-17T19:36:29+01:00"
-  completed_at_note: "ISO timestamp of this gate's mem_save (session id 46) — `date` is not available inside the /scribe sandbox."
-  commit_status: "PENDING — USER ACTION. The /scribe sandbox refused `git add`, `git add .agents/` and `git commit --dry-run` with 'Gate /scribe es de lectura (bash lectura únicamente)'; only read commands (git status/diff, cat, wc) pass. Abort rule applied and logged in `.agents/context/error.log`. The archive itself is complete in the working tree; the two atomic commits (fix / docs) were handed over as a copy-paste block in the /scribe handoff."
-  adr_file: ".agents/docs/adr/0006-dev-origin-allowlist-and-port-binding.md"
+  scribe_hash: "rev:12c389674c6881d1+spec:release-versioning.md#A+V1"
+  scribe_hash_note: "Readable composite key instead of sha256(reviewer_hash+domain.yaml): this repo has no domain.yaml (the Markdown specs under .agents/docs/specs/ play that role) and the /scribe sandbox exposes no hashing utility. It differs from both closed cycles' keys, so this cycle was genuinely pending archive, not a repeated /scribe run."
+  completed_at: "2026-09-17T20:04:33+01:00"
+  completed_at_note: "ISO timestamp of this gate's mem_save (session id 50) — `date` is not available inside the /scribe sandbox."
+  commit_status: "PENDING — USER ACTION. The /scribe sandbox refused `git add` with 'Gate /scribe es de lectura (bash lectura únicamente)' (same constraint as the dev-port-fallback cycle, logged in .agents/context/error.log: interpreters and every write command are blocked, only git reads pass). Two atomic commits are handed over as paste-safe `git commit -m` commands (no heredoc, which breaks when the pasted block is indented): 1) chore: bump version 2.1.0 — the 5 carriers plus the guard test, so every intermediate commit stays consistent; 2) docs(agents) — the harness archive."
+  adr_file: null
+  adr_note: "No ADR: a release sync changes no policy (the dev-environment policy already lives in ADR-0006)."
   archive:
-    spec: ".agents/docs/specs/dev-environment.md §A (D1..D3) — new living spec; no change_spec.yaml existed because this was an ad-hoc Fast Path cycle"
-    adr: ".agents/docs/adr/0006-dev-origin-allowlist-and-port-binding.md"
-    review: ".agents/docs/review_2026-09-17_dev-port-fallback.md (reviewer ✅ APROBADO, 11 KEEP / 0 REMOVE)"
-    memory_ids: [45, 46, 47]
-    memory_topic_keys: ["architecture/dev-origin-allowlist", "config/concurrently-arg-forwarding"]
-    index_project: "projects-github-imagetransformer (reindexed: 118 → 127 files / 288 symbols)"
-    history: ".agents/context/history.md (entry 2026-09-17, corrected date + review outcome)"
-  evidence: "RED: pnpm vitest run backend/src/__tests__/corsOrigins.test.ts src/__tests__/devServerConfig.test.ts → exit 1, 4 failed/7 passed (localhost:5174 + 127.0.0.1:5174 CORS, strictPort, clientPort). GREEN: exit 0, 11/11. Full: pnpm test → exit 0, 21 files / 157 tests (baseline 19/146). Reviewer re-ran at review time: pnpm type-check 0, oxlint in check mode 0, lint-filenames 0, format:check 1 file (ID-01, now fixed)."
+    spec: ".agents/docs/specs/release-versioning.md §A (V1) — new living spec: the five version carriers, what is deliberately NOT a carrier, and the release procedure"
+    adr: null
+    adr_note: "n/a — no policy decision in this cycle"
+    review: ".agents/docs/review_2026-09-17_release-2.1.0.md (reviewer ✅ APROBADO, 4 KEEP / 0 REMOVE)"
+    memory_ids: [50, 51]
+    memory_topic_keys: ["config/version-carriers"]
+    index_project: "projects-github-imagetransformer (reindexed: 127 → 131 files)"
+    history: ".agents/context/history.md (entry 2026-09-17: release 2.1.0 + review outcome)"
+    manifest_updated: ".agents/project_manifest.yaml (version carrier synced by /build; testing counts refreshed to 22 suites / 161 tests)"
+    commit: "PENDING — see commit_status"
+  evidence: "Guard written first and green at 2.0.0 (4/4, no false positives). Then the deliberate half-applied bump (4 carriers → 2.1.0, manifest left at 2.0.0) produced the real RED: exit 1, exactly one message — `harness manifest (.agents/project_manifest.yaml) carries 2.0.0, expected 2.1.0`. After syncing the manifest: guard 4/4 and full `pnpm test` exit 0 — 22 files / 161 tests (baseline 21 / 157)."
   not_run:
-    - "pnpm build — AGENTS.md no-auto-runs policy (proposed to the user)"
-    - "pnpm qa as a whole: its lint step is `oxlint --fix` and would mutate files inside a read-only gate; the pieces were run individually instead"
+    - "pnpm build / pnpm type-check / pnpm format:check — AGENTS.md no-auto-runs policy; the pre-commit hook runs tsc + lint-staged. The new file was hand-checked for the 80-column budget (only comments exceed it, which biome leaves alone)."
   pending_ids:
-    - "USER ACTION (blocking the archive): run the two atomic commits from the /scribe handoff — the sandbox refused git add/commit (see .agents/context/error.log). Commit 1 = the fix + tests, commit 2 = .agents/ harness (spec, ADR-0006, review, checkpoint, build_state, history, manifest). After committing, `pnpm format:check` must be green (the hook's biome format --write finishes ID-01)."
-    - "RESOLVED by this /scribe run: ID-01 (build_state.json reformatted, array expanded), OBS-03 (cycle date normalised to 2026-09-17 in checkpoint.yml, history.md, build_state.json) and the workload figure (`~455` → 385 code/config + 342 .agents)"
-    - "USER EXTERNAL (this cycle, environmental): a stale foreign dev server still holds :5173 — kill it; with strictPort the failure is now explicit instead of a silent drift"
-    - "OBS-02 (pre-existing, unverified in-container): docker-compose.yml:55 `pnpm run dev -- --host 0.0.0.0` never reaches Vite (concurrently swallows the flag: child argv [] in all 3 shapes; pnpm does forward after --). With vite `host: 'localhost'` the published 5173:5173 likely cannot reach the container frontend, and the vite.config.ts:12 comment is inaccurate. Confirm with `docker compose up`; candidate for its own short cycle"
+    - "USER ACTION (blocking the archive): run the two paste-safe commits from the /scribe handoff — commit 1 = `chore: bump version 2.1.0` (package.json, backend/package.json, README.md, docker-compose.prod.yml, .agents/project_manifest.yaml, the new guard test: the manifest must travel with the carriers so no intermediate commit is inconsistent), commit 2 = `docs(agents)` harness (history.md, checkpoint.yml, build_state.json, review_2026-09-17_release-2.1.0.md, release-versioning.md). Afterwards `pnpm format:check` must be green and `pnpm test` 22 files / 161 tests."
+    - "USER: push and tag release 2.1.0 if that is the workflow (the repo currently has no tags)"
+    - "OBS-01 (this cycle, informational): the guard's CARRIERS list is hardcoded — a future version carrier (e.g. a version in index.html or a new compose file) is not covered until it is added"
+    - "OBS-02 (this cycle, informational): the guard reads .agents/project_manifest.yaml, so it would fail with ENOENT in a code-only checkout (the directory is versioned and prod images never run the suite)"
+    - "USER EXTERNAL (carried over): a stale foreign dev server still holds :5173 — kill it (with strictPort the failure is explicit instead of a silent drift)"
+    - "OBS-02 (pre-existing, unverified in-container): docker-compose.yml:55 `pnpm run dev -- --host 0.0.0.0` never reaches Vite (concurrently swallows the flag; child argv [] in all 3 shapes). With vite `host: 'localhost'` the published 5173:5173 likely cannot reach the container frontend, and the vite.config.ts:12 comment is inaccurate. Confirm with `docker compose up`."
     - "OBS-01 (DRY, pre-existing): backend/src/middlewares/securityMiddleware.ts:29-47 re-implements the CORS_ORIGIN/CORS_ORIGINS parsing now encapsulated in normalizeOrigin, and does not filter non-http(s) schemes for connectSrc"
-    - "USER EXTERNAL (carried over from the closed 2026-09-17 cycle): Dependabot alert export (no gh CLI / private repo / no auth)"
+    - "USER EXTERNAL (carried over): Dependabot alert export (no gh CLI / private repo / no auth)"
     - "USER DECISION (carried over): .github/workflows/security.yml pending the user's OK (introduces GitHub Actions for the first time)"
     - "DEFERRED (carried over): slice C2b dev tooling (biome, commitlint, concurrently, globals, oxlint, vite majors)"
     - "DEFERRED (carried over): slice C3 — check:security script, scripts/scan-advisories.mjs (ADR-0005 partially covered)"
@@ -61,42 +63,69 @@ pipeline:
     - "Q1 (carried over): where are the advisories seen (GitHub Dependabot UI / email / pnpm audit)? Needed to close the triage."
     - "Q2 (carried over): GitHub vs Gitea as the canonical CI host (.github/** vs other)."
   workload:
-    files: 5
-    changed_lines: 385
-    note: "Inside the 5-file/400-line budget for code+config. Net new production logic is ~52 lines (74 lines are deletions from extracting the CORS block); 197 of the 301 new lines are tests. The .agents/ delta (132+/210−) is bookkeeping-dominated and counted separately."
+    code_config_files: 5
+    code_config_lines: 119
+    note: "Within the 5-file/400-line budget (code+config). 5 carrier lines + 114 new test lines; the .agents/ delta (3 files + build_state rewrite) is declared separately."
 
-  # ── Layer 2: the previously closed cycle, preserved verbatim ────────────────
-  closed_cycle_2026-09-17:
-    status: "completed"
-    summary: "Dependency refresh (slices C1 + C2a) + Dependabot version-update enablement + review fixes ID-01/02/03, archived in 3 atomic commits (head 7d340af)."
-    reviewer_hash: "73ad2513d2f50ce9"
-    reviewed_at: "2026-09-17"
-    scribe_hash: "rev:73ad2513d2f50ce9+spec:security-hardening.md#D+R16-R21"
-    completed_at: "2026-09-17T16:29:24+01:00"
-    completed_at_note: "Timestamp of that cycle's /scribe mem_save (no `date` allowed in the /scribe sandbox)."
-    adr_file: ".agents/docs/adr/0005-dependency-advisory-policy.md"
-    plan_file: ".agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md"
-    review_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot-repass.md"
-    review_prev_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot.md"
-    analysis_file: ".agents/docs/analysis_2026-09-17_security-advisory-triage.md"
-    triage_file: ".agents/docs/evidence/advisory_triage_2026-09-17.md"
-    dependabot_config: ".github/dependabot.yml"
-    built_at: "2026-09-17"
-    planned_at: "2026-09-17"
-    build_hash: "slices C1+C2a + dependabot.yml + review fixes ID-01/02/03 @ 8a62fde — change_spec.yaml 2026-09-17-dependency-refresh-and-advisory-closure"
-    diff_stat: "6 files modified + 4 new — backend/package.json 4+/4-, pnpm-workspace.yaml 6+/6-, pnpm-lock.yaml 59+/69-, .agents/*, .github/dependabot.yml (new, 86 lines), backend/src/__tests__/dependencyConfig.test.ts (new)"
-    cycle_summary: "Slices C1 + C2a + Dependabot enablement DONE. Headline: pnpm audit full+prod = 0 and OSV 0/376 → no live advisory; the perceived 'security advisory problem' is 11 stale origin/dependabot/* refs (close-list emitted, none to merge). Refreshed: helmet 8.3.0, express-rate-limit 8.7.0, zod 4.6.2, tsx 4.23.13 + 6 override floors. NEW: .github/dependabot.yml (version updates) — the repo never had a .github/ directory in any branch, and alerts/security updates run without config while scheduled version updates require it. Verified: pnpm qa exit 0 (18 files/135 tests), pnpm build exit 0, audit 0/0, OSV 0/57, runtime smoke 200/200, dependabot.yml structural validation 0 errors."
-    archive:
-      spec_merged_into: ".agents/docs/specs/security-hardening.md §D (R16..R21)"
-      change_spec: ".agents/specs/change_spec.yaml (status: archived)"
-      specs_readme: ".agents/specs/README.md (OpenSpec-equivalent flow)"
-      adr: ".agents/docs/adr/0005-dependency-advisory-policy.md"
-      memory_ids: [34, 35, 36]
-      index_project: "projects-github-imagetransformer (118 files / 282 symbols, first index)"
-      manifest_updated: ".agents/project_manifest.yaml (project.index_project + tooling/testing)"
-    workload:
-      slices: "C1 done | C2a done | C2b + C3 pending"
-      note: "Slice C2a stayed inside the 5-file/400-line budget (4 files, 93 insertions). NEVER use `pnpm up -r` here: it produced a 1198-line lockfile diff and rewrote `catalog:`/exact pins. Use `pnpm install --no-frozen-lockfile`."
-    previous_cycle:
-      completed_at: "2026-09-10"
-      summary: "Full security remediation: 2 HIGH XSS + sharp CVE + 13 Dependabot reports + deferred hardening (nginx rootless, trust-proxy, magic-bytes, digests). Reviewer APROBADO (40 KEEP/0 REMOVE). Suite 135/135, audit full+prod 0."
+  # ── Layer 2: previously closed cycles, preserved verbatim ──────────────────
+  closed_cycles:
+    "2026-09-17_dev-port-fallback":
+      status: "completed"
+      summary: "Reported `pnpm dev` CORS outage + HMR websocket failure: a foreign process held :5173, Vite drifted to :5174, and two hardcoded 5173 assumptions broke. Fixed with loopback CORS patterns in dev (exact list kept in prod, fail-loud when empty) and Vite strictPort with no pinned hmr.clientPort."
+      plan_file: null
+      plan_note: "Ad-hoc Fast Path: user-reported dev bug, small and single-concern (AGENTS.md §4.1). R1..R3 were declared in the test docblocks and archived as the living spec's section A."
+      review_file: ".agents/docs/review_2026-09-17_dev-port-fallback.md"
+      reviewed_at: "2026-09-17"
+      reviewer_hash: "5c53fd73e39b130a"
+      reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16]."
+      reviewer_verdict: "APPROVED — 11 KEEP / 0 REMOVE; workload 5 files / 385 code+config lines (inside SLO)."
+      reviewer_evidence: "dev :3099 echoed Access-Control-Allow-Origin for http://localhost:5174, 127.0.0.1:5180 and [::1]:5174 plus a successful preflight; prod :3098 served only its exact origin; prod with an empty allowlist exited 1 before listening; Vite strictPort exited 1 with 'Port 5173 is already in use'; the served @vite/client shipped hmrPort = null (page-port fallback). Negative control: the pre-existing backend on :3001 reproduced the missing ACAO."
+      scribe_hash: "rev:5c53fd73e39b130a+spec:dev-environment.md#A+D1-D3"
+      completed_at: "2026-09-17T19:36:29+01:00"
+      completed_at_note: "ISO timestamp of that gate's mem_save (session id 46) — `date` is unavailable inside the /scribe sandbox."
+      commit_status: "RESOLVED — committed as cc26502 (fix(dev-env), 5 files 311+/74-) and 76ae2db (docs(agents), 7 files), then merged into develop as e8b892f. The /scribe sandbox could not run git add/commit (see .agents/context/error.log); the user executed the two paste-safe commands."
+      cycle_date_note: "OBS-03: /build labelled this cycle 2026-09-18; the real system date was 2026-09-17 (date -I, file mtimes, and the previous cycle closing at 16:29 the same day). Normalised in checkpoint.yml, history.md and build_state.json."
+      archive:
+        spec: ".agents/docs/specs/dev-environment.md §A (D1..D3) — new living spec; no change_spec.yaml existed because this was an ad-hoc Fast Path cycle"
+        adr: ".agents/docs/adr/0006-dev-origin-allowlist-and-port-binding.md"
+        review: ".agents/docs/review_2026-09-17_dev-port-fallback.md"
+        memory_ids: [45, 46, 47]
+        memory_topic_keys: ["architecture/dev-origin-allowlist", "config/concurrently-arg-forwarding"]
+        index_project: "projects-github-imagetransformer (reindexed: 118 → 127 files / 288 symbols)"
+        history: ".agents/context/history.md (entry 2026-09-17)"
+        error_log: ".agents/context/error.log (local only: *.log is gitignored)"
+
+    "2026-09-17_dependency-refresh":
+      status: "completed"
+      summary: "Dependency refresh (slices C1 + C2a) + Dependabot version-update enablement + review fixes ID-01/02/03, archived in 3 atomic commits (head 7d340af)."
+      reviewer_hash: "73ad2513d2f50ce9"
+      reviewed_at: "2026-09-17"
+      scribe_hash: "rev:73ad2513d2f50ce9+spec:security-hardening.md#D+R16-R21"
+      completed_at: "2026-09-17T16:29:24+01:00"
+      completed_at_note: "Timestamp of that cycle's /scribe mem_save (no `date` allowed in the /scribe sandbox)."
+      adr_file: ".agents/docs/adr/0005-dependency-advisory-policy.md"
+      plan_file: ".agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md"
+      review_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot-repass.md"
+      review_prev_file: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot.md"
+      analysis_file: ".agents/docs/analysis_2026-09-17_security-advisory-triage.md"
+      triage_file: ".agents/docs/evidence/advisory_triage_2026-09-17.md"
+      dependabot_config: ".github/dependabot.yml"
+      built_at: "2026-09-17"
+      planned_at: "2026-09-17"
+      build_hash: "slices C1+C2a + dependabot.yml + review fixes ID-01/02/03 @ 8a62fde — change_spec.yaml 2026-09-17-dependency-refresh-and-advisory-closure"
+      diff_stat: "6 files modified + 4 new — backend/package.json 4+/4-, pnpm-workspace.yaml 6+/6-, pnpm-lock.yaml 59+/69-, .agents/*, .github/dependabot.yml (new, 86 lines), backend/src/__tests__/dependencyConfig.test.ts (new)"
+      cycle_summary: "Slices C1 + C2a + Dependabot enablement DONE. Headline: pnpm audit full+prod = 0 and OSV 0/376 → no live advisory; the perceived 'security advisory problem' is 11 stale origin/dependabot/* refs (close-list emitted, none to merge). Refreshed: helmet 8.3.0, express-rate-limit 8.7.0, zod 4.6.2, tsx 4.23.13 + 6 override floors. NEW: .github/dependabot.yml (version updates). Verified: pnpm qa exit 0 (18 files/135 tests), pnpm build exit 0, audit 0/0, OSV 0/57, runtime smoke 200/200."
+      archive:
+        spec_merged_into: ".agents/docs/specs/security-hardening.md §D (R16..R21)"
+        change_spec: ".agents/specs/change_spec.yaml (status: archived)"
+        specs_readme: ".agents/specs/README.md (OpenSpec-equivalent flow)"
+        adr: ".agents/docs/adr/0005-dependency-advisory-policy.md"
+        memory_ids: [34, 35, 36]
+        index_project: "projects-github-imagetransformer (118 files / 282 symbols, first index)"
+        manifest_updated: ".agents/project_manifest.yaml (project.index_project + tooling/testing)"
+      workload:
+        slices: "C1 done | C2a done | C2b + C3 pending"
+        note: "Slice C2a stayed inside the 5-file/400-line budget (4 files, 93 insertions). NEVER use `pnpm up -r` here: it produced a 1198-line lockfile diff and rewrote `catalog:`/exact pins. Use `pnpm install --no-frozen-lockfile`."
+      previous_cycle:
+        completed_at: "2026-09-10"
+        summary: "Full security remediation: 2 HIGH XSS + sharp CVE + 13 Dependabot reports + deferred hardening (nginx rootless, trust-proxy, magic-bytes, digests). Reviewer APROBADO (40 KEEP/0 REMOVE). Suite 135/135, audit full+prod 0."
