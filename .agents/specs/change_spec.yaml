@@ -1,0 +1,106 @@
+# change_spec.yaml — machine-readable contract for /build and /reviewer.
+# Equivalent to openspec/changes/<change>/proposal.md (+ requirements).
+# Cycle: 2026-09-17 advisory triage + within-major dependency refresh.
+# Source plan: .agents/docs/plan_2026-09-17_dependency-refresh-and-advisory-closure.md
+# Source analysis: .agents/docs/analysis_2026-09-17_security-advisory-triage.md
+
+change:
+  id: "2026-09-17-dependency-refresh-and-advisory-closure"
+  title: "Advisory triage and within-major dependency refresh"
+  status: archived        # draft | active | archived
+  archived_at: "2026-09-17"
+  merged_into: ".agents/docs/specs/security-hardening.md §D (R16..R21)"
+  closed_by: ".agents/docs/review_2026-09-17_dependency-refresh-dependabot-repass.md (reviewer ✅ APROBADO tras 1 rechazo por ID-01)"
+  policy: ".agents/docs/adr/0005-dependency-advisory-policy.md"
+  mode: SDD
+  store: ".agents/"
+  budget:
+    max_files: 5
+    max_lines: 400
+  domain: "imageTransformer (pnpm monorepo: frontend SPA + Express/Sharp backend)"
+  slices:
+    - id: C1
+      name: "Advisory triage"
+      state: done
+    - id: C2a
+      name: "Within-major refresh — backend runtime + override floors"
+      state: done
+    - id: C2b
+      name: "Within-major refresh — dev tooling (biome/oxlint/commitlint/concurrently/globals/vite)"
+      state: deferred
+    - id: C3
+      name: "Automation (Dependabot + CI audit/OSV) + ADR-0005"
+      state: deferred   # Dependabot config DONE; ADR-0005 DONE; CI workflow + check:security + scan-advisories.mjs deferred
+
+constraints:
+  minimumReleaseAge: 7200           # 5 days — any newer target is rejected by pnpm
+  preferFrozenLockfile: true        # plain `pnpm install` will not rewrite the lockfile
+  strictPeerDependencies: true
+  blockExoticSubdeps: true
+  resolutionMode: lowest-direct     # for direct deps the OVERRIDE FLOOR decides, not the exact pin
+  catalog: "pnpm-workspace.yaml"    # never inline a version that the catalog declares
+
+requirements:
+  R1:
+    statement: "The authoritative advisory inventory is captured as evidence (pnpm audit full + prod; Dependabot export)."
+    status: partial
+    evidence: ".agents/docs/evidence/audit_full_2026-09-17.json, audit_prod_2026-09-17.json (0 advisories, exit 0); Dependabot export BLOCKED (no gh CLI, private repo)"
+  R2:
+    statement: "Stale Dependabot PRs/refs are reconciled against the locked tree with a close-list."
+    status: done
+    evidence: ".agents/docs/evidence/advisory_triage_2026-09-17.md §T1.1 (11/11 refs classified, none to merge)"
+  R3:
+    statement: "Any live advisory is remediated via override floor / exact bump, then audit = 0."
+    status: no_op
+    evidence: "No live advisory found (pnpm audit 0/0 + OSV 0 hits) — no-op recorded per plan"
+  R4:
+    statement: "Catalog floors are at the newest release-age-allowed version within major."
+    status: deferred
+    evidence: "C2b slice; pnpm install reported biome 2.5.14/commitlint 21.2.2/concurrently 10.0.5/globals 17.12.0/oxlint 1.83.0/vite 8.3.0 still available"
+  R5:
+    statement: "Backend runtime deps are at the newest release-age-allowed version within major (exact pins preserved)."
+    status: done
+    evidence: "helmet 8.1.0->8.3.0, express-rate-limit 8.3.2->8.7.0, zod 4.4.3->4.6.2, tsx 4.21.0->4.23.13; multer stays 2.3.0 (2.4.0 blocked by age gate)"
+  R6:
+    statement: "Override floors are refreshed to the newest allowed patch, keeping single-line consumers pinned."
+    status: done
+    evidence: "minimatch 10.2.3->10.2.6, flatted 3.4.2->3.4.4, path-to-regexp 8.4.0->8.4.2, ip-address >=10.7.0, postcss >=8.5.28, zod >=4.6.2; undici 7.29.0 / picomatch 2.3.2 / js-yaml <5 unchanged by design"
+  R7:
+    statement: "The refreshed tree is verified: QA, build, audit, OSV, runtime smoke."
+    status: done
+    evidence: "pnpm qa exit 0 (18 files / 135 tests), pnpm build exit 0, pnpm audit + --prod 0, OSV 57 versions 0 hits, GET /api/formats 200 + POST /api/convert 200 (webp 64x64 + zip)"
+  R8:
+    statement: "A `check:security` script runs the audit gates."
+    status: deferred
+    evidence: "C3 slice"
+  R9:
+    statement: "Dependabot version updates are configured (.github/dependabot.yml), adapted from the currencyExchange reference; a CI workflow additionally gates the audit and the OSV scan."
+    status: partial
+    evidence: ".github/dependabot.yml delivered (npm for '/' + '/backend' with groups.minor-and-patch + group-by: dependency-name; docker for both Dockerfiles; 4 ignore rules mirrored from the override floors; commitlint-safe commit prefixes). Validated: YAML parses, 0 unknown keys, 0 overlapping directories, pnpm qa exit 0. CI workflow still pending user go-ahead."
+    root_cause: "The repo had no .github/ directory in any branch or commit — Dependabot alerts/security updates are a repository setting (13 advisories + 11 dependabot/* branches appeared without it) but scheduled version updates require the file."
+  R10:
+    statement: "The dependency-advisory policy is codified in ADR-0005 and linked from AGENTS.md."
+    status: deferred
+    evidence: "C3 slice"
+  R11:
+    statement: "No major bumps, no Docker base-image change, no .env change, no source behaviour change."
+    status: done
+    evidence: "git diff touches only pnpm-workspace.yaml, backend/package.json, pnpm-lock.yaml (+ .agents/)"
+  R12:
+    statement: "Major upgrades are recorded as a separate follow-up cycle."
+    status: done
+    evidence: "plan §R12 (typescript 7, vitest 5, jsdom 30, lint-staged 17, archiver 8)"
+
+scenarios:
+  happy: "pnpm install resolves the new floors; QA/build green; backend boots and converts an image."
+  edge: "A target version published <5 days ago is rejected by minimumReleaseAge -> the previous patch is chosen (biome 2.5.13 not 2.5.14, oxlint 1.82.0 not 1.83.0, zod 4.6.2 not 4.6.5, multer 2.3.0 not 2.4.0)."
+  edge_2: "A range override beats an exact manifest pin under lowest-direct (zod stayed 4.4.3 until the override floor moved to >=4.6.2)."
+  side: "Dev tooling (biome/oxlint/commitlint/vite) is untouched; their newest versions are reported by pnpm but deferred to slice C2b."
+
+acceptance:
+  - "pnpm audit (full) = 0 and pnpm audit --prod = 0, evidence archived."
+  - "OSV re-scan of every changed package = 0 hits."
+  - "pnpm qa exit 0 with 135/135 tests; pnpm build exit 0."
+  - "Runtime smoke: GET /api/formats 200 and POST /api/convert 200."
+  - "Diff within the cycle budget: <=5 files, <=400 lines (actual: 4 files, 128 lockfile lines)."
+  - "No manifest contract broken: catalog specifiers and backend exact pins preserved."

@@ -1,0 +1,86 @@
+# Dependabot configuration — imageTransformer
+#
+# WHY THIS FILE DID NOT EXIST: the repository never had a `.github/` directory
+# (`git log --all -- .github` is empty on every branch). Dependabot *alerts* and
+# *security updates* are a repository setting, not a file — which is why 13
+# advisories and 11 `dependabot/*` branches were raised in 2026 while no
+# scheduled version update ever ran. This file enables those version updates.
+#
+# Adapted from /projects/Github/currencyExchange/.github/dependabot.yml, with the
+# differences this repo needs:
+#   * pnpm workspace has TWO manifests ("." + "backend") sharing one lockfile
+#     -> `directories` + `group-by: dependency-name` (one PR per dependency, no
+#        duplicate PRs across directories).
+#   * override floors in pnpm-workspace.yaml already pin whole lines (undici,
+#     picomatch, js-yaml) and the catalog caret ranges pin the major of every
+#     devDependency -> NO `ignore` rules are needed here (see the note in the
+#     npm entry; review ID-01, 2026-09-17).
+#   * both Dockerfiles pin base images by digest (ADR-0004) -> a `docker` entry
+#     keeps those digests fresh.
+#
+# REVIEW CHECKLIST for every Dependabot PR here:
+#   1. `catalog:` specifiers must stay `catalog:` — pnpm 11 catalogs are not
+#      guaranteed to be understood by Dependabot; a PR that inlines a version
+#      into package.json (e.g. "vite": "^8.3.0") or turns an exact backend pin
+#      into a caret MUST be rejected.
+#   2. Bump the mirroring override floor in pnpm-workspace.yaml when a backend
+#      exact pin moves (resolutionMode `lowest-direct` makes the floor win).
+#   3. A digest bump in a Dockerfile requires the ADR-0004 verification
+#      (build + `nginx -t` as non-root + boot test), not just a green CI.
+#   4. `minimumReleaseAge: 7200` (5 days) applies to local installs; Dependabot
+#      PRs may reference versions younger than that, so the lockfile they
+#      generate may need `pnpm install --no-frozen-lockfile` locally.
+#   5. `backend/src/__tests__/dependencyConfig.test.ts` guards this file: no
+#      `ignore` entry for a package that is not a direct dependency, override
+#      floor >= exact pin, and valid structure. Run `pnpm test` after editing.
+
+version: 2
+
+updates:
+  # ── npm / pnpm workspace: root "." + workspace member "backend" ────────────
+  - package-ecosystem: "npm" # pnpm workspaces are served by the npm ecosystem
+    directories:
+      - "/"
+      - "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "chore(deps)"
+      prefix-development: "chore(deps-dev)"
+    # Collapse minor/patch into reviewable PRs; majors stay one-by-one (they are
+    # the ones that break: typescript 7, vitest 5, jsdom 30, lint-staged 17,
+    # archiver 8 — recorded as the R12 follow-up cycle).
+    groups:
+      minor-and-patch:
+        patterns: ["*"]
+        update-types: ["minor", "patch"]
+        # One PR per dependency across "/" and "/backend" instead of one per
+        # directory (both share the same pnpm-lock.yaml).
+        group-by: "dependency-name"
+    # Deliberately NO `ignore` rules here (review ID-01, 2026-09-17).
+    # The four candidates (undici, nanoid, picomatch, js-yaml) are TRANSITIVE:
+    # they appear in pnpm-lock.yaml but in no manifest, so Dependabot never opens
+    # a version-update PR for them anyway — their ceiling is already enforced by
+    # the pnpm-workspace.yaml overrides / parent ranges. Meanwhile the official
+    # docs state that `ignore` also applies to SECURITY updates, which patch the
+    # lockfile where those packages DO live, so the only observable effect of
+    # such a rule would be to silently skip a security-update PR when a fix
+    # exists only inside the blocked range. Guarded by the test suite.
+
+  # ── Docker base images (root Dockerfile + backend/Dockerfile) ──────────────
+  - package-ecosystem: "docker"
+    directories:
+      - "/"
+      - "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: "chore(deps)"
+
+# Note: `target-branch` is intentionally unset. Version updates follow the
+# repository default branch (`origin/HEAD -> origin/develop`); security updates
+# always target the default branch.

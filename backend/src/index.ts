@@ -17,6 +17,7 @@ import {
 	cleanupStartup,
 	schedulePeriodicCleanup,
 } from "./utils/tempCleanup.js";
+import { getCorsOrigins } from "./utils/corsOrigins.js";
 
 // Calcular __dirname para ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -41,79 +42,9 @@ const TEMP_FILE_MAX_AGE_MS = parseInt(
 cleanupStartup();
 schedulePeriodicCleanup(TEMP_CLEANUP_INTERVAL_MS, TEMP_FILE_MAX_AGE_MS);
 
-// Configuración de CORS (DEBE ir antes de Helmet)
-/**
- * Normaliza una URL eliminando trailing slash y validando formato
- */
-const normalizeOrigin = (origin: string): string | null => {
-	const trimmed = origin.trim();
-	if (!trimmed) return null;
-
-	// Validar que sea una URL válida (http o https)
-	try {
-		const url = new URL(trimmed);
-		// Solo permitir http y https
-		if (url.protocol !== "http:" && url.protocol !== "https:") {
-			return null;
-		}
-		// Retornar sin trailing slash
-		return url.origin;
-	} catch {
-		return null;
-	}
-};
-
-/**
- * Obtiene los orígenes CORS permitidos de forma segura
- */
-const getCorsOrigins = (): string[] => {
-	if (process.env.NODE_ENV === "production") {
-		const origins: string[] = [];
-
-		// Agregar origen desde variable de entorno (para Netlify u otros servicios)
-		if (process.env.CORS_ORIGIN) {
-			const normalized = normalizeOrigin(process.env.CORS_ORIGIN);
-			if (normalized) {
-				origins.push(normalized);
-			} else {
-				logger.warn(
-					{ corsOrigin: process.env.CORS_ORIGIN },
-					"CORS_ORIGIN invalid, will be ignored",
-				);
-			}
-		}
-
-		// Agregar múltiples orígenes si están separados por coma
-		if (process.env.CORS_ORIGINS) {
-			const multipleOrigins = process.env.CORS_ORIGINS.split(",")
-				.map(normalizeOrigin)
-				.filter((origin): origin is string => origin !== null);
-			origins.push(...multipleOrigins);
-		}
-
-		// En producción, solo permitir localhost si se especifica explícitamente
-		// Esto es útil para testing local contra producción
-		if (process.env.ALLOW_LOCALHOST === "true") {
-			origins.push("http://localhost:5173", "http://localhost:3000");
-		}
-
-		// Si no hay orígenes configurados en producción, lanzar error
-		if (origins.length === 0) {
-			logger.error(
-				"No CORS origins configured in production! This is a security risk.",
-			);
-			throw new Error(
-				"CORS_ORIGIN must be configured in production environment for security reasons",
-			);
-		}
-
-		return origins;
-	}
-
-	// Desarrollo: permitir todos los orígenes locales
-	return ["http://localhost:3000", "http://localhost:5173", "http://localhost"];
-};
-
+// Configuración de CORS (DEBE ir antes de Helmet). Permitir cualquier puerto de
+// loopback en desarrollo es deliberado: el dev server de Vite se mueve de puerto
+// cuando 5173 está ocupado. Ver utils/corsOrigins.ts.
 const corsOrigins = getCorsOrigins();
 logger.info(
 	{ corsOrigins, nodeEnv: process.env.NODE_ENV },
