@@ -6,69 +6,86 @@
 
 pipeline:
   status: "completed" # plan_completed | build_completed | reviewer_approved | reviewer_rejected | completed
-  cycle: "2026-09-17 release-2.1.0 documentation corrections (post-release, harness-only)"
+  cycle: "2026-09-17 release 2.1.1 — version bump, guard-verified (patch release)"
   plan_file: null
-  plan_note: "No plan and no change_spec: harness documentation correction. Trigger: finishing release 2.1.0 exposed an error in the harness docs (the spec claimed the repository has no tags). No production code and no test changed, so TDD is N/A; the evidence is the git-flow source lines cited plus the measured repo state."
+  plan_note: "Patch bump on branch release/2.1.1, opened by the user with `git flow release start 2.1.1`. No plan and no change_spec deltas: the contract is V1 of .agents/docs/specs/release-versioning.md (root package.json is the source of truth; every other carrier must match)."
   spec_file: ".agents/specs/change_spec.yaml"
   change_spec: ".agents/specs/change_spec.yaml (status: archived — belongs to the closed dependency cycle, untouched)"
-  review_file: ".agents/docs/review_2026-09-17_release-docs-correction-repass.md"
-  review_prev_file: ".agents/docs/review_2026-09-17_release-docs-correction.md"
-  reviewer_pass: "Pass 1 REJECTED (ID-01/ID-02) → Pass 2 APPROVED after the fixes. The `reviewer_evidence`/`reviewer_verdict` fields describe pass 1; the `_pass2` fields describe this approval."
-  reviewer_evidence_pass2: "ID-01 verified: git show-ref --tags | wc -l → 20, the spec now states '20 tags as of 2026-09-17' (self-dated), and the four sites (spec, checkpoint evidence, build_state evidence.tags, history) all say 20; the only remaining '21 tags' text is the frozen pass-1 finding and the history lesson that quotes it. ID-02 verified: no volatile ahead-of-origin figures remain in any instruction — checkpoint.yml and build_state.json both tell the user to measure with git rev-list --count; the build also fixed an extra occurrence in build_state.json that the pass-1 finding had not cited (same ID). Non-regression: the tagging section stays coherent and the release state is unchanged (tag V2.1.0 → 70d54fda → commit c5ae925, release/2.1.0 deleted, main/develop carriers identical). The pass-1 review artifact was not touched by the build (mtime 20:23:18 vs the build edits at 20:24:47+)."
-  reviewer_verdict_pass2: "APPROVED — 0 KEEP / 0 REMOVE (documentation-only cycle); suite green (22 files / 161 tests); biome check-only 0; workload 4 files / 0 code-config lines."
+  review_file: ".agents/docs/review_2026-09-17_release-2.1.1.md"
+  review_prev_file: null
   reviewed_at: "2026-09-17"
-  reviewer_hash: "29ca7c8765c76c3b"
-  reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16] using the PASS-2 values of those fields, read from this file as /build left them. Reviewed-surface hash of the frozen candidate (.agents diff only): 74221b02a44d253b852fcbd88e513c0a9252fcad7c4be491ba73fe339827435f (pass 1 was 25b8b8c4…)."
-  reviewer_evidence: "Affirmation-by-affirmation check: gitflow.prefix.versiontag = V (git config); V1.0.0/V2.0.0/V2.1.0 are annotated tag objects; V2.1.0 -> object 70d54fda -> commit c5ae925; V2.0.1 absent; release/2.1.0 deleted; git diff main develop -- <5 carriers> empty (both at 2.1.0); git-flow-release:817 require_clean_working_tree unconditional inside finish while :571 (gitflow.allowdirty) belongs to the start handler; :872/:768/:769 the annotated tag and its -m/-f flags; :844/:859 idempotent skip of an already-merged branch and an existing tag; gitflow-common:758-759 echo \"$@\" explains the duplicated annotation V2.1.0 V2.1.0; origin/main..main = 9 commits. Two counts were wrong: tags are 20, not 21 (ID-01) and develop is 12 ahead of origin/develop, not 6 (ID-02)."
-  reviewer_verdict: "REJECTED — ID-01 (blocking: false tag count 21 vs 20, four occurrences) and ID-02 (blocking: stale and volatile ahead-count). No tests to remove (docs-only cycle). Suite green, no /debug needed. Everything else in the cycle verified correct."
-  build_hash: "docs-corrections-pass2@70d54fda: ID-01 the tag count is 20 not 21 (four places; the spec figure is now self-dated) + ID-02 the volatile ahead-of-origin counts were dropped from pending_ids"
+  reviewer_hash: "46566389e767135b"
+  reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16] with the values /build left in this file; recomputed by the reviewer. Reviewed surfaces: code/config c74687ab724745de7cf6e8ebd71c938c3e2bd64ae8842333c2b264057d5b2526, full tree 077e69af20eebdfd8531ff1a0a0ac4bbf1993338b4e12c8dead07e45178b18fa."
+  reviewer_evidence: "R1 verified independently: the 6 version points extracted with the reviewer's own patterns are all 2.1.1, and the code/config diff is exactly the 5 version lines (no dependency, script or lockfile change, no 2.1.0 residue). Guard 4/4 in isolation; full pnpm test exit 0 (22 files / 161 tests); biome format check-only 0 (71 files); checkpoint.yml parses with no duplicate keys; history.md 185 lines. The build's RED is recorded with its exact message; the reviewer did not reproduce it live because moving the harness manifest is outside its write scope (E3)."
+  reviewer_verdict: "APPROVED — 0 KEEP / 0 REMOVE (the guard was reused unchanged for a second consecutive release, which is its design); workload 4 code/config files / 5 lines + 4 harness files; 3 informational observations (commit before finish, the tag will be number 21 while the spec count stays dated, history.md at 185 lines)."
+  build_hash: "release-2.1.1@5b3ddea: 6 carriers synced 2.1.0 → 2.1.1 (package.json, backend/package.json, README badge, compose tags x2, harness manifest) — guard RED→GREEN, no new test needed"
   build_state: ".agents/.state/build_state.json"
-  diff_stat: ".agents only — release-versioning.md (tag count 21 → 20 with an as-of date), checkpoint.yml (evidence count + pending_ids cleanup + new build_hash/diff_stat), build_state.json (evidence.tags count + this pass), history.md (count + the review-fix lesson). Still no code, no tests."
+  diff_stat: "4 code/config files / 5 lines (package.json, backend/package.json, README.md badge, docker-compose.prod.yml tags x2) + 4 harness files (.agents/project_manifest.yaml, .agents/context/history.md, .agents/.state/build_state.json, .agents/checkpoint.yml). No lockfile, no tests added or changed."
   built_at: "2026-09-17"
   last_step: "scribe"
-  scribe_hash: "rev:29ca7c8765c76c3b+spec:release-versioning.md#A+V1+tagging"
-  scribe_hash_note: "Readable composite key (same convention as the three previous cycles): this repo has no domain.yaml and the /scribe sandbox exposes no hashing utility. It differs from every closed cycle's key, so this cycle was genuinely pending archive, not a repeated run."
-  completed_at: "2026-09-17T20:27:39+01:00"
-  completed_at_note: "ISO timestamp of this gate's mem_save (session id 53) — `date` is unavailable inside the /scribe sandbox."
+  scribe_hash: "rev:46566389e767135b+spec:release-versioning.md#V1"
+  scribe_hash_note: "Readable composite key (same convention as the four previous cycles): no domain.yaml in this repo and no hashing utility in the /scribe sandbox. It differs from every closed cycle's key, so this cycle was genuinely pending archive."
+  completed_at: "2026-09-17T20:35:17+01:00"
+  completed_at_note: "ISO timestamp of this gate's mem_save (session id 54) — `date` is unavailable inside the /scribe sandbox."
   adr_file: null
-  adr_note: "No ADR: nothing architectural changed. The release-tagging conventions are durable config knowledge (memory 52) plus .agents/docs/specs/release-versioning.md."
+  adr_note: "No ADR: a patch bump changes no policy. The release procedure lives in .agents/docs/specs/release-versioning.md and memory 52 (config/release-tagging)."
   archive:
-    spec: ".agents/docs/specs/release-versioning.md — the 'Tagging and completion' section was corrected in place (20 tags self-dated, the V2.0.1 gap, the finish requirements: -m without a TTY, clean tree, idempotency, --theirs recovery). This cycle had NO change_spec.yaml deltas; the archived change_spec of the dependency cycle was left untouched."
+    spec: ".agents/docs/specs/release-versioning.md — V1 and the release procedure already described this cycle; no change_spec deltas existed, so nothing was merged and the archived change_spec stays untouched"
     adr: null
-    adr_note: "n/a — the release procedure is documented in the living spec plus memory 52 config/release-tagging; no architectural decision was taken."
-    reviews: [".agents/docs/review_2026-09-17_release-docs-correction.md (pass 1: REJECTED — ID-01/ID-02)", ".agents/docs/review_2026-09-17_release-docs-correction-repass.md (pass 2: APPROVED)"]
-    memory_ids: [53]
-    memory_note: "memory 52 (config/release-tagging) was updated earlier in this session to revision 2 with the git-flow findings."
-    index_project: "projects-github-imagetransformer (reindexed: 131 → 133 files)"
-    history: ".agents/context/history.md (entry 2026-09-17: release 2.1.0 + the review-fix pass + QA)"
-    commit: "PENDING — see pending_ids: the /scribe sandbox blocks git add/commit, so the user runs the paste-safe block"
-  evidence: "Claim-by-claim verification of every corrected statement: `git show-ref --tags` → 20 tags, all V-prefixed, V2.1.0 present, V2.0.1 absent; `git show V2.1.0 --no-patch` → annotated tag whose commit is the merge c5ae925, annotation body 'V2.1.0 V2.1.0' (explained by /usr/bin/gitflow-common:758-759, the run_filter_hook fallback `echo \"$@\"`, which appends the tag name to the message); /usr/bin/git-flow-release:872 (annotated tag, `-m` used only when supplied), :817 (`require_clean_working_tree`, unconditional), :844 and :859 (skips an already-merged branch and an existing tag), :571 (`gitflow.allowdirty` honoured only by start); `git diff main develop -- <5 carriers>` → empty (main and develop both at 2.1.0); `pnpm test` → 22 files / 161 tests green on develop."
+    review: ".agents/docs/review_2026-09-17_release-2.1.1.md (reviewer ✅ APROBADO, 0 KEEP / 0 REMOVE)"
+    memory_ids: [54]
+    index_project: "projects-github-imagetransformer (reindexed: 133 → 134 files)"
+    history: ".agents/context/history.md (entry 2026-09-17: release 2.1.1 + the guard RED/GREEN + the commit-before-finish lesson)"
+    commit: "PENDING — the /scribe sandbox blocks git add/commit, so the user runs the paste-safe block; then `git flow release finish -m \"V2.1.1\" 2.1.1` from the now-clean tree"
+  evidence: "RED: the four code/config carriers were bumped first while .agents/project_manifest.yaml stayed at 2.1.0 → `pnpm vitest run backend/src/__tests__/versionConsistency.test.ts` exit 1 with exactly one finding: '.agents/project_manifest.yaml: 2.1.0, expected 2.1.1' (3 passed / 1 failed). A real RED on a real bump, not a synthetic fixture. GREEN: guard 4/4 and full `pnpm test` exit 0 — 22 files / 161 tests. No lockfile change (pnpm records no version for workspace projects). The guard needed no modification for a second consecutive release, which is its design."
   not_run:
-    - "pnpm qa as a whole — AGENTS.md no-auto-runs policy. `biome format .` was run read-only (check mode, no --write) to confirm the .md/.json edits stay biome-clean."
+    - "pnpm build — AGENTS.md no-auto-runs policy. `biome format .` was run in check mode (no --write) to confirm the edited JSON/MD stay biome-clean."
   pending_ids:
-    - "RESOLVED in this pass (pass 2): ID-01 → 20 tags in all four places (release-versioning.md, checkpoint.yml evidence, build_state.json evidence.tags, history.md), with the spec's figure now self-dated so it cannot silently rot; ID-02 → the volatile ahead-of-origin counts were removed from the push item"
-    - "SCRIBE (after approval): commit the harness correction as docs(agents) — the /scribe sandbox refuses git add/commit in this environment, so the user executes the paste-safe commands"
-    - "USER: push main + develop + tags (both branches carry unpushed commits — measure with `git rev-list --count origin/<branch>..<branch>`; point-in-time counts are deliberately not recorded here because they go stale immediately)"
-    - "USER (optional): tag the untagged 2.0.1 release merge — `git tag -a V2.0.1 54ffdad -m 'V2.0.1'`"
-    - "USER EXTERNAL (carried over): a stale foreign dev server still holds :5173 — kill it (with strictPort the failure is explicit instead of a silent drift)"
-    - "OBS-02 (pre-existing, unverified in-container): docker-compose.yml:55 `pnpm run dev -- --host 0.0.0.0` never reaches Vite (concurrently swallows the flag; child argv [] in all 3 shapes). With vite `host: 'localhost'` the published 5173:5173 likely cannot reach the container frontend. Confirm with `docker compose up`."
-    - "OBS-01 (DRY, pre-existing): backend/src/middlewares/securityMiddleware.ts:29-47 re-implements the CORS_ORIGIN/CORS_ORIGINS parsing now encapsulated in normalizeOrigin, and does not filter non-http(s) schemes for connectSrc"
+    - "USER ACTION (blocking this cycle's closure): commit `chore: bump version 2.1.1` on release/2.1.1 (4 code/config files / 5 lines + 4 harness files, no lockfile), THEN — from the now-clean tree — `git flow release finish -m \"V2.1.1\" 2.1.1`. The earlier finish attempt aborted with 'Working tree contains unstaged changes' precisely because the bump was not committed yet: commit first, finish second."
+    - "USER: commit `chore: bump version 2.1.1` on release/2.1.1, then `git flow release finish -m \"V2.1.1\" 2.1.1` FROM A CLEAN TREE — the -m is mandatory (annotated tag, no TTY) and finish aborts on a dirty tree (git-flow-release:817)"
+    - "USER (carried over): push main + develop + tags — measure the ahead counts with git rev-list --count instead of recording them"
+    - "USER (carried over, optional): tag the untagged 2.0.1 release merge — `git tag -a V2.0.1 54ffdad -m 'V2.0.1'`"
+    - "USER EXTERNAL (carried over): a stale foreign dev server still holds :5173 — kill it"
+    - "OBS-02 (pre-existing, unverified in-container): docker-compose.yml:55 `pnpm run dev -- --host 0.0.0.0` never reaches Vite (concurrently swallows the flag; child argv [] in all 3 shapes)"
+    - "OBS-01 (DRY, pre-existing): backend/src/middlewares/securityMiddleware.ts:29-47 re-implements the CORS_ORIGIN/CORS_ORIGINS parsing now encapsulated in normalizeOrigin"
     - "USER EXTERNAL (carried over): Dependabot alert export (no gh CLI / private repo / no auth)"
-    - "USER DECISION (carried over): .github/workflows/security.yml pending the user's OK (introduces GitHub Actions for the first time)"
-    - "DEFERRED (carried over): slice C2b dev tooling (biome, commitlint, concurrently, globals, oxlint, vite majors)"
-    - "DEFERRED (carried over): slice C3 — check:security script, scripts/scan-advisories.mjs (ADR-0005 partially covered)"
-    - "USER DECISION (carried over): close 11 stale origin/dependabot refs — commands in .agents/docs/evidence/advisory_triage_2026-09-17.md"
-    - "POST-MERGE WATCH (carried over): first Dependabot run must not turn `catalog:` into an inline version nor an exact pin into a caret"
+    - "USER DECISION (carried over): .github/workflows/security.yml pending the user's OK"
+    - "DEFERRED (carried over): slice C2b dev tooling · slice C3 check:security + scan-advisories.mjs"
+    - "USER DECISION (carried over): close 11 stale origin/dependabot refs · POST-MERGE WATCH: first Dependabot run must not rewrite `catalog:` or exact pins"
   open_questions:
     - "Q1 (carried over): where are the advisories seen (GitHub Dependabot UI / email / pnpm audit)? Needed to close the triage."
     - "Q2 (carried over): GitHub vs Gitea as the canonical CI host (.github/** vs other)."
   workload:
-    files: 4
-    scope: ".agents/ only (spec, checkpoint, build_state, history) — no code, no tests"
-    note: "Excluded from the code/config SLO by the convention used in the previous three cycles; declared here for transparency."
+    code_config_files: 4
+    code_config_lines: 5
+    note: "Five one-line carrier edits plus harness bookkeeping. Inside the 5-file/400-line SLO with a wide margin; no tests added or changed (the guard from the 2.1.0 cycle already enforces the invariant)."
 
   # ── Layer 2: previously closed cycles, preserved verbatim ──────────────────
   closed_cycles:
+    "2026-09-17_release-docs-correction":
+      status: "completed"
+      summary: "Corrected the release-versioning spec and the harness after finishing 2.1.0: the false claim that the repository has no tags was replaced by the real conventions, and two wrong counts (tags 21→20, develop ahead 6→12) were fixed. Reviewer pass 1 REJECTED on those two counts; pass 2 APPROVED after the fixes."
+      plan_file: null
+      plan_note: "Harness documentation correction, not a feature cycle."
+      review_file: ".agents/docs/review_2026-09-17_release-docs-correction-repass.md"
+      review_prev_file: ".agents/docs/review_2026-09-17_release-docs-correction.md"
+      reviewer_pass: "Pass 1 REJECTED (ID-01/ID-02) → Pass 2 APPROVED"
+      reviewed_at: "2026-09-17"
+      reviewer_hash: "29ca7c8765c76c3b"
+      reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16] with the pass-2 values. Reviewed surface hashes: 74221b02a44d253b852fcbd88e513c0a9252fcad7c4be491ba73fe339827435f (pass 2), 25b8b8c4… (pass 1)."
+      reviewer_verdict: "APPROVED — 0 KEEP / 0 REMOVE (docs-only); suite green; biome check-only 0; workload 4 files / 0 code-config lines."
+      scribe_hash: "rev:29ca7c8765c76c3b+spec:release-versioning.md#A+V1+tagging"
+      completed_at: "2026-09-17T20:27:39+01:00"
+      completed_at_note: "ISO timestamp of that gate's mem_save (session id 53) — `date` is unavailable inside the /scribe sandbox."
+      commit_status: "RESOLVED — committed as 5b3ddea (`docs(agents): correct release-versioning docs and harness counts`) on develop after the V2.1.0 tag merge (4f85011). The /scribe sandbox could not run git add/commit; the user executed the paste-safe block."
+      archive:
+        spec: ".agents/docs/specs/release-versioning.md — 'Tagging and completion' section corrected in place; no change_spec deltas existed"
+        adr: null
+        reviews: [".agents/docs/review_2026-09-17_release-docs-correction.md (REJECTED)", ".agents/docs/review_2026-09-17_release-docs-correction-repass.md (APPROVED)"]
+        memory_ids: [53]
+        index_project: "projects-github-imagetransformer (reindexed: 131 → 133 files)"
+        history: ".agents/context/history.md (entry 2026-09-17: release 2.1.0 + the review-fix pass + QA)"
+
     "2026-09-17_release-2.1.0":
       status: "completed"
       summary: "Released 2.1.0: five version carriers synced and guarded by versionConsistency.test.ts; finished with git-flow as tag V2.1.0."
@@ -80,12 +97,12 @@ pipeline:
       reviewer_hash_note: "sha256(build_hash + \"\\n\" + diff_stat)[0:16]. Reviewer-surface hash of the frozen candidate: 41482c9542bcdb76463c7fc348ffd5522e7c3f4041aa516c7ce0eb5cac71e4d1."
       reviewer_verdict: "APPROVED — 4 KEEP / 0 REMOVE; workload 5 code/config files / 119 lines (inside SLO); 2 informational observations."
       reviewer_evidence: "The 6 version points were extracted with the reviewer's own patterns (all 2.1.0), no 2.0.0 residue outside the guard fixtures, the dev compose carries no versioned tag (no sixth carrier), and the guard CARRIERS match the version-bearing files of the 2.0.0 release (f128550) minus the history log. Suite: pnpm test 22 files / 161 tests, type-check 0, oxlint root+backend check mode 0, lint-filenames 0, biome format check-only 0."
-      superseded: "The review's §6 claim that the repository 'has no tags' was wrong; it is superseded by the documentation-correction cycle above (the review artifact itself stays frozen as evidence)."
+      superseded: "The review's §6 claim that the repository 'has no tags' was wrong; superseded by the documentation-correction cycle above (the review artifact itself stays frozen as evidence)."
       scribe_hash: "rev:12c389674c6881d1+spec:release-versioning.md#A+V1"
       completed_at: "2026-09-17T20:04:33+01:00"
       completed_at_note: "ISO timestamp of that gate's mem_save (session id 50) — `date` is unavailable inside the /scribe sandbox."
-      commit_status: "RESOLVED — committed as fc9f075 (chore: bump version 2.1.0) and 022c13e (docs(agents): archive the 2.1.0 release cycle), merged into main as c5ae925 (conflicts on the five carriers resolved with `git checkout --theirs`), then finished: tag V2.1.0 (object 70d54fda → commit c5ae925), back-merge into develop, release/2.1.0 deleted. The /scribe sandbox could not run git add/commit; the user executed the paste-safe commands."
-      tag_status: "Tag V2.1.0 created (annotated). Known gap: V2.0.1 was never tagged — the 2.0.1 release was merged into main (54ffdad) but never finished."
+      commit_status: "RESOLVED — committed as fc9f075 (chore: bump version 2.1.0) and 022c13e (docs(agents): archive the 2.1.0 release cycle), merged into main as c5ae925 (conflicts on the five carriers resolved with `git checkout --theirs`), then finished: tag V2.1.0 (object 70d54fda → commit c5ae925), back-merge into develop (4f85011), release/2.1.0 deleted."
+      tag_status: "Tag V2.1.0 created (annotated; annotation body 'V2.1.0 V2.1.0' because gitflow-common:758-759 appends the tag name to the message). Known gap: V2.0.1 was never tagged."
       archive:
         spec: ".agents/docs/specs/release-versioning.md §A (V1) — corrected by the following cycle (tagging/completion section)"
         adr: null
