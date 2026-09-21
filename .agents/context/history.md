@@ -6,6 +6,12 @@
 
 ## Change History
 
+- **2026-09-21: Dev-tooling refresh within-major + zero-vuln audit (scribe)**
+  - Branch `feature/update-dependencies` (from `develop`). `pnpm upgrade` bumped catalog floors: biome ^2.5.14, commitlint ^21.2.2, concurrently ^10.0.5, globals ^17.12.0, husky ^9.1.7, lint-staged ^16.4.0, oxlint ^1.83.0, typescript ^6.0.3, vite ^8.3.0; backend re-synced (biome 2.4.15->2.5.14, oxlint 1.67.0->1.83.0).
+  - Fixed `pnpm up` catalog regression (`"vite": "^8.3.0"` inline -> `"catalog:"`, floor moved to catalog `^8.3.0`); re-synced via `pnpm install --no-frozen-lockfile` per ADR-0005. Final diff: `pnpm-workspace.yaml` + `pnpm-lock.yaml` only.
+  - Audit: `pnpm audit` 0 + `pnpm audit --prod` 0. Pre-commit hooks green (type-check FE+BE). `pnpm qa/build` proposed, not auto-run. Commit `9aa44e8 chore(deps): refresh dev tooling within-major`.
+  - Lesson: `pnpm upgrade` (like `pnpm up -r`) breaks `catalog:` pins into inline versions — always re-check `git diff package.json` after any upgrade.
+
 - **2026-09-17: Release 2.1.1 — bump verificado por guard (build)**
   - `2.1.0` → `2.1.1` en los 6 portadores: `package.json` (raíz, fuente de verdad), `backend/package.json`, badge de `README.md`, los dos tags por defecto de `docker-compose.prod.yml` y `.agents/project_manifest.yaml`. **Sin cambios en el lockfile** (pnpm no registra versión de los proyectos del workspace → `preferFrozenLockfile` intacto).
   - **TDD con el guard existente:** primero los 4 de código/config dejando el manifiesto atrás → **RED real** con un solo mensaje (`.agents/project_manifest.yaml: 2.1.0, expected 2.1.1`) → **GREEN** al sincronizarlo. `pnpm test` → **22 ficheros / 161 tests**.
