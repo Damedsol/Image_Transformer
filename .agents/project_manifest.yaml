@@ -9,7 +9,7 @@ project:
   root_path: "/projects/Github/imageTransformer"
 
 project_name: "imageTransformer"
-version: "2.1.1"
+version: "2.2.0"
 type: "monorepo (pnpm workspace v11)"
 license: "CC BY 4.0"
 
