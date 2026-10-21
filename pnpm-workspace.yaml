@@ -31,7 +31,7 @@ catalog:
   "lint-staged": "^16.4.0"
   "oxlint": "^1.83.0"
   "typescript": "^6.0.3"
-  "vite": "^8.3.0"
+  "vite": "^8.3.3"
 
 overrides:
   "brace-expansion@^1.0.0": "1.1.12"
